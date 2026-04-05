@@ -1836,3 +1836,24 @@ main { padding: 0 0 48px; }
   border-color: #22c55e !important;
   box-shadow: 0 2px 12px rgba(34,197,94,0.15) !important;
 }
+
+/* 홈 Hero 두 번째 CTA (아웃라인) */
+.cta-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  background: var(--white);
+  color: var(--amber-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--yellow-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.cta-btn-outline:hover {
+  background: var(--yellow-bg);
+  border-color: var(--yellow);
+}

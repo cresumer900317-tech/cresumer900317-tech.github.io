@@ -69,10 +69,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="hero-dot"></span>
             메이플키우기 · 스카니아 11서버
           </div>
-          <h1 class="hero-title">함께라서 <span class="accent">더 강한</span><br>친구패밀리 😊</h1>
-          <p class="hero-desc">5개 길드가 함께하는 메이플키우기 패밀리 길드</p>
+          <h1 class="hero-title">🔥 TOP30 승격 경쟁<br><span class="accent">친구패밀리</span></h1>
+          <p class="hero-desc">매달 상위 30명 메인 길드 이동 · 실시간 랭킹 시스템 운영</p>
           <p class="hero-update">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
-          <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">가입 문의하기</a>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
+            <a class="cta-btn" href="./ranking.html">🏆 랭킹 보기</a>
+            <a class="cta-btn" href="./members.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">👥 길드 선택하기</a>
+          </div>
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">총 길드 수</div>
@@ -85,10 +88,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="kpi-card">
               <div class="kpi-label">평균 전투력</div>
               <div class="kpi-value">${formatCompactPower(avgPower)}</div>
+              <div style="font-size:0.72rem;color:var(--text-faint);margin-top:3px;">🔥 상위권 길드 수준</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">TOP 500 비율</div>
               <div class="kpi-value dark">${formatNumber(top500Count)}명 <span style="font-size:0.85rem;color:var(--text-faint);">(${top500Rate}%)</span></div>
+              <div style="font-size:0.72rem;color:var(--text-faint);margin-top:3px;">💎 고스펙 유저 밀집</div>
             </div>
             <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly.html'">
               <div class="kpi-label">이달 누적 성장량</div>
@@ -135,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="guild-board-stat-val">${formatCompactPower(avg)}</div>
                   </div>
                   <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "🔒 정원 마감" : "✨ 모집 중"}</div>
-                  <div class="guild-board-more">상세보기 →</div>
+                  <div class="guild-board-more">길드 보러가기 →</div>
                 </div>
               `;
             }).join("")}
@@ -171,6 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
+      ${(growthTop.length || riseTop.length) ? `
       <div class="section-block">
         <div class="container">
           <div class="section-head">
@@ -178,13 +184,13 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-title">이번 주 변화</div>
               <div class="section-sub">성장량 · 서버 순위 상승 TOP 5</div>
             </div>
-            <a class="section-link" href="./weekly.html">주간성장 보기 →</a>
+            <a class="section-link" href="./weekly.html">월간성장 보기 →</a>
           </div>
           <div class="summary-split">
             <div class="summary-panel">
               <div class="sub-head">성장 TOP 5</div>
               <div class="mini-card-list">
-                ${growthTop.length ? growthTop.map((item, i) => `
+                ${growthTop.map((item, i) => `
                   <div class="mini-summary-card">
                     <span class="mini-summary-rank">${i + 1}</span>
                     ${characterAvatarHtml(item)}
@@ -197,13 +203,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     <div class="mini-summary-side">${metricHtml(item.weeklyDiff || 0)}</div>
                   </div>
-                `).join("") : `<div class="empty-box">다음 업데이트 후 표시됩니다.</div>`}
+                `).join("")}
               </div>
             </div>
             <div class="summary-panel">
               <div class="sub-head">서버 순위 상승 TOP 5</div>
               <div class="mini-card-list">
-                ${riseTop.length ? riseTop.map((item, i) => `
+                ${riseTop.map((item, i) => `
                   <div class="mini-summary-card">
                     <span class="mini-summary-rank">${i + 1}</span>
                     ${characterAvatarHtml(item)}
@@ -216,12 +222,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     <div class="mini-summary-side">${rankTrendHtml(item)}</div>
                   </div>
-                `).join("") : `<div class="empty-box">서버 순위 데이터 수집 후 표시됩니다.</div>`}
+                `).join("")}
               </div>
             </div>
           </div>
         </div>
       </div>
+      ` : ""}
 
       <!-- 모달 -->
       <div id="guildModal" class="modal-backdrop" style="display:none;">
