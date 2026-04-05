@@ -8,6 +8,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const CUT = 30;
 
+    // 시즌 타이머: 매달 말일까지 남은 일수
+    function getSeasonDaysLeft() {
+      const now = new Date();
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const diff = Math.ceil((lastDay - now) / (1000 * 60 * 60 * 24));
+      return diff;
+    }
+
+    // 컷라인 거리 계산
+    function getCutDistance(item, sorted) {
+      const cutItem = sorted[CUT - 1];
+      if (!cutItem) return null;
+      const cutPower = Number(cutItem.power || 0);
+      const myPower = Number(item.power || 0);
+      const diff = myPower - cutPower;
+      return diff;
+    }
+
+    function cutDistanceHtml(diff) {
+      if (diff === null) return "";
+      if (diff >= 0) {
+        return `<span style="font-size:0.72rem;color:#059669;font-weight:600;">+${formatCompactPower(diff)} 여유</span>`;
+      }
+      return `<span style="font-size:0.72rem;color:#dc2626;font-weight:600;">컷라인까지 -${formatCompactPower(Math.abs(diff))}</span>`;
+    }
+
     function getStatus(rank) {
       if (rank <= 25) return "safe";
       if (rank <= 30) return "danger";
@@ -70,11 +96,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ── 압축형 카드 ──
-    function renderCompactCard(item, rank) {
+    function renderCompactCard(item, rank, allSorted) {
       const status = getStatusLabel(rank);
       const isCut = rank === CUT;
       const isJustBelow = rank === CUT + 1;
       const st = getStatus(rank);
+      const cutDiff = (st === "danger" || st === "challenge") ? getCutDistance(item, allSorted) : null;
 
       let cardClass = "rk-compact-card";
       if (rank <= 3) cardClass += " rk-top3-card";
@@ -103,6 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="rk-c-power">${escapeHtml(getPower(item))}</div>
             <div class="rk-c-server">${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</div>
             ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
+          ${cutDiff !== null ? `<div style="margin-top:2px;">${cutDistanceHtml(cutDiff)}</div>` : ""}
           </div>
           ${isCut ? `<div class="rk-cut-marker">컷</div>` : ""}
         </div>
@@ -110,14 +138,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const heroHtml = renderHero(sorted);
-    const top3Html = sorted.slice(0, 3).map((item, i) => renderCompactCard(item, i + 1)).join("");
-    const restHtml = sorted.slice(3).map((item, i) => renderCompactCard(item, i + 4)).join("");
+    const top3Html = sorted.slice(0, 3).map((item, i) => renderCompactCard(item, i + 1, sorted)).join("");
+    const restHtml = sorted.slice(3).map((item, i) => renderCompactCard(item, i + 4, sorted)).join("");
 
     document.querySelector("main").innerHTML = `
       <div class="page-card">
         <div class="container">
           <div style="padding:28px 0 8px;">
-            <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">🏆 통합 랭킹</h1>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+              <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0;">🏆 통합 랭킹</h1>
+              <div style="display:flex;align-items:center;gap:6px;background:var(--yellow-bg);border:1px solid var(--yellow-border);border-radius:999px;padding:4px 14px;">
+                <span style="font-size:0.78rem;">📅</span>
+                <span style="font-size:0.78rem;font-weight:700;color:var(--amber-dark);">시즌 종료까지 ${getSeasonDaysLeft()}일</span>
+              </div>
+            </div>
             <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">전투력 기준 · ${formatNumber(sorted.length)}명 · TOP ${CUT} 친구들 길드 승격</p>
           </div>
 
