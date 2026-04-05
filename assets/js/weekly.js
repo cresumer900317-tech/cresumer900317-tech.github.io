@@ -11,26 +11,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const now = new Date();
     const monthLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
     const hasSnapshot = rows.some(r => r.hasSnapshot);
-
-    // 기준일 텍스트
     const snapDateLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월 5일`;
 
-    let currentTab = "growth";
-
-    function getTabData() {
-      if (currentTab === "growth") {
-        return [...rows].sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0));
-      }
-      if (currentTab === "rate") {
-        return [...rows].sort((a, b) => Number(b.growthRate || 0) - Number(a.growthRate || 0));
-      }
-      if (currentTab === "server") {
-        return [...rows]
-          .filter((x) => Number(x.serverRankDiff || 0) > 0)
-          .sort((a, b) => Number(b.serverRankDiff || 0) - Number(a.serverRankDiff || 0));
-      }
-      return rows;
-    }
+    // 성장량 기준 정렬
+    const sorted = [...rows].sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0));
 
     function renderCards(list) {
       if (!list.length) return createEmptyBox("데이터가 없습니다.");
@@ -54,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           : (item.hasSnapshot ? "0.00%" : "-");
 
         return `
-          <article class="list-card">
+          <article class="list-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
             <div class="card-left">
               ${rank <= 3
                 ? `<div class="rank-chip ${rank === 1 ? "medal-gold" : rank === 2 ? "medal-silver" : "medal-bronze"}">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>`
@@ -116,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector("main").innerHTML = `
       <div class="page-card">
         <div class="container">
-          <div style="padding:32px 0 24px;">
+          <div style="padding:32px 0 20px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
               <h1 style="font-size:1.7rem; font-weight:800; color:var(--text); margin:0; line-height:1;">
                 📈 월간 성장
@@ -128,38 +112,55 @@ document.addEventListener("DOMContentLoaded", async () => {
               ">${monthLabel}</span>
             </div>
             <p style="font-size:0.88rem; color:var(--text-soft); margin:0;">
-              성장량 · 성장률 · 서버 순위 상승 기준으로 전환하여 볼 수 있어요
+              이번 달 전투력 성장량 기준으로 정렬돼요
             </p>
           </div>
+
           ${snapshotBanner}
-          <div class="tab-bar">
-            <button class="tab-btn is-active" data-tab="growth">성장량</button>
-            <button class="tab-btn" data-tab="rate">성장률</button>
-            <button class="tab-btn" data-tab="server">서버 상승</button>
+
+          <div class="toolbar-card">
+            <label class="search-field">
+              <span>🔎</span>
+              <input id="monthlySearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+            </label>
+            <button id="monthlyResetButton" class="ghost-btn" type="button">초기화</button>
           </div>
-          <div class="stack-list" id="weeklyList">
-            <div class="loading-box">불러오는 중...</div>
+
+          <div class="stack-list" id="monthlyCardList">
+            ${renderCards(sorted)}
           </div>
         </div>
       </div>
     `;
 
-    function render() {
-      const list = getTabData();
-      document.getElementById("weeklyList").innerHTML = renderCards(list);
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.classList.toggle("is-active", btn.dataset.tab === currentTab);
+    // 검색 기능
+    const input = document.getElementById("monthlySearchInput");
+    const resetButton = document.getElementById("monthlyResetButton");
+    const wrap = document.getElementById("monthlyCardList");
+
+    function applySearch() {
+      const keyword = String(input.value || "").trim().toLowerCase();
+      const cards = Array.from(wrap.querySelectorAll("[data-character-row]"));
+      cards.forEach(card => card.classList.remove("highlight-card", "dim-card"));
+      if (!keyword) return;
+      let firstMatch = null;
+      cards.forEach(card => {
+        const name = card.getAttribute("data-character-row") || "";
+        if (name.includes(keyword)) {
+          card.classList.add("highlight-card");
+          if (!firstMatch) firstMatch = card;
+        } else {
+          card.classList.add("dim-card");
+        }
       });
+      if (firstMatch) firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        currentTab = btn.dataset.tab;
-        render();
-      });
+    input.addEventListener("input", applySearch);
+    resetButton.addEventListener("click", () => {
+      input.value = "";
+      applySearch();
     });
-
-    render();
 
   } catch (error) {
     console.error(error);
