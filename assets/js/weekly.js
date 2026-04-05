@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     function monthlyServerDiffHtml(item) {
       const diff = item.monthlyServerDiff;
       if (diff === null || diff === undefined) return "-";
-      if (diff > 0) return `<span class="metric-up">▲${formatNumber(diff)}</span>`;
-      if (diff < 0) return `<span class="metric-down">▼${formatNumber(Math.abs(diff))}</span>`;
+      if (diff > 0) return `<span class="metric-rank-up">▲${formatNumber(diff)}</span>`;
+      if (diff < 0) return `<span class="metric-rank-down">▼${formatNumber(Math.abs(diff))}</span>`;
       return `<span class="metric-neutral">-</span>`;
     }
 
@@ -37,7 +37,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!item.hasSnapshot) {
           diffHtml = `<span style="color:var(--text-faint);font-size:0.78rem;">기준 없음</span>`;
         } else if (monthlyDiff !== null && monthlyDiff !== undefined) {
-          diffHtml = metricHtml(monthlyDiff);
+          const absVal = formatCompactPower(Math.abs(monthlyDiff));
+          if (monthlyDiff > 0) {
+            diffHtml = `<span class="metric-growth-up">+${absVal}</span>`;
+          } else if (monthlyDiff < 0) {
+            diffHtml = `<span class="metric-growth-down">-${absVal}</span>`;
+          } else {
+            diffHtml = `<span class="metric-neutral">-</span>`;
+          }
         }
 
         const growthRateHtml = item.growthRate !== null && item.growthRate !== undefined
