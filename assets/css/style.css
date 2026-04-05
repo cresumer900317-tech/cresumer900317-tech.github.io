@@ -893,11 +893,11 @@ main { padding: 0 0 48px; }
 .metric-down { color: #dc2626; font-weight: 600; }
 .metric-neutral { color: var(--text-soft); }
 /* 성장량 전용: 증가=파랑, 감소=빨강 */
-.metric-growth-up { color: #2563eb; font-weight: 700; }
-.metric-growth-down { color: #dc2626; font-weight: 700; }
+.metric-growth-up { color: #2563eb !important; font-weight: 700 !important; }
+.metric-growth-down { color: #dc2626 !important; font-weight: 700 !important; }
 /* 서버순위 변동: 상승=초록, 하락=빨강 */
-.metric-rank-up { color: #059669; font-weight: 700; }
-.metric-rank-down { color: #dc2626; font-weight: 700; }
+.metric-rank-up { color: #059669 !important; font-weight: 700 !important; }
+.metric-rank-down { color: #dc2626 !important; font-weight: 700 !important; }
 
 /* ===== 공지/팁 ===== */
 .notice-stack { display: grid; gap: 10px; }
