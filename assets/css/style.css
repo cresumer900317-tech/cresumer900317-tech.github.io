@@ -1591,3 +1591,178 @@ main { padding: 0 0 48px; }
   .rk-c-avatar { width: 36px; height: 36px; }
   .rk-c-avatar .character-avatar { width: 36px; height: 36px; }
 }
+
+/* ===== 길드 디렉토리 (members) ===== */
+
+/* 탭 인원수 뱃지 */
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--border);
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  margin-left: 3px;
+}
+.tab-btn.is-active .tab-count {
+  background: var(--amber);
+  color: var(--white);
+}
+
+/* 길드 요약 카드 그리드 */
+.mb-guild-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.mb-guild-summary-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mb-guild-summary-card:hover {
+  border-color: var(--yellow-border);
+  background: var(--yellow-bg);
+  transform: translateY(-1px);
+}
+.mb-guild-full {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.mb-gs-name { margin-bottom: 8px; display: flex; justify-content: center; }
+.mb-gs-count {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
+.mb-gs-count span { font-size: 0.8rem; color: var(--text-soft); font-weight: 500; margin-left: 1px; }
+.mb-gs-power {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--amber);
+  margin-top: 4px;
+}
+.mb-gs-label {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-top: 1px;
+}
+.mb-gs-status {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.mb-gs-status.full { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.mb-gs-status.recruit { background: var(--yellow-pale); color: var(--amber-dark); border: 1px solid var(--yellow-border); }
+
+/* 멤버 카드 */
+.mb-list { display: grid; gap: 6px; }
+.mb-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s, background 0.15s;
+}
+.mb-card:hover { border-color: var(--yellow-border); background: var(--yellow-bg); }
+.mb-card.highlight-card { border-color: var(--yellow); background: var(--yellow-bg); }
+.mb-card.dim-card { opacity: 0.3; }
+
+.mb-rank {
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.mb-rank-num {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+.mb-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.mb-avatar .character-avatar { width: 44px; height: 44px; }
+
+.mb-info { flex: 1; min-width: 0; }
+.mb-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.mb-master-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--yellow);
+  color: var(--white);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.mb-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.mb-job { font-size: 0.78rem; color: var(--text-soft); }
+.mb-level { font-size: 0.75rem; color: var(--text-faint); font-weight: 600; }
+
+/* 역할 뱃지 */
+.mb-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.mb-role-dealer { background: #fff0f0; color: #dc2626; border: 1px solid #fca5a5; }
+.mb-role-support { background: #eff6ff; color: #2563eb; border: 1px solid #93c5fd; }
+
+.mb-power-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+.mb-power {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--amber);
+  white-space: nowrap;
+}
+.mb-server {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .mb-guild-summary { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .mb-guild-summary { grid-template-columns: repeat(2, 1fr); }
+  .mb-avatar { width: 36px; height: 36px; }
+  .mb-avatar .character-avatar { width: 36px; height: 36px; }
+}
