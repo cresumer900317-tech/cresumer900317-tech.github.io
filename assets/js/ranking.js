@@ -48,6 +48,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       return null;
     }
 
+    // 전투력 조/억 분리 HTML
+    function powerSplitHtml(item, size = "md") {
+      const pt = item.powerText || "";
+      const parts = pt.trim().split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        const big = parts[0];   // "3조"
+        const small = parts[1]; // "8,374억"
+        const bigSize = size === "lg" ? "1.3rem" : "1.05rem";
+        const smallSize = size === "lg" ? "1rem" : "0.82rem";
+        return `<span style="font-size:${bigSize};font-weight:900;color:var(--amber);">${escapeHtml(big)}</span><span style="font-size:0.65rem;color:var(--text-faint);margin:0 3px;font-weight:400;">|</span><span style="font-size:${smallSize};font-weight:700;color:var(--amber-dark);">${escapeHtml(small)}</span>`;
+      }
+      const fallback = pt || formatCompactPower(item.power);
+      return `<span style="font-size:1.05rem;font-weight:800;color:var(--amber);">${escapeHtml(fallback)}</span>`;
+    }
+
     function getPower(item) {
       const pt = item.powerText || "";
       const parts = pt.trim().split(/\s+/).filter(Boolean);
@@ -67,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
             <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
             <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
-            <div class="rk-hero-power">${escapeHtml(getPower(item))}</div>
+            <div class="rk-hero-power">${powerSplitHtml(item, "lg")}</div>
             ${item.serverRank ? `<div class="rk-hero-server">서버 ${formatNumber(item.serverRank)}위</div>` : ""}
           </div>
         `;
@@ -127,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
           <div class="rk-c-right">
-            <div class="rk-c-power">${escapeHtml(getPower(item))}</div>
+            <div class="rk-c-power">${powerSplitHtml(item)}</div>
             <div class="rk-c-server">${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</div>
             ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
           ${cutDiff !== null ? `<div style="margin-top:2px;">${cutDistanceHtml(cutDiff)}</div>` : ""}
