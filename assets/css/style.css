@@ -1766,3 +1766,61 @@ main { padding: 0 0 48px; }
   .mb-avatar { width: 36px; height: 36px; }
   .mb-avatar .character-avatar { width: 36px; height: 36px; }
 }
+
+/* 길드 요약 카드 힌트 */
+.mb-gs-hint {
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.mb-guild-summary-card:hover .mb-gs-hint { opacity: 1; }
+
+/* 정렬 버튼 */
+.mb-sort-group {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.sort-btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--white);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sort-btn:hover { border-color: var(--yellow-border); color: var(--amber); }
+.sort-btn.is-active {
+  background: var(--yellow-bg);
+  border-color: var(--yellow-border);
+  color: var(--amber-dark);
+  font-weight: 700;
+}
+
+/* 길드 그룹 묶음 */
+.mb-group { margin-bottom: 16px; }
+.mb-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  margin-bottom: 6px;
+  border-bottom: 2px solid var(--yellow-border);
+}
+.mb-group-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.mb-group-power {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  margin-left: auto;
+}
+.mb-group-list { display: grid; gap: 5px; }

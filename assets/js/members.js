@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let currentGuild = "전체";
     let searchKeyword = "";
+    let sortMode = "power"; // power | level | name
 
-    // 길드별 통계
     function guildStats(guildName) {
       const list = rows.filter(r => r.guild === guildName);
       const count = list.length;
@@ -24,7 +24,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (searchKeyword) {
         list = list.filter(r => (r.name || "").toLowerCase().includes(searchKeyword));
       }
-      return [...list].sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
+      return sortList(list);
+    }
+
+    function sortList(list) {
+      return [...list].sort((a, b) => {
+        if (sortMode === "power") return Number(b.power || 0) - Number(a.power || 0);
+        if (sortMode === "level") return Number(b.level || 0) - Number(a.level || 0);
+        if (sortMode === "name") return (a.name || "").localeCompare(b.name || "", "ko");
+        return 0;
+      });
     }
 
     function getPowerDisplay(item) {
@@ -33,15 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
     }
 
-    function jobRoleHtml(job) {
-      const dealers = ["섀도어","아크메이지(불,독)","아크메이지(썬,콜)","히어로","팔라딘","다크나이트","신궁","보우마스터","나이트로드","듀얼블레이드","메르세데스","카인","호영","카이저","제로","팬텀","은월","캐논마스터","데몬슬레이어","데몬어벤져","배틀메이지","와일드헌터","메카닉","블래스터","아란","에반","루미너스","카링","소환사","키네시스","일리움","아크","노바","래프터","엔젤릭버스터"];
-      const supports = ["비숍"];
-      if (supports.includes(job)) return `<span class="mb-role mb-role-support">서포터</span>`;
-      if (dealers.includes(job)) return `<span class="mb-role mb-role-dealer">딜러</span>`;
-      return "";
-    }
-
-    // 길드 요약 카드 (전체 탭일 때)
+    // 길드 요약 카드
     function renderGuildSummary() {
       return `
         <div class="mb-guild-summary">
@@ -49,17 +50,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const stats = guildStats(g);
             const isFull = stats.count >= 30;
             return `
-              <div class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}" data-guild="${escapeHtml(g)}">
-                <div class="mb-gs-name">
-                  ${guildBadgeHtml(g)}
-                </div>
+              <div class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}" data-guild-filter="${escapeHtml(g)}">
+                <div class="mb-gs-name">${guildBadgeHtml(g)}</div>
                 <div class="mb-gs-count">${stats.count}<span>명</span></div>
                 <div class="mb-gs-power">${formatCompactPower(stats.avgPower)}</div>
                 <div class="mb-gs-label">평균 전투력</div>
-                ${isFull
-                  ? `<div class="mb-gs-status full">정원 마감</div>`
-                  : `<div class="mb-gs-status recruit">모집 중</div>`
-                }
+                <div class="mb-gs-status ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "모집 중"}</div>
+                <div class="mb-gs-hint">클릭하여 보기 →</div>
               </div>
             `;
           }).join("")}
@@ -67,17 +64,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // 멤버 카드 (심플 디렉토리형)
+    // 멤버 카드 (심플)
     function renderMemberCard(item, rank) {
       const power = getPowerDisplay(item);
       const isMaster = item.isMaster;
-
       return `
         <div class="mb-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
-          <div class="mb-rank">${rank <= 3
-            ? `<span style="font-size:1.4rem;">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
-            : `<span class="mb-rank-num">${rank}</span>`
-          }</div>
+          <div class="mb-rank">
+            ${rank <= 3
+              ? `<span style="font-size:1.3rem;">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
+              : `<span class="mb-rank-num">${rank}</span>`
+            }
+          </div>
           <div class="mb-avatar">${characterAvatarHtml(item)}</div>
           <div class="mb-info">
             <div class="mb-name">
@@ -87,7 +85,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="mb-sub">
               ${currentGuild === "전체" ? guildBadgeHtml(item.guild || "길드 없음") : ""}
               <span class="mb-job">${escapeHtml(item.job || "-")}</span>
-              ${jobRoleHtml(item.job || "")}
               <span class="mb-level">Lv ${item.level || "-"}</span>
             </div>
           </div>
@@ -99,12 +96,40 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    function renderList(list) {
+    // 전체 탭: 길드별 그룹 묶음
+    function renderGrouped(list) {
+      if (!list.length) return createEmptyBox("해당하는 멤버가 없습니다.");
+
+      // 검색 중일 땐 그냥 flat으로
+      if (searchKeyword) {
+        return list.map((item, idx) => renderMemberCard(item, idx + 1)).join("");
+      }
+
+      return GUILDS.map(g => {
+        const gList = list.filter(r => r.guild === g);
+        if (!gList.length) return "";
+        const stats = guildStats(g);
+        return `
+          <div class="mb-group">
+            <div class="mb-group-header">
+              ${guildBadgeHtml(g)}
+              <span class="mb-group-count">${gList.length}명</span>
+              <span class="mb-group-power">평균 ${formatCompactPower(stats.avgPower)}</span>
+            </div>
+            <div class="mb-group-list">
+              ${gList.map((item, idx) => renderMemberCard(item, idx + 1)).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 단일 길드: 일반 리스트
+    function renderFlat(list) {
       if (!list.length) return createEmptyBox("해당하는 멤버가 없습니다.");
       return list.map((item, idx) => renderMemberCard(item, idx + 1)).join("");
     }
 
-    // 탭 버튼 라벨 (인원수 포함)
     function tabLabel(g) {
       const stats = guildStats(g);
       return `${g} <span class="tab-count">${stats.count}</span>`;
@@ -113,12 +138,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     function render() {
       const filtered = getFiltered();
       const showSummary = currentGuild === "전체" && !searchKeyword;
+      const isAll = currentGuild === "전체";
+
+      const listHtml = isAll ? renderGrouped(filtered) : renderFlat(filtered);
 
       document.getElementById("members-list").innerHTML =
-        (showSummary ? renderGuildSummary() : "") + renderList(filtered);
+        (showSummary ? renderGuildSummary() : "") + listHtml;
+
       document.getElementById("members-count").textContent = `${formatNumber(filtered.length)}명`;
+
       document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.guild === currentGuild);
+      });
+      document.querySelectorAll(".sort-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.sort === sortMode);
       });
     }
 
@@ -143,6 +176,11 @@ document.addEventListener("DOMContentLoaded", async () => {
               <input id="membersSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
             </label>
             <button id="membersResetButton" class="ghost-btn" type="button">초기화</button>
+            <div class="mb-sort-group">
+              <button class="sort-btn is-active" data-sort="power">전투력</button>
+              <button class="sort-btn" data-sort="level">레벨</button>
+              <button class="sort-btn" data-sort="name">이름</button>
+            </div>
           </div>
 
           <div class="mb-list" id="members-list">
@@ -160,10 +198,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
+    // 정렬 이벤트
+    document.querySelectorAll(".sort-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        sortMode = btn.dataset.sort;
+        render();
+      });
+    });
+
     // 검색 이벤트
     const input = document.getElementById("membersSearchInput");
     const resetBtn = document.getElementById("membersResetButton");
-
     input.addEventListener("input", () => {
       searchKeyword = input.value.trim().toLowerCase();
       render();
@@ -172,6 +217,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.value = "";
       searchKeyword = "";
       render();
+    });
+
+    // 길드 요약 카드 클릭 → 해당 길드 필터
+    document.getElementById("members-list").addEventListener("click", e => {
+      const card = e.target.closest("[data-guild-filter]");
+      if (!card) return;
+      const guild = card.dataset.guildFilter;
+      currentGuild = guild;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.guild === guild);
+      });
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     render();
