@@ -17,10 +17,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function monthlyServerDiffHtml(item) {
       const diff = item.monthlyServerDiff;
-      if (diff === null || diff === undefined) return "-";
-      if (diff > 0) return `<span class="metric-rank-up">▲${formatNumber(diff)}</span>`;
-      if (diff < 0) return `<span class="metric-rank-down">▼${formatNumber(Math.abs(diff))}</span>`;
-      return `<span class="metric-neutral">-</span>`;
+      if (diff === null || diff === undefined || diff === 0) return `<span style="color:var(--text-faint);">-</span>`;
+      if (diff > 0) return `<span style="color:#059669;font-weight:700;">▲${formatNumber(diff)}</span>`;
+      return `<span style="color:#dc2626;font-weight:700;">▼${formatNumber(Math.abs(diff))}</span>`;
+    }
+
+    function growthHtml(item) {
+      const diff = item.monthlyDiff;
+      if (!item.hasSnapshot) return `<span style="color:var(--text-faint);font-size:0.8rem;">기준 없음</span>`;
+      if (diff === null || diff === undefined || diff === 0) return `<span style="color:var(--text-faint);">-</span>`;
+      const absVal = formatCompactPower(Math.abs(diff));
+      if (diff > 0) return `<span style="color:#2563eb;font-size:1.45rem;font-weight:800;line-height:1;">+${absVal}</span>`;
+      return `<span style="color:#dc2626;font-size:1.45rem;font-weight:800;line-height:1;">-${absVal}</span>`;
     }
 
     function renderCards(list) {
@@ -32,27 +40,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const parts = pt.trim().split(/\s+/).filter(Boolean);
         const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
 
-        const monthlyDiff = item.monthlyDiff;
-        let diffHtml = "-";
-        if (!item.hasSnapshot) {
-          diffHtml = `<span style="color:var(--text-faint);font-size:0.78rem;">기준 없음</span>`;
-        } else if (monthlyDiff !== null && monthlyDiff !== undefined) {
-          const absVal = formatCompactPower(Math.abs(monthlyDiff));
-          if (monthlyDiff > 0) {
-            diffHtml = `<span class="metric-growth-up">+${absVal}</span>`;
-          } else if (monthlyDiff < 0) {
-            diffHtml = `<span class="metric-growth-down">-${absVal}</span>`;
-          } else {
-            diffHtml = `<span class="metric-neutral">-</span>`;
-          }
-        }
-
-        const growthRateHtml = item.growthRate !== null && item.growthRate !== undefined
-          ? formatRate(item.growthRate)
-          : (item.hasSnapshot ? "0.00%" : "-");
+        const growthRate = item.growthRate !== null && item.growthRate !== undefined
+          ? formatRate(item.growthRate) : "-";
 
         return `
-          <article class="list-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
+          <article class="list-card monthly-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
             <div class="card-left">
               ${rank <= 3
                 ? `<div class="rank-chip ${rank === 1 ? "medal-gold" : rank === 2 ? "medal-silver" : "medal-bronze"}">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>`
@@ -61,22 +53,25 @@ document.addEventListener("DOMContentLoaded", async () => {
               ${characterAvatarHtml(item)}
             </div>
             <div class="card-main">
-              <div class="card-topline">
-                <div>
-                  <div class="rank-name">${escapeHtml(item.name || "-")}</div>
-                  <div class="rank-subline">
-                    ${guildBadgeHtml(item.guild || "길드 없음")}
-                    <span class="job-text">${escapeHtml(item.job || "-")}</span>
-                    <span class="level-text">Lv ${escapeHtml(String(item.level || "-"))}</span>
-                  </div>
+              <div class="monthly-card-top">
+                <div class="monthly-name-block">
+                  <span class="monthly-name">${escapeHtml(item.name || "-")}</span>
+                  <span class="monthly-guild-badge ${(item.guild && item.guild !== "길드 없음") ? "guild-" + (["친구들","친구둘","친구삼","친구넷","친구닷"].indexOf(item.guild) + 1 === 0 ? "none" : "f" + (["친구들","친구둘","친구삼","친구넷","친구닷"].indexOf(item.guild) + 1)) : "guild-none"}">${escapeHtml(item.guild || "-")}</span>
+                  <span class="monthly-meta-line">${escapeHtml(item.job || "-")} · Lv ${item.level || "-"}</span>
                 </div>
-                <div class="rank-power">${escapeHtml(displayPower)}</div>
+                <div class="monthly-power">${escapeHtml(displayPower)}</div>
               </div>
-              <div class="meta-grid four">
-                <div class="mini-stat"><span>월간 성장량</span><strong>${diffHtml}</strong></div>
-                <div class="mini-stat"><span>성장률</span><strong>${growthRateHtml}</strong></div>
-                <div class="mini-stat"><span>서버 순위 변동</span><strong>${monthlyServerDiffHtml(item)}</strong></div>
-                <div class="mini-stat"><span>현재 서버 순위</span><strong>${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</strong></div>
+              <div class="monthly-card-body">
+                <div class="monthly-growth-block">
+                  <div class="monthly-growth-label">🔥 이달 성장</div>
+                  <div class="monthly-growth-value">${growthHtml(item)}</div>
+                  <div class="monthly-growth-rate">${growthRate !== "-" ? `성장률 ${growthRate}` : ""}</div>
+                </div>
+                <div class="monthly-rank-block">
+                  <div class="monthly-rank-label">📊 순위</div>
+                  <div class="monthly-rank-diff">${monthlyServerDiffHtml(item)}</div>
+                  <div class="monthly-rank-current">${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</div>
+                </div>
               </div>
             </div>
           </article>

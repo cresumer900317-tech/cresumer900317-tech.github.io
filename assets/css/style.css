@@ -1252,3 +1252,102 @@ main { padding: 0 0 48px; }
   .page-title { font-size: 1.3rem; }
   .notice-card-body { padding: 1rem; }
 }
+/* ===== 월간성장 카드 레이아웃 ===== */
+.monthly-card { align-items: flex-start; }
+
+.monthly-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.monthly-name-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.monthly-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.monthly-guild-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+.monthly-guild-badge.guild-f1 { background:#fef3c7; border-color:#fde68a; color:#92400e; }
+.monthly-guild-badge.guild-f2 { background:#fef3c7; border-color:#fcd34d; color:#92400e; }
+.monthly-guild-badge.guild-f3 { background:#fffbeb; border-color:#fde68a; color:#b45309; }
+.monthly-guild-badge.guild-f4 { background:#fff7ed; border-color:#fed7aa; color:#c2410c; }
+.monthly-guild-badge.guild-f5 { background:#fff7ed; border-color:#fdba74; color:#ea580c; }
+.monthly-guild-badge.guild-none { background:var(--bg); border-color:var(--border); color:var(--text-faint); }
+.monthly-meta-line {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  width: 100%;
+}
+.monthly-power {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--amber);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.monthly-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.monthly-growth-block,
+.monthly-rank-block {
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.monthly-growth-label,
+.monthly-rank-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  letter-spacing: 0.02em;
+}
+.monthly-growth-value {
+  line-height: 1;
+  margin: 2px 0;
+}
+.monthly-growth-rate {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+.monthly-rank-diff {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 2px 0;
+}
+.monthly-rank-current {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--amber-dark);
+}
+
+@media (max-width: 480px) {
+  .monthly-card-body { grid-template-columns: 1fr; }
+  .monthly-card-top { flex-direction: column; gap: 4px; }
+  .monthly-power { align-self: flex-end; }
+}
