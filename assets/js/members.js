@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let currentGuild = "전체";
     let searchKeyword = "";
-    let sortMode = "power"; // power | level | name
+    let sortMode = "power";
 
     function guildStats(guildName) {
       const list = rows.filter(r => r.guild === guildName);
@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (sortMode === "power") return Number(b.power || 0) - Number(a.power || 0);
         if (sortMode === "level") return Number(b.level || 0) - Number(a.level || 0);
         if (sortMode === "name") return (a.name || "").localeCompare(b.name || "", "ko");
+        if (sortMode === "popularity") return Number(b.popularity || 0) - Number(a.popularity || 0);
         return 0;
       });
     }
@@ -42,21 +43,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       return parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
     }
 
-    // 길드 요약 카드
+    // 길드 요약 카드 (항상 고정)
     function renderGuildSummary() {
       return `
         <div class="mb-guild-summary">
           ${GUILDS.map(g => {
             const stats = guildStats(g);
             const isFull = stats.count >= 30;
+            const isActive = currentGuild === g;
             return `
-              <div class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}" data-guild-filter="${escapeHtml(g)}">
+              <div class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}${isActive ? " mb-guild-active" : ""}" data-guild-filter="${escapeHtml(g)}">
                 <div class="mb-gs-name">${guildBadgeHtml(g)}</div>
                 <div class="mb-gs-count">${stats.count}<span>명</span></div>
                 <div class="mb-gs-power">${formatCompactPower(stats.avgPower)}</div>
                 <div class="mb-gs-label">평균 전투력</div>
                 <div class="mb-gs-status ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "모집 중"}</div>
-                <div class="mb-gs-hint">클릭하여 보기 →</div>
               </div>
             `;
           }).join("")}
@@ -64,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // 멤버 카드 (심플)
+    // 멤버 카드
     function renderMemberCard(item, rank) {
       const power = getPowerDisplay(item);
       const isMaster = item.isMaster;
@@ -99,12 +100,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 전체 탭: 길드별 그룹 묶음
     function renderGrouped(list) {
       if (!list.length) return createEmptyBox("해당하는 멤버가 없습니다.");
-
-      // 검색 중일 땐 그냥 flat으로
       if (searchKeyword) {
         return list.map((item, idx) => renderMemberCard(item, idx + 1)).join("");
       }
-
       return GUILDS.map(g => {
         const gList = list.filter(r => r.guild === g);
         if (!gList.length) return "";
@@ -124,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }).join("");
     }
 
-    // 단일 길드: 일반 리스트
+    // 단일 길드: flat 리스트
     function renderFlat(list) {
       if (!list.length) return createEmptyBox("해당하는 멤버가 없습니다.");
       return list.map((item, idx) => renderMemberCard(item, idx + 1)).join("");
@@ -137,21 +135,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function render() {
       const filtered = getFiltered();
-      const showSummary = currentGuild === "전체" && !searchKeyword;
       const isAll = currentGuild === "전체";
 
-      const listHtml = isAll ? renderGrouped(filtered) : renderFlat(filtered);
+      // 길드 요약 카드는 항상 고정
+      document.getElementById("mb-guild-summary-area").innerHTML = renderGuildSummary();
 
-      document.getElementById("members-list").innerHTML =
-        (showSummary ? renderGuildSummary() : "") + listHtml;
+      // 리스트 영역
+      const listHtml = isAll ? renderGrouped(filtered) : renderFlat(filtered);
+      document.getElementById("members-list").innerHTML = listHtml;
 
       document.getElementById("members-count").textContent = `${formatNumber(filtered.length)}명`;
 
+      // 탭 활성화
       document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.guild === currentGuild);
       });
+
+      // 정렬 버튼 활성화
       document.querySelectorAll(".sort-btn").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.sort === sortMode);
+      });
+
+      // 요약 카드 클릭 이벤트 재등록
+      document.querySelectorAll("[data-guild-filter]").forEach(card => {
+        card.addEventListener("click", () => {
+          const guild = card.dataset.guildFilter;
+          currentGuild = guild;
+          render();
+        });
       });
     }
 
@@ -170,6 +181,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${GUILDS.map(g => `<button class="tab-btn" data-guild="${escapeHtml(g)}">${tabLabel(g)}</button>`).join("")}
           </div>
 
+          <!-- 길드 요약 카드: 항상 고정 -->
+          <div id="mb-guild-summary-area"></div>
+
           <div class="toolbar-card">
             <label class="search-field">
               <span>🔎</span>
@@ -180,6 +194,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <button class="sort-btn is-active" data-sort="power">전투력</button>
               <button class="sort-btn" data-sort="level">레벨</button>
               <button class="sort-btn" data-sort="name">이름</button>
+              <button class="sort-btn" data-sort="popularity">인기도</button>
             </div>
           </div>
 
@@ -217,19 +232,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.value = "";
       searchKeyword = "";
       render();
-    });
-
-    // 길드 요약 카드 클릭 → 해당 길드 필터
-    document.getElementById("members-list").addEventListener("click", e => {
-      const card = e.target.closest("[data-guild-filter]");
-      if (!card) return;
-      const guild = card.dataset.guildFilter;
-      currentGuild = guild;
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("is-active", btn.dataset.guild === guild);
-      });
-      render();
-      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     render();
