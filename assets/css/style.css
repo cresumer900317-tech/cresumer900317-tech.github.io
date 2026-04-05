@@ -1269,7 +1269,7 @@ main { padding: 0 0 48px; }
   gap: 6px;
 }
 .monthly-name {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--text);
   line-height: 1.2;
@@ -1335,15 +1335,17 @@ main { padding: 0 0 48px; }
   font-weight: 500;
 }
 .monthly-rank-diff {
-  font-size: 1.05rem;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.2;
   margin: 2px 0;
 }
 .monthly-rank-current {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--amber-dark);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  margin: 2px 0;
 }
 
 @media (max-width: 480px) {

@@ -69,8 +69,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div class="monthly-rank-block">
                   <div class="monthly-rank-label">📊 순위</div>
-                  <div class="monthly-rank-diff">${monthlyServerDiffHtml(item)}</div>
                   <div class="monthly-rank-current">${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</div>
+                  <div class="monthly-rank-diff">${monthlyServerDiffHtml(item)}</div>
                 </div>
               </div>
             </div>
