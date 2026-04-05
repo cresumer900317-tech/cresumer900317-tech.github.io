@@ -15,20 +15,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const sorted = [...rows].sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0));
 
-    function monthlyServerDiffHtml(item) {
+    function serverDiffHtml(item) {
       const diff = item.monthlyServerDiff;
-      if (diff === null || diff === undefined || diff === 0) return `<span style="color:var(--text-faint);">-</span>`;
-      if (diff > 0) return `<span style="color:#059669;font-weight:700;">▲${formatNumber(diff)}</span>`;
-      return `<span style="color:#dc2626;font-weight:700;">▼${formatNumber(Math.abs(diff))}</span>`;
+      if (!diff) return `<span style="color:var(--text-faint);font-size:0.82rem;">변동없음</span>`;
+      if (diff > 0) return `<span style="color:#059669;font-weight:700;font-size:0.92rem;">▲${formatNumber(diff)}</span>`;
+      return `<span style="color:#dc2626;font-weight:700;font-size:0.92rem;">▼${formatNumber(Math.abs(diff))}</span>`;
     }
 
-    function growthHtml(item) {
+    function growthValueHtml(item) {
       const diff = item.monthlyDiff;
-      if (!item.hasSnapshot) return `<span style="color:var(--text-faint);font-size:0.8rem;">기준 없음</span>`;
-      if (diff === null || diff === undefined || diff === 0) return `<span style="color:var(--text-faint);">-</span>`;
+      if (!item.hasSnapshot) return `<span style="color:var(--text-faint);font-size:0.85rem;">기준 없음</span>`;
+      if (!diff) return `<span style="color:var(--text-faint);">-</span>`;
       const absVal = formatCompactPower(Math.abs(diff));
-      if (diff > 0) return `<span style="color:#2563eb;font-size:1.45rem;font-weight:800;line-height:1;">+${absVal}</span>`;
-      return `<span style="color:#dc2626;font-size:1.45rem;font-weight:800;line-height:1;">-${absVal}</span>`;
+      const color = diff > 0 ? "#d97706" : "#dc2626"; // 오렌지 계열
+      const sign = diff > 0 ? "+" : "-";
+      return `<span style="color:${color};font-size:1.5rem;font-weight:900;line-height:1;letter-spacing:-0.5px;">${sign}${absVal}</span>`;
+    }
+
+    function growthRateHtml(item) {
+      const rate = item.growthRate;
+      if (rate === null || rate === undefined || !item.hasSnapshot) return "";
+      const num = Number(rate);
+      let color = "var(--text-soft)";
+      let suffix = "";
+      if (num >= 10) { color = "#d97706"; suffix = " 🔥"; }
+      else if (num >= 5) { color = "#b45309"; suffix = " 🔥"; }
+      else if (num > 0) { color = "#92400e"; }
+      return `<span style="font-size:0.85rem;font-weight:600;color:${color};">성장률 ${formatRate(rate)}${suffix}</span>`;
+    }
+
+    function guildClass(guild) {
+      const map = { "친구들": "f1", "친구둘": "f2", "친구삼": "f3", "친구넷": "f4", "친구닷": "f5" };
+      return "monthly-guild-badge guild-" + (map[guild] || "none");
     }
 
     function renderCards(list) {
@@ -36,15 +54,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       return list.map((item, idx) => {
         const rank = idx + 1;
+        const isFirst = rank === 1;
         const pt = item.powerText || "";
         const parts = pt.trim().split(/\s+/).filter(Boolean);
         const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
 
-        const growthRate = item.growthRate !== null && item.growthRate !== undefined
-          ? formatRate(item.growthRate) : "-";
-
         return `
-          <article class="list-card monthly-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
+          <article class="list-card monthly-card${isFirst ? " monthly-card-first" : ""}" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
+            ${isFirst ? `<div class="monthly-first-badge">🔥 이번달 1위</div>` : ""}
             <div class="card-left">
               ${rank <= 3
                 ? `<div class="rank-chip ${rank === 1 ? "medal-gold" : rank === 2 ? "medal-silver" : "medal-bronze"}">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>`
@@ -56,21 +73,21 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="monthly-card-top">
                 <div class="monthly-name-block">
                   <span class="monthly-name">${escapeHtml(item.name || "-")}</span>
-                  <span class="monthly-guild-badge ${(item.guild && item.guild !== "길드 없음") ? "guild-" + (["친구들","친구둘","친구삼","친구넷","친구닷"].indexOf(item.guild) + 1 === 0 ? "none" : "f" + (["친구들","친구둘","친구삼","친구넷","친구닷"].indexOf(item.guild) + 1)) : "guild-none"}">${escapeHtml(item.guild || "-")}</span>
+                  <span class="${guildClass(item.guild)}">${escapeHtml(item.guild || "-")}</span>
                   <span class="monthly-meta-line">${escapeHtml(item.job || "-")} · Lv ${item.level || "-"}</span>
                 </div>
-                <div class="monthly-power">${escapeHtml(displayPower)}</div>
               </div>
               <div class="monthly-card-body">
                 <div class="monthly-growth-block">
-                  <div class="monthly-growth-label">🔥 이달 성장</div>
-                  <div class="monthly-growth-value">${growthHtml(item)}</div>
-                  <div class="monthly-growth-rate">${growthRate !== "-" ? `성장률 ${growthRate}` : ""}</div>
+                  <div class="monthly-block-label">🔥 이달 성장</div>
+                  <div class="monthly-growth-value">${growthValueHtml(item)}</div>
+                  <div class="monthly-power-sub">총 전투력 ${escapeHtml(displayPower)}</div>
+                  ${growthRateHtml(item) ? `<div style="margin-top:2px;">${growthRateHtml(item)}</div>` : ""}
                 </div>
                 <div class="monthly-rank-block">
-                  <div class="monthly-rank-label">📊 순위</div>
+                  <div class="monthly-block-label">📊 서버 순위</div>
                   <div class="monthly-rank-current">${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</div>
-                  <div class="monthly-rank-diff">${monthlyServerDiffHtml(item)}</div>
+                  <div class="monthly-rank-diff">${serverDiffHtml(item)}</div>
                 </div>
               </div>
             </div>
@@ -82,25 +99,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const snapshotBanner = hasSnapshot ? `
       <div style="
         display:flex; align-items:center; gap:8px;
-        background:var(--yellow-bg);
-        border:1px solid var(--yellow-border);
-        border-radius:var(--radius-md);
-        padding:10px 16px;
-        font-size:0.83rem;
-        color:var(--amber-dark);
-        margin-bottom:20px;
+        background:var(--yellow-bg); border:1px solid var(--yellow-border);
+        border-radius:var(--radius-md); padding:10px 16px;
+        font-size:0.83rem; color:var(--amber-dark); margin-bottom:20px;
       ">
         📌 기준일 <strong style="margin:0 4px;">${snapDateLabel}</strong> 전투력 대비 현재 성장량 · 매달 1일 자동 갱신
       </div>
     ` : `
       <div style="
-        background:var(--yellow-bg);
-        border:1px solid var(--yellow-border);
-        border-radius:var(--radius-md);
-        padding:10px 16px;
-        font-size:0.83rem;
-        color:var(--amber-dark);
-        margin-bottom:20px;
+        background:var(--yellow-bg); border:1px solid var(--yellow-border);
+        border-radius:var(--radius-md); padding:10px 16px;
+        font-size:0.83rem; color:var(--amber-dark); margin-bottom:20px;
       ">
         📌 매달 1일에 기준 전투력이 자동 저장됩니다. 스냅샷 생성 이후부터 성장량이 표시됩니다.
       </div>
@@ -111,22 +120,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div style="padding:32px 0 20px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
-              <h1 style="font-size:1.7rem; font-weight:800; color:var(--text); margin:0; line-height:1;">
-                📈 월간 성장
-              </h1>
-              <span style="
-                font-size:0.95rem; font-weight:700;
-                color:var(--white); background:var(--amber);
-                border-radius:999px; padding:3px 14px; line-height:1.6;
-              ">${monthLabel}</span>
+              <h1 style="font-size:1.7rem; font-weight:800; color:var(--text); margin:0; line-height:1;">📈 월간 성장</h1>
+              <span style="font-size:0.95rem;font-weight:700;color:var(--white);background:var(--amber);border-radius:999px;padding:3px 14px;line-height:1.6;">${monthLabel}</span>
             </div>
-            <p style="font-size:0.88rem; color:var(--text-soft); margin:0;">
-              이번 달 전투력 성장량 기준으로 정렬돼요
-            </p>
+            <p style="font-size:0.88rem;color:var(--text-soft);margin:0;">이번 달 전투력 성장량 기준으로 정렬돼요</p>
           </div>
-
           ${snapshotBanner}
-
           <div class="toolbar-card">
             <label class="search-field">
               <span>🔎</span>
@@ -134,7 +133,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             </label>
             <button id="monthlyResetButton" class="ghost-btn" type="button">초기화</button>
           </div>
-
           <div class="stack-list" id="monthlyCardList">
             ${renderCards(sorted)}
           </div>
@@ -165,10 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     input.addEventListener("input", applySearch);
-    resetButton.addEventListener("click", () => {
-      input.value = "";
-      applySearch();
-    });
+    resetButton.addEventListener("click", () => { input.value = ""; applySearch(); });
 
   } catch (error) {
     console.error(error);

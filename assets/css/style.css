@@ -1253,14 +1253,30 @@ main { padding: 0 0 48px; }
   .notice-card-body { padding: 1rem; }
 }
 /* ===== 월간성장 카드 레이아웃 ===== */
-.monthly-card { align-items: flex-start; }
+.monthly-card { align-items: flex-start; position: relative; }
 
+/* 1등 카드 강조 */
+.monthly-card-first {
+  border: 2px solid var(--yellow) !important;
+  background: linear-gradient(135deg, #fffbeb 0%, #fff 60%) !important;
+  box-shadow: 0 4px 20px rgba(245,158,11,0.18) !important;
+}
+.monthly-first-badge {
+  position: absolute;
+  top: -1px;
+  right: 16px;
+  background: var(--yellow);
+  color: var(--white);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 0 0 8px 8px;
+  letter-spacing: 0.03em;
+}
+
+/* 카드 상단 */
 .monthly-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .monthly-name-block {
   display: flex;
@@ -1269,22 +1285,23 @@ main { padding: 0 0 48px; }
   gap: 6px;
 }
 .monthly-name {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.3rem;
+  font-weight: 900;
   color: var(--text);
   line-height: 1.2;
+  letter-spacing: -0.3px;
 }
 .monthly-guild-badge {
   display: inline-flex;
   align-items: center;
   height: 22px;
-  padding: 0 8px;
+  padding: 0 9px;
   border-radius: 999px;
   font-size: 0.73rem;
   font-weight: 700;
   border: 1px solid transparent;
 }
-.monthly-guild-badge.guild-f1 { background:#fef3c7; border-color:#fde68a; color:#92400e; }
+.monthly-guild-badge.guild-f1 { background:#fef3c7; border-color:#fbbf24; color:#78350f; }
 .monthly-guild-badge.guild-f2 { background:#fef3c7; border-color:#fcd34d; color:#92400e; }
 .monthly-guild-badge.guild-f3 { background:#fffbeb; border-color:#fde68a; color:#b45309; }
 .monthly-guild-badge.guild-f4 { background:#fff7ed; border-color:#fed7aa; color:#c2410c; }
@@ -1295,14 +1312,8 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
   width: 100%;
 }
-.monthly-power {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--amber);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
+/* 카드 바디 2칸 */
 .monthly-card-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1316,40 +1327,36 @@ main { padding: 0 0 48px; }
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
-.monthly-growth-label,
-.monthly-rank-label {
-  font-size: 0.72rem;
+.monthly-block-label {
+  font-size: 0.71rem;
   font-weight: 600;
   color: var(--text-soft);
   letter-spacing: 0.02em;
+  margin-bottom: 2px;
 }
-.monthly-growth-value {
-  line-height: 1;
-  margin: 2px 0;
-}
-.monthly-growth-rate {
-  font-size: 0.82rem;
-  color: var(--text-soft);
-  font-weight: 500;
-}
-.monthly-rank-diff {
-  font-size: 0.88rem;
-  font-weight: 700;
-  line-height: 1.2;
-  margin: 2px 0;
+.monthly-growth-value { line-height: 1; }
+.monthly-power-sub {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  margin-top: 2px;
 }
 .monthly-rank-current {
-  font-size: 1.45rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 900;
   color: var(--text);
   line-height: 1;
   margin: 2px 0;
+  letter-spacing: -0.5px;
+}
+.monthly-rank-diff {
+  line-height: 1.3;
+  margin-top: 1px;
 }
 
 @media (max-width: 480px) {
   .monthly-card-body { grid-template-columns: 1fr; }
-  .monthly-card-top { flex-direction: column; gap: 4px; }
-  .monthly-power { align-self: flex-end; }
+  .monthly-name { font-size: 1.15rem; }
+  .monthly-rank-current { font-size: 1.25rem; }
 }
