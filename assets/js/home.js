@@ -76,6 +76,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             <a class="cta-btn" href="./ranking.html">🏆 랭킹 보기</a>
             <a class="cta-btn" href="./members.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">👥 길드 선택하기</a>
           </div>
+          <div style="margin-top:12px;">
+            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" style="
+              display:inline-flex; align-items:center; gap:6px;
+              font-size:0.83rem; color:var(--text-soft); font-weight:500;
+              text-decoration:none; transition:color 0.15s;
+            " onmouseover="this.style.color='var(--amber)'" onmouseout="this.style.color='var(--text-soft)'">
+              💬 빠른 가입 문의 <span style="font-size:0.75rem;color:var(--text-faint);">(운영진 1:1 안내)</span>
+              <span style="font-size:0.78rem;">→</span>
+            </a>
+          </div>
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">총 길드 수</div>
@@ -141,6 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   </div>
                   <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "🔒 정원 마감" : "✨ 모집 중"}</div>
                   <div class="guild-board-more">길드 보러가기 →</div>
+                  <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="guild-board-inquiry" onclick="event.stopPropagation()">💬 가입 문의</a>
                 </div>
               `;
             }).join("")}

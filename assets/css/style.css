@@ -1857,3 +1857,22 @@ main { padding: 0 0 48px; }
   background: var(--yellow-bg);
   border-color: var(--yellow);
 }
+
+/* 길드 카드 가입 문의 버튼 */
+.guild-board-inquiry {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--amber-dark);
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.guild-board-inquiry:hover {
+  background: var(--yellow-pale);
+  border-color: var(--yellow);
+}
