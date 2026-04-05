@@ -866,11 +866,16 @@ main { padding: 0 0 48px; }
   font-weight: 600;
   white-space: nowrap;
 }
-.guild-badge.guild-f1 { background: #fef3c7; border-color: #fde68a; color: #b45309; }
-.guild-badge.guild-f2 { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
-.guild-badge.guild-f3 { background: #fffbeb; border-color: #fde68a; color: #b45309; }
-.guild-badge.guild-f4 { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
-.guild-badge.guild-f5 { background: #fff7ed; border-color: #fdba74; color: #ea580c; }
+/* 친구들: 주황 (메인 길드 강조) */
+.guild-badge.guild-f1 { background: #fff7ed; border-color: #f97316; color: #c2410c; font-weight: 700; }
+/* 친구둘: 파랑 */
+.guild-badge.guild-f2 { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+/* 친구삼: 초록 */
+.guild-badge.guild-f3 { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+/* 친구넷: 보라 */
+.guild-badge.guild-f4 { background: #faf5ff; border-color: #a855f7; color: #7e22ce; }
+/* 친구닷: 회색 */
+.guild-badge.guild-f5 { background: #f8fafc; border-color: #94a3b8; color: #475569; }
 .guild-badge.guild-none { background: var(--bg); border-color: var(--border); color: var(--text-faint); }
 
 /* ===== 순위 트렌드 ===== */
@@ -1301,11 +1306,11 @@ main { padding: 0 0 48px; }
   font-weight: 700;
   border: 1px solid transparent;
 }
-.monthly-guild-badge.guild-f1 { background:#fef3c7; border-color:#fbbf24; color:#78350f; }
-.monthly-guild-badge.guild-f2 { background:#fef3c7; border-color:#fcd34d; color:#92400e; }
-.monthly-guild-badge.guild-f3 { background:#fffbeb; border-color:#fde68a; color:#b45309; }
-.monthly-guild-badge.guild-f4 { background:#fff7ed; border-color:#fed7aa; color:#c2410c; }
-.monthly-guild-badge.guild-f5 { background:#fff7ed; border-color:#fdba74; color:#ea580c; }
+.monthly-guild-badge.guild-f1 { background:#fff7ed; border-color:#f97316; color:#c2410c; font-weight:700; }
+.monthly-guild-badge.guild-f2 { background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; }
+.monthly-guild-badge.guild-f3 { background:#f0fdf4; border-color:#22c55e; color:#15803d; }
+.monthly-guild-badge.guild-f4 { background:#faf5ff; border-color:#a855f7; color:#7e22ce; }
+.monthly-guild-badge.guild-f5 { background:#f8fafc; border-color:#94a3b8; color:#475569; }
 .monthly-guild-badge.guild-none { background:var(--bg); border-color:var(--border); color:var(--text-faint); }
 .monthly-meta-line {
   font-size: 0.78rem;
