@@ -4,75 +4,142 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const members = await getRankingData();
     const rows = Array.isArray(members) ? members : [];
-
     const sorted = [...rows].sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
 
-    function rankChipHtml(rank) {
-      if (rank === 1) return `<div class="rank-chip medal-gold">🥇</div>`;
-      if (rank === 2) return `<div class="rank-chip medal-silver">🥈</div>`;
-      if (rank === 3) return `<div class="rank-chip medal-bronze">🥉</div>`;
-      return `<div class="rank-chip rank-default">${rank}</div>`;
+    const CUT = 30;
+
+    function getStatus(rank) {
+      if (rank <= 25) return "safe";
+      if (rank <= 30) return "danger";
+      if (rank <= 35) return "challenge";
+      return "normal";
     }
 
-    function renderCards(list) {
-      return list.map((item, idx) => {
-        const rank = idx + 1;
-        const pt = item.powerText || "";
-        const parts = pt.trim().split(/\s+/).filter(Boolean);
-        const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
-        return `
-          <article class="list-card" data-character-row="${escapeHtml(String(item.name || "").toLowerCase())}">
-            <div class="card-left">
-              ${rankChipHtml(rank)}
-              ${characterAvatarHtml(item)}
-            </div>
-            <div class="card-main">
-              <div class="card-topline">
-                <div>
-                  <div class="rank-name">${escapeHtml(item.name || "-")}</div>
-                  <div class="rank-subline">
-                    ${guildBadgeHtml(item.guild || "길드 없음")}
-                    <span class="job-text">${escapeHtml(item.job || "-")}</span>
-                    <span class="level-text">Lv ${escapeHtml(String(item.level || "-"))}</span>
-                  </div>
-                </div>
-                <div class="rank-power">${escapeHtml(displayPower)}</div>
-              </div>
-              <div class="meta-grid">
-                <div class="mini-stat"><span>서버 순위</span><strong>${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</strong></div>
-                <div class="mini-stat"><span>통합 순위</span><strong>${item.overallRank ? formatNumber(item.overallRank) + "위" : "-"}</strong></div>
-                <div class="mini-stat"><span>인기도</span><strong>${formatNumber(item.popularity || 0)}</strong></div>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join("");
+    function getStatusLabel(rank) {
+      if (rank <= 25) return { text: "안정권", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0" };
+      if (rank <= 30) return { text: "위험", color: "#d97706", bg: "#fffbeb", border: "#fde68a" };
+      if (rank <= 35) return { text: "도전", color: "#dc2626", bg: "#fff5f5", border: "#fca5a5" };
+      return null;
     }
+
+    function getPower(item) {
+      const pt = item.powerText || "";
+      const parts = pt.trim().split(/\s+/).filter(Boolean);
+      return parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+    }
+
+    // ── TOP3 히어로 ──
+    function renderHero(sorted) {
+      if (sorted.length === 0) return "";
+      const [first, second, third] = sorted;
+
+      function heroCard(item, rank, center = false) {
+        if (!item) return `<div></div>`;
+        return `
+          <div class="rk-hero-card${center ? " rk-hero-center" : ""}">
+            <div class="rk-hero-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>
+            <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
+            <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
+            <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
+            <div class="rk-hero-power">${escapeHtml(getPower(item))}</div>
+            ${item.serverRank ? `<div class="rk-hero-server">서버 ${formatNumber(item.serverRank)}위</div>` : ""}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rk-hero-wrap">
+          <div class="rk-hero-grid">
+            ${heroCard(second, 2)}
+            ${heroCard(first, 1, true)}
+            ${heroCard(third, 3)}
+          </div>
+        </div>
+      `;
+    }
+
+    // ── 컷라인 구분선 ──
+    function cutlineDivider() {
+      return `
+        <div class="rk-cutline-divider">
+          <div class="rk-cutline-line"></div>
+          <div class="rk-cutline-badge">🏆 승격 컷라인 · TOP ${CUT}</div>
+          <div class="rk-cutline-line"></div>
+        </div>
+      `;
+    }
+
+    // ── 압축형 카드 ──
+    function renderCompactCard(item, rank) {
+      const status = getStatusLabel(rank);
+      const isCut = rank === CUT;
+      const isJustBelow = rank === CUT + 1;
+      const st = getStatus(rank);
+
+      let cardClass = "rk-compact-card";
+      if (rank <= 3) cardClass += " rk-top3-card";
+      if (isCut) cardClass += " rk-cut-card";
+      if (st === "danger") cardClass += " rk-danger-card";
+      if (st === "challenge") cardClass += " rk-challenge-card";
+
+      return `
+        ${isJustBelow ? `<div class="rk-below-line"><span>── 컷라인 이하 ──</span></div>` : ""}
+        <div class="${cardClass}" data-character-row="${escapeHtml(String(item.name || "").toLowerCase())}">
+          <div class="rk-c-rank">
+            ${rank <= 3
+              ? `<span style="font-size:1.6rem;">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
+              : `<span class="rk-c-num ${st === "danger" ? "rk-num-danger" : st === "challenge" ? "rk-num-challenge" : ""}">${rank}</span>`
+            }
+          </div>
+          <div class="rk-c-avatar">${characterAvatarHtml(item)}</div>
+          <div class="rk-c-info">
+            <div class="rk-c-name">${escapeHtml(item.name || "-")}</div>
+            <div class="rk-c-sub">
+              ${guildBadgeHtml(item.guild || "길드 없음")}
+              <span class="rk-c-job">${escapeHtml(item.job || "-")} · Lv ${item.level || "-"}</span>
+            </div>
+          </div>
+          <div class="rk-c-right">
+            <div class="rk-c-power">${escapeHtml(getPower(item))}</div>
+            <div class="rk-c-server">${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</div>
+            ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
+          </div>
+          ${isCut ? `<div class="rk-cut-marker">컷</div>` : ""}
+        </div>
+      `;
+    }
+
+    const heroHtml = renderHero(sorted);
+    const top3Html = sorted.slice(0, 3).map((item, i) => renderCompactCard(item, i + 1)).join("");
+    const restHtml = sorted.slice(3).map((item, i) => renderCompactCard(item, i + 4)).join("");
 
     document.querySelector("main").innerHTML = `
       <div class="page-card">
         <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">통합 랭킹</div>
-              <div class="section-sub">전투력 기준 · ${formatNumber(sorted.length)}명</div>
-            </div>
+          <div style="padding:28px 0 8px;">
+            <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">🏆 통합 랭킹</h1>
+            <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">전투력 기준 · ${formatNumber(sorted.length)}명 · TOP ${CUT} 친구들 길드 승격</p>
           </div>
-          <div class="toolbar-card">
+
+          ${heroHtml}
+
+          <div class="toolbar-card" style="margin-top:20px;">
             <label class="search-field">
               <span>🔎</span>
               <input id="rankingSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
             </label>
             <button id="rankingResetButton" class="ghost-btn" type="button">초기화</button>
           </div>
-          <div class="stack-list" id="rankingCardList">
-            ${sorted.length ? renderCards(sorted) : createEmptyBox("랭킹 데이터가 없습니다.")}
+
+          <div class="rk-list" id="rankingCardList">
+            ${top3Html}
+            ${cutlineDivider()}
+            ${restHtml || createEmptyBox("랭킹 데이터가 없습니다.")}
           </div>
         </div>
       </div>
     `;
 
-    // 검색 기능
     const input = document.getElementById("rankingSearchInput");
     const resetButton = document.getElementById("rankingResetButton");
     const wrap = document.getElementById("rankingCardList");
@@ -80,27 +147,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     function applySearch() {
       const keyword = String(input.value || "").trim().toLowerCase();
       const cards = Array.from(wrap.querySelectorAll("[data-character-row]"));
-      cards.forEach((card) => card.classList.remove("highlight-card", "dim-card"));
+      cards.forEach(c => c.classList.remove("highlight-card", "dim-card"));
       if (!keyword) return;
       let firstMatch = null;
-      cards.forEach((card) => {
-        const name = card.getAttribute("data-character-row") || "";
+      cards.forEach(c => {
+        const name = c.getAttribute("data-character-row") || "";
         if (name.includes(keyword)) {
-          card.classList.add("highlight-card");
-          if (!firstMatch) firstMatch = card;
+          c.classList.add("highlight-card");
+          if (!firstMatch) firstMatch = c;
         } else {
-          card.classList.add("dim-card");
+          c.classList.add("dim-card");
         }
       });
       if (firstMatch) firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
     input.addEventListener("input", applySearch);
-    resetButton.addEventListener("click", () => {
-      input.value = "";
-      applySearch();
-      input.focus();
-    });
+    resetButton.addEventListener("click", () => { input.value = ""; applySearch(); input.focus(); });
 
   } catch (error) {
     console.error(error);
