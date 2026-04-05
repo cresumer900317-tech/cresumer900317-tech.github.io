@@ -13,8 +13,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const hasSnapshot = rows.some(r => r.hasSnapshot);
     const snapDateLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월 5일`;
 
-    // 성장량 기준 정렬
     const sorted = [...rows].sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0));
+
+    function monthlyServerDiffHtml(item) {
+      const diff = item.monthlyServerDiff;
+      if (diff === null || diff === undefined) return "-";
+      if (diff > 0) return `<span class="metric-up">▲${formatNumber(diff)}</span>`;
+      if (diff < 0) return `<span class="metric-down">▼${formatNumber(Math.abs(diff))}</span>`;
+      return `<span class="metric-neutral">-</span>`;
+    }
 
     function renderCards(list) {
       if (!list.length) return createEmptyBox("데이터가 없습니다.");
@@ -61,12 +68,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="meta-grid four">
                 <div class="mini-stat"><span>월간 성장량</span><strong>${diffHtml}</strong></div>
                 <div class="mini-stat"><span>성장률</span><strong>${growthRateHtml}</strong></div>
-                <div class="mini-stat"><span>서버 순위 변동</span><strong>${
-                  item.monthlyServerDiff === null || item.monthlyServerDiff === undefined ? "-" :
-                  item.monthlyServerDiff > 0 ? \`<span class="metric-up">▲\${formatNumber(item.monthlyServerDiff)}</span>\` :
-                  item.monthlyServerDiff < 0 ? \`<span class="metric-down">▼\${formatNumber(Math.abs(item.monthlyServerDiff))}</span>\` :
-                  \`<span class="metric-neutral">-</span>\`
-                }</strong></div>
+                <div class="mini-stat"><span>서버 순위 변동</span><strong>${monthlyServerDiffHtml(item)}</strong></div>
                 <div class="mini-stat"><span>현재 서버 순위</span><strong>${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</strong></div>
               </div>
             </div>
@@ -138,7 +140,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `;
 
-    // 검색 기능
     const input = document.getElementById("monthlySearchInput");
     const resetButton = document.getElementById("monthlyResetButton");
     const wrap = document.getElementById("monthlyCardList");
