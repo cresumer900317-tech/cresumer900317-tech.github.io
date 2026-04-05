@@ -2,10 +2,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
   try {
-    const [summary, members] = await Promise.all([
+    const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
+    const [summary, members, monthlyRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
+      fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
     ]);
+    const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
 
     const rows = Array.isArray(members) ? members : [];
     const grouped = byGuild(rows);
@@ -21,6 +24,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       ? Math.round(rows.reduce((sum, r) => sum + Number(r.power || 0), 0) / rows.length)
       : 0;
     const totalWeeklyGrowth = rows.reduce((sum, r) => sum + Number(r.weeklyDiff || 0), 0);
+    // 월간 누적 성장량 & 성장왕
+    const totalMonthlyGrowth = monthlyRows.reduce((sum, r) => sum + Number(r.monthlyDiff || 0), 0);
+    const monthlyKing = [...monthlyRows]
+      .filter(r => r.hasSnapshot && Number(r.monthlyDiff || 0) > 0)
+      .sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0))[0] || null;
     const avgPopularity = rows.length
       ? Math.round(rows.reduce((sum, r) => sum + Number(r.popularity || 0), 0) / rows.length)
       : 0;
@@ -83,14 +91,14 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="kpi-label">TOP 500 비율</div>
               <div class="kpi-value dark">${formatNumber(top500Count)}명 <span style="font-size:0.85rem;color:var(--text-faint);">(${top500Rate}%)</span></div>
             </div>
-            <div class="kpi-card">
-              <div class="kpi-label">주간 성장량</div>
-              <div class="kpi-value">${totalWeeklyGrowth > 0 ? "+" + formatCompactPower(totalWeeklyGrowth) : "-"}</div>
+            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly.html'">
+              <div class="kpi-label">이달 누적 성장량</div>
+              <div class="kpi-value">${totalMonthlyGrowth > 0 ? "+" + formatCompactPower(totalMonthlyGrowth) : "-"}</div>
             </div>
-            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./ranking.html'">
-              <div class="kpi-label">최고 전투력</div>
-              <div class="kpi-value" style="font-size:1rem;">${escapeHtml(topPlayer.name || "-")}</div>
-              <div style="font-size:0.78rem;color:var(--text-faint);margin-top:3px;">${escapeHtml(topPlayerPower)} · 서버 ${topPlayer.serverRank ? formatNumber(topPlayer.serverRank) + "위" : "-"}</div>
+            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly.html'">
+              <div class="kpi-label">이달의 성장왕 🏆</div>
+              <div class="kpi-value" style="font-size:1rem;">${monthlyKing ? escapeHtml(monthlyKing.name) : "-"}</div>
+              <div style="font-size:0.78rem;color:var(--text-faint);margin-top:3px;">${monthlyKing ? "+" + formatCompactPower(monthlyKing.monthlyDiff) : "스냅샷 집계 중"}</div>
             </div>
           </div>
         </div>
@@ -230,8 +238,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button class="modal-close" id="modalClose">✕</button>
           </div>
           <div class="modal-stats" id="modalStats"></div>
-          <div class="modal-section-title">전체 길드원</div>
-          <div id="modalTop5" style="max-height:400px; overflow-y:auto; padding:0 4px 4px;"></div>
+          <div class="modal-section-title">전투력 TOP 5</div>
+          <div id="modalTop5"></div>
+          <div class="modal-footer">
+            <a id="modalMoreLink" href="./members.html" class="modal-more-btn">길드원 전체보기 →</a>
+          </div>
         </div>
       </div>
     `;
@@ -273,7 +284,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         `;
 
-        document.getElementById("modalTop5").innerHTML = sorted.map((item, i) => {
+        const top5 = sorted.slice(0, 5);
+        document.getElementById("modalTop5").innerHTML = top5.map((item, i) => {
           const pt = item.powerText || "";
           const parts = pt.trim().split(/\s+/).filter(Boolean);
           const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
