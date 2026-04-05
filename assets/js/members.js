@@ -45,11 +45,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div class="rank-power">${escapeHtml(displayPower)}</div>
               </div>
-              <div class="meta-grid four">
+              <div class="meta-grid">
                 <div class="mini-stat"><span>서버 순위</span><strong>${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</strong></div>
                 <div class="mini-stat"><span>통합 순위</span><strong>${item.overallRank ? formatNumber(item.overallRank) + "위" : "-"}</strong></div>
                 <div class="mini-stat"><span>인기도</span><strong>${formatNumber(item.popularity || 0)}</strong></div>
-                <div class="mini-stat"><span>주간 성장</span><strong>${item.weeklyDiff ? metricHtml(item.weeklyDiff) : "-"}</strong></div>
               </div>
             </div>
           </article>

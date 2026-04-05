@@ -61,7 +61,12 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="meta-grid four">
                 <div class="mini-stat"><span>월간 성장량</span><strong>${diffHtml}</strong></div>
                 <div class="mini-stat"><span>성장률</span><strong>${growthRateHtml}</strong></div>
-                <div class="mini-stat"><span>서버 변동</span><strong>${rankTrendHtml(item)}</strong></div>
+                <div class="mini-stat"><span>서버 순위 변동</span><strong>${
+                  item.monthlyServerDiff === null || item.monthlyServerDiff === undefined ? "-" :
+                  item.monthlyServerDiff > 0 ? \`<span class="metric-up">▲\${formatNumber(item.monthlyServerDiff)}</span>\` :
+                  item.monthlyServerDiff < 0 ? \`<span class="metric-down">▼\${formatNumber(Math.abs(item.monthlyServerDiff))}</span>\` :
+                  \`<span class="metric-neutral">-</span>\`
+                }</strong></div>
                 <div class="mini-stat"><span>현재 서버 순위</span><strong>${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</strong></div>
               </div>
             </div>
