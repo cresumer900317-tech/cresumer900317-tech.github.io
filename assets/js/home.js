@@ -122,9 +122,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="family-board-grid">
             ${guilds.map((guild) => {
               const list = grouped[guild] || [];
-              const avg = list.length
-                ? Math.round(list.reduce((s, r) => s + Number(r.power || 0), 0) / list.length)
-                : 0;
+              const totalPower = list.reduce((s, r) => s + Number(r.power || 0), 0);
+              const avg = totalPower;
               const isFull = list.length >= 30;
               const guildLevel = list.length > 0 ? (list[0].guildLevel || 0) : 0;
               return `
@@ -139,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="guild-board-stat-val accent">${formatNumber(list.length)}명</div>
                   </div>
                   <div class="guild-board-stat">
-                    <div class="guild-board-stat-label">평균 전투력</div>
+                    <div class="guild-board-stat-label">합산 전투력</div>
                     <div class="guild-board-stat-val">${formatCompactPower(avg)}</div>
                   </div>
                   <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "🔒 정원 마감" : "✨ 모집 중"}</div>

@@ -54,8 +54,11 @@ function formatRate(value) {
 function formatCompactPower(value) {
   const num = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
   if (!Number.isFinite(num) || num === 0) return "-";
-  const jo = Math.floor(num / 1e12);
+  const gyeong = Math.floor(num / 1e16);
+  const jo = Math.floor((num % 1e16) / 1e12);
   const eok = Math.floor((num % 1e12) / 1e8);
+  if (gyeong > 0 && jo > 0) return `${formatNumber(gyeong)}경 ${formatNumber(jo)}조`;
+  if (gyeong > 0) return `${formatNumber(gyeong)}경`;
   if (jo > 0 && eok > 0) return `${formatNumber(jo)}조 ${formatNumber(eok)}억`;
   if (jo > 0) return `${formatNumber(jo)}조`;
   if (eok > 0) return `${formatNumber(eok)}억`;
@@ -113,7 +116,7 @@ function renderShell() {
     ${navLink("./index.html", "home", "홈", page)}
     ${navLink("./ranking.html", "ranking", "랭킹", page)}
     ${navLink("./members.html", "members", "길드원", page)}
-    ${navLink("./weekly.html", "weekly", "월간성장", page)}
+    ${navLink("./weekly.html", "weekly", "주간성장", page)}
     ${navLink("./notice.html", "notice", "공지", page)}
     ${navLink("./tips.html", "tips", "팁", page)}
   `;
