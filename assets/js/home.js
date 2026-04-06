@@ -74,17 +74,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           <p class="hero-update">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
             <a class="cta-btn" href="./ranking.html">🏆 랭킹 보기</a>
-            <a class="cta-btn" href="./members.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">👥 길드 선택하기</a>
+            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">💬 빠른 가입 문의</a>
           </div>
-          <div style="margin-top:12px;">
-            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" style="
-              display:inline-flex; align-items:center; gap:6px;
-              font-size:0.83rem; color:var(--text-soft); font-weight:500;
-              text-decoration:none; transition:color 0.15s;
-            " onmouseover="this.style.color='var(--amber)'" onmouseout="this.style.color='var(--text-soft)'">
-              💬 빠른 가입 문의 <span style="font-size:0.75rem;color:var(--text-faint);">(운영진 1:1 안내)</span>
-              <span style="font-size:0.78rem;">→</span>
-            </a>
+          <div style="margin-top:8px;">
+            <span style="font-size:0.75rem;color:var(--text-faint);">운영진이 길드를 배정해드려요 · 1:1 안내</span>
           </div>
           <div class="kpi-grid">
             <div class="kpi-card">
