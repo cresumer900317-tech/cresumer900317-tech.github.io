@@ -1876,3 +1876,182 @@ main { padding: 0 0 48px; }
   background: var(--yellow-pale);
   border-color: var(--yellow);
 }
+
+/* ===== 길드 라이벌전 페이지 ===== */
+
+/* 전투력 바 */
+.rv-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.rv-bar-row {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  transition: transform 0.15s;
+}
+.rv-bar-row:hover { transform: translateX(3px); }
+.rv-bar-first {
+  border-width: 2px;
+  border-color: var(--yellow);
+  background: var(--yellow-bg);
+  box-shadow: 0 4px 16px rgba(245,158,11,0.15);
+}
+.rv-bar-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rv-bar-guild-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rv-bar-emoji { font-size: 1.3rem; }
+.rv-win-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--yellow);
+  color: var(--white);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.rv-rank-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--text-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.rv-bar-power {
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.rv-bar-track {
+  height: 12px;
+  background: var(--border-light);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.rv-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1s ease;
+}
+.rv-bar-info {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+/* 스탯 비교 테이블 */
+.rv-compare {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 0;
+}
+.rv-compare-header {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 1.2fr);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  gap: 8px;
+}
+.rv-compare-guild-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+.rv-stat-row {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 1.2fr);
+  padding: 10px 16px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-light);
+  align-items: center;
+}
+.rv-stat-row:last-child { border-bottom: none; }
+.rv-stat-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.rv-stat-cell {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+.rv-stat-best {
+  font-weight: 800;
+}
+
+/* 에이스 카드 */
+.rv-ace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.rv-ace-card {
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  position: relative;
+}
+.rv-ace-top {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.rv-ace-crown {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: var(--yellow);
+  color: var(--white);
+  padding: 2px 10px;
+  border-radius: 0 0 8px 8px;
+  white-space: nowrap;
+}
+.rv-ace-guild {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 8px 0 4px;
+}
+.rv-ace-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.rv-ace-power {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .rv-compare-header { grid-template-columns: 0.8fr repeat(3, 1fr); }
+  .rv-stat-row { grid-template-columns: 0.8fr repeat(3, 1fr); }
+  .rv-ace-grid { grid-template-columns: 1fr; }
+  .rv-bar-power { font-size: 1.1rem; }
+}

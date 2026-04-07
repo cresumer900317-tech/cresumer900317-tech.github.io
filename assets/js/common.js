@@ -116,7 +116,8 @@ function renderShell() {
     ${navLink("./index.html", "home", "홈", page)}
     ${navLink("./ranking.html", "ranking", "랭킹", page)}
     ${navLink("./members.html", "members", "길드원", page)}
-    ${navLink("./weekly.html", "weekly", "주간성장", page)}
+    ${navLink("./weekly.html", "weekly", "월간성장", page)}
+    ${navLink("./rivals.html", "rivals", "⚔️ 라이벌전", page)}
     ${navLink("./notice.html", "notice", "공지", page)}
     ${navLink("./tips.html", "tips", "팁", page)}
   `;
