@@ -134,7 +134,10 @@ function renderShell() {
         <span class="nav-user-guild">${escapeHtml(user.guild||"")}</span>
         <button class="nav-logout-btn" onclick="logout()">로그아웃</button>
        </div>`
-    : `<a class="nav-login-btn" href="./login.html">로그인</a>`;
+    : `<div class="nav-auth-btns">
+        <a class="nav-register-btn" href="./login.html?tab=register">회원가입</a>
+        <a class="nav-login-btn" href="./login.html">로그인</a>
+       </div>`;
 
   root.innerHTML = `
     <header class="site-header-bar">
@@ -151,7 +154,16 @@ function renderShell() {
         <button id="mobileMenuButton" class="mobile-menu-btn" type="button" aria-label="메뉴 열기">☰</button>
       </div>
       <div id="mobileNavPanel" class="mobile-nav-panel">
-        <div class="container mobile-nav-links">${links}</div>
+        <div class="container mobile-nav-links">
+          ${links}
+          <div class="mobile-auth-links">
+            ${user
+              ? `<span class="mobile-user-info">😊 ${escapeHtml(user.character_name)} <button onclick="logout()" style="background:none;border:none;color:var(--text-soft);font-size:0.78rem;cursor:pointer;">로그아웃</button></span>`
+              : `<a href="./login.html?tab=register" class="mobile-auth-btn mobile-register">회원가입</a>
+                 <a href="./login.html" class="mobile-auth-btn mobile-login">로그인</a>`
+            }
+          </div>
+        </div>
       </div>
     </header>
   `;

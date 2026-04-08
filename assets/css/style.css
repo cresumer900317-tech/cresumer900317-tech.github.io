@@ -2225,48 +2225,65 @@ main { padding: 0 0 48px; }
   .activity-guild { display: none; }
 }
 
-/* ===== 네비 로그인 상태 ===== */
+/* ===== 네비 인증 버튼 ===== */
 .nav-user {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
-.nav-user-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text);
-}
-.nav-user-guild {
-  font-size: 0.72rem;
-  color: var(--text-faint);
-}
+.nav-user-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.nav-user-guild { font-size: 0.72rem; color: var(--text-faint); }
 .nav-logout-btn {
-  font-size: 0.72rem;
-  padding: 3px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: none;
-  color: var(--text-soft);
-  cursor: pointer;
+  font-size: 0.72rem; padding: 3px 10px;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: none; color: var(--text-soft); cursor: pointer;
 }
 .nav-logout-btn:hover { background: var(--bg); }
+
+.nav-auth-btns { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.nav-register-btn {
+  font-size: 0.82rem; font-weight: 600; padding: 5px 14px;
+  background: var(--white); color: var(--amber-dark);
+  border: 1.5px solid var(--yellow-border);
+  border-radius: 999px; text-decoration: none;
+  transition: all 0.15s;
+}
+.nav-register-btn:hover { background: var(--yellow-bg); }
 .nav-login-btn {
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 5px 14px;
-  background: var(--yellow);
-  color: var(--white);
-  border-radius: 999px;
-  text-decoration: none;
-  flex-shrink: 0;
+  font-size: 0.82rem; font-weight: 600; padding: 5px 14px;
+  background: var(--yellow); color: var(--white);
+  border-radius: 999px; text-decoration: none; flex-shrink: 0;
   transition: background 0.15s;
 }
 .nav-login-btn:hover { background: var(--amber); }
 
+/* 모바일 인증 */
+.mobile-auth-links {
+  display: flex; gap: 8px; padding: 12px 0 4px;
+  border-top: 1px solid var(--border-light); margin-top: 8px;
+}
+.mobile-auth-btn {
+  flex: 1; text-align: center; padding: 10px;
+  border-radius: var(--radius-md); font-size: 0.88rem;
+  font-weight: 700; text-decoration: none;
+}
+.mobile-register {
+  background: var(--white); color: var(--amber-dark);
+  border: 1.5px solid var(--yellow-border);
+}
+.mobile-login {
+  background: var(--yellow); color: var(--white);
+}
+.mobile-user-info {
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+  padding: 10px 0; display: block;
+  border-top: 1px solid var(--border-light); margin-top: 8px;
+}
+
 @media (max-width: 768px) {
   .nav-user { display: none; }
-  .nav-login-btn { display: none; }
+  .nav-auth-btns { display: none; }
 }
 
 /* ===== 게시판 공통 ===== */

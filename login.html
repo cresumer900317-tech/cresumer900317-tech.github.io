@@ -284,6 +284,10 @@ if (sessionStorage.getItem("user")) {
   const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
   location.href = redirect;
 }
+
+// URL 파라미터로 탭 선택
+const tabParam = new URLSearchParams(location.search).get("tab");
+if (tabParam === "register") showTab("register");
 </script>
 </body>
 </html>
