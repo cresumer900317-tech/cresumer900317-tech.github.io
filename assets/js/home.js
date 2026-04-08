@@ -3,19 +3,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, rankingRes, visitorRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/api/ranking`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
     ]);
     const visitorStats = visitorRes || {};
-    const rankingRows = Array.isArray(rankingRes) ? rankingRes : [];
-    const sortedRanking = [...rankingRows].sort((a, b) => Number(b.power||0) - Number(a.power||0));
     const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
 
     const rows = Array.isArray(members) ? members : [];
+    const sortedRanking = [...rows].sort((a, b) => Number(b.power||0) - Number(a.power||0));
     const grouped = byGuild(rows);
     const guilds = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"];
 
