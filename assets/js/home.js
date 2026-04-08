@@ -74,18 +74,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="hero-dot"></span>
             메이플키우기 · 스카니아 11서버
           </div>
-          <h1 class="hero-title">🔥 TOP30 승격 경쟁<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">지금 참여하면 운영진이 길드를 직접 배정해드립니다</p>
+          <h1 class="hero-title">🤝 같이 성장하는 길드 시스템<br><span class="accent">친구패밀리</span></h1>
+          <p class="hero-desc">지금 참여하면 딱 맞는 길드로 바로 배정</p>
           <div style="display:flex;align-items:center;gap:8px;margin:8px 0 14px;flex-wrap:wrap;">
-            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 이번 달 마감 임박</span>
-            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명 참여 중</span>
+            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 지금 가입자 계속 증가 중</span>
+            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명과 함께 성장 중</span>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
-            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 지금 바로 참여하기</a>
+            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 길드 가입 문의하기</a>
             <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
           <div style="margin-top:10px;font-size:0.78rem;color:var(--text-soft);">
-            운영진이 활동 성향에 맞게 길드를 배정해드립니다 · 과밀 방지 / 성장 관리 진행
+            비슷한 성장 단계의 멤버들과 함께 시작해요
           </div>
           <p class="hero-update" style="margin-top:6px;">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
           <div class="kpi-grid">
