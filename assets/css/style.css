@@ -2471,23 +2471,36 @@ main { padding: 0 0 48px; }
 .role-admin { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
 .role-member { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); }
 
-/* ===== 방문자 바 ===== */
-.visitor-bar {
-  background: var(--white);
-  border-bottom: 1px solid var(--border-light);
-  padding: 7px 0;
-}
-.visitor-bar-inner {
+/* ===== 방문자 CTA 바 ===== */
+.visitor-cta-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  font-size: 0.8rem;
+  margin-top: 10px;
+  font-size: 0.78rem;
   color: var(--text-soft);
 }
-.visitor-item strong { color: var(--text); font-weight: 700; }
-.visitor-divider { color: var(--border); }
-.visitor-online {
+.visitor-cta-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+  animation: pulse-green 2s infinite;
+}
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(34,197,94,0.05); }
+}
+.visitor-cta-count { font-size: 0.85rem; }
+.visitor-cta-count strong { color: var(--text); font-weight: 800; }
+.visitor-cta-names {
   color: var(--text-faint);
   font-size: 0.75rem;
+}
+.visitor-cta-extra {
+  color: var(--text-faint);
+  font-size: 0.73rem;
 }
