@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+
+[build.processing.html]
+  pretty_urls = true
