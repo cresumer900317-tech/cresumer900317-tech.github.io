@@ -1,213 +1,137 @@
-// =============================================
-// notice.js - 친구패밀리 공지사항 페이지
-// =============================================
+document.addEventListener("DOMContentLoaded", async () => {
+  renderShell();
 
-const NOTICES = [
-  {
-    id: 1,
-    title: "친구패밀리 운영방식 변경 공지",
-    date: "2025-04-05",
-    category: "운영",
-    important: true,
-    emoji: "📢",
-    content: [
-      {
-        type: "intro",
-        text: "안녕하세요 🙂 <br>친구패밀리 운영 방향과 시스템을 보다 효율적으로 개선하기 위해 아래와 같이 운영 방식을 변경합니다."
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "1",
-        title: "길드 인원 운영 방식 변경",
-        items: [
-          { label: "기존", value: "분기별 이동" },
-          { label: "변경", value: "월별 이동" },
-        ],
-        note: "매달 마지막 주 수요일 저녁 기준 → [친구들] 길드 인원 1~30등 정렬 진행",
-        bullets: [
-          "친구들: 메인 길드 (핵심 길드)",
-          "친구둘 / 친구삼 / 친구넷 / 친구닷: 균형 분배",
-        ],
-        sub: "기존처럼 1군/2군 개념이 아닌 1기 / 2기 개념 유지\n친구들은 패밀리의 중심이자 신규 유입을 유도하는 메인 길드 역할"
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "2",
-        title: "길드 레이드 훈장 운영 방식 변경",
-        desc: "기존 방식은 효율이 낮다고 판단되어 아래와 같이 변경됩니다.",
-        items: [
-          { label: "진행 인원", value: "가을호떡 / 군보 / 낭만김갑룡 (3인 고정)" },
-          { label: "운영 방식", value: "친구둘 / 친구삼 / 친구넷 / 친구닷 순회 방문 → 각 길드 인원이 최대한 훈장을 획득할 수 있도록 지원" },
-        ],
-        schedule: [
-          { day: "수요일", time: "21:00 ~ 23:00" },
-          { day: "토요일", time: "13:00 ~ 14:00" },
-        ],
-        bullets: [
-          "주 2회 진행 (총 약 3시간)",
-          "최대한 많은 인원이 혜택 받을 수 있도록 운영",
-        ]
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "3",
-        title: "길드 전체 활성화 방향",
-        bullets: [
-          "친구둘/삼뿐만 아니라 넷/닷까지 적극 활용",
-          "파티퀘스트, 길드 콘텐츠, 정보 공유 활성화",
-          "전체 인원이 함께 성장하는 구조 구축",
-        ]
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "4",
-        title: "4월 길드 재정렬 일정",
-        highlight: "📅 4월 29일 22:00 ~ 4월 30일 09:00 사이 진행 예정"
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "5",
-        title: "길드 건물 & 공헌도 운영",
-        desc: "길드 성장 강화를 위해 건물 업그레이드를 다시 활성화합니다.",
-        items: [
-          { label: "주간 공헌도", value: "6,000 이상" },
-          { label: "운영 방식", value: "첫 주차 테스트 운영" },
-        ]
-      },
-      {
-        type: "section",
-        icon: "🔹",
-        number: "6",
-        title: "콘텐츠 참여 관리",
-        bullets: [
-          "길드 콘텐츠 참여 여부 체크 예정",
-          "지속적으로 미참여 시 → 별도 면담 진행",
-        ]
-      },
-      {
-        type: "outro",
-        text: "이번 변경은 단순한 정렬이 아니라 👉 \"전체 인원이 같이 성장하는 구조\"를 만들기 위한 방향입니다.\n운영진도 더 좋은 환경을 만들기 위해 계속 고민하고 있으니 모두 적극적인 참여 부탁드립니다 🙏"
-      }
-    ]
-  }
-];
+  const API = "https://guild-backend-production-75a6.up.railway.app";
+  const user = getUser();
+  const isAdmin = user?.role === "admin";
 
-// ── 날짜 포맷 ──────────────────────────────
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-}
+  try {
+    const res = await fetch(`${API}/api/notices`, { cache: "no-store" });
+    const notices = await res.json();
 
-// ── 섹션 렌더 ──────────────────────────────
-function renderSection(s) {
-  let html = `<div class="notice-section">
-    <div class="notice-section-title">
-      <span class="section-icon">${s.icon}</span>
-      <strong>${s.number}. ${s.title}</strong>
-    </div>`;
-
-  if (s.desc) html += `<p class="section-desc">${s.desc}</p>`;
-
-  if (s.items) {
-    html += `<ul class="section-table">`;
-    for (const item of s.items) {
-      html += `<li><span class="label">${item.label}</span><span class="value">${item.value}</span></li>`;
+    function categoryColor(cat) {
+      const map = { "공지": "#f59e0b", "이벤트": "#3b82f6", "길드": "#22c55e", "운영": "#8b5cf6" };
+      return map[cat] || "#6b7280";
     }
-    html += `</ul>`;
-  }
 
-  if (s.note) html += `<div class="section-note">📌 ${s.note}</div>`;
-
-  if (s.bullets) {
-    html += `<ul class="section-bullets">`;
-    for (const b of s.bullets) {
-      html += `<li>${b}</li>`;
-    }
-    html += `</ul>`;
-  }
-
-  if (s.sub) {
-    html += `<div class="section-sub">※ ${s.sub.replace('\n', '<br>※ ')}</div>`;
-  }
-
-  if (s.schedule) {
-    html += `<div class="section-schedule">📅 진행 시간 (예정 / 변동 가능)<ul>`;
-    for (const sc of s.schedule) {
-      html += `<li><span class="sched-day">${sc.day}</span><span class="sched-time">${sc.time}</span></li>`;
-    }
-    html += `</ul></div>`;
-  }
-
-  if (s.highlight) {
-    html += `<div class="section-highlight">${s.highlight}</div>`;
-  }
-
-  html += `</div>`;
-  return html;
-}
-
-// ── 공지 카드 렌더 ──────────────────────────
-function renderNoticeCard(notice) {
-  let bodyHtml = "";
-
-  for (const block of notice.content) {
-    if (block.type === "intro") {
-      bodyHtml += `<p class="notice-intro">${block.text}</p>`;
-    } else if (block.type === "section") {
-      bodyHtml += renderSection(block);
-    } else if (block.type === "outro") {
-      bodyHtml += `<div class="notice-outro">${block.text.replace(/\n/g, "<br>")}</div>`;
-    }
-  }
-
-  return `
-    <div class="notice-card ${notice.important ? "notice-important" : ""}">
-      <div class="notice-card-header">
-        <div class="notice-header-left">
-          <span class="notice-emoji">${notice.emoji}</span>
-          <div>
-            <div class="notice-category-badge">${notice.category}</div>
-            <h2 class="notice-title">${notice.title}</h2>
+    function renderList(list) {
+      if (!list.length) return `<div class="board-empty">등록된 공지가 없습니다</div>`;
+      return list.map(n => `
+        <div class="board-row${n.is_pinned ? " board-row-pinned" : ""}" onclick="openPost(${n.id})" style="cursor:pointer;">
+          <div class="board-row-left">
+            ${n.is_pinned ? `<span class="board-pin">📌</span>` : `<span class="board-num">${n.id}</span>`}
+            <span class="board-cat" style="color:${categoryColor(n.category)};background:${categoryColor(n.category)}15;">${n.category||"공지"}</span>
+            <span class="board-ttl">${escapeHtml(n.title)}</span>
+          </div>
+          <div class="board-row-right">
+            <span class="board-auth">${escapeHtml(n.author||"운영진")}</span>
+            <span class="board-dt">${new Date(n.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
         </div>
-        <div class="notice-date">📅 ${formatDate(notice.date)}</div>
-      </div>
-      <div class="notice-card-body">
-        ${bodyHtml}
-      </div>
-    </div>
-  `;
-}
+      `).join("");
+    }
 
-// ── 페이지 렌더 ────────────────────────────
-function renderNoticePage() {
-  const main = document.querySelector("main");
-  if (!main) return;
+    document.querySelector("main").innerHTML = `
+      <div class="page-card">
+        <div class="container">
+          <div style="padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">📢 공지사항</h1>
+              <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">길드 운영 관련 공지를 확인하세요</p>
+            </div>
+            ${isAdmin ? `<button onclick="showWrite()" class="board-write-btn">✏️ 공지 작성</button>` : ""}
+          </div>
 
-  let html = `
-    <div class="container" style="padding-top: 32px; padding-bottom: 48px;">
-      <div class="page-header">
-        <h1 class="page-title">📋 공지사항</h1>
-        <p class="page-subtitle">친구패밀리 운영진의 공지를 확인하세요</p>
+          <!-- 작성 폼 -->
+          <div id="writeForm" class="board-write-form" style="display:none;">
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+              <select id="nCat" class="board-select"><option>공지</option><option>이벤트</option><option>길드</option><option>운영</option></select>
+              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;">
+                <input type="checkbox" id="nPin" /> 상단 고정
+              </label>
+            </div>
+            <input type="text" id="nTitle" placeholder="제목" class="board-input" style="margin-bottom:8px;" />
+            <textarea id="nContent" placeholder="내용" class="board-textarea"></textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
+              <button onclick="hideWrite()" class="board-cancel-btn">취소</button>
+              <button onclick="submitNotice()" class="board-submit-btn">등록</button>
+            </div>
+          </div>
+
+          <!-- 목록 -->
+          <div class="board-table">
+            <div class="board-table-header">
+              <span>번호</span><span>제목</span><span>작성자</span><span>날짜</span>
+            </div>
+            <div id="noticeList">${renderList(notices)}</div>
+          </div>
+        </div>
       </div>
-      <div class="notice-list">
-  `;
 
-  for (const notice of NOTICES) {
-    html += renderNoticeCard(notice);
+      <!-- 모달 -->
+      <div id="postModal" class="board-modal-bg" style="display:none;" onclick="if(event.target===this)closeModal()">
+        <div class="board-modal-box">
+          <div id="postContent"></div>
+        </div>
+      </div>
+    `;
+
+  } catch(e) {
+    document.querySelector("main").innerHTML = `<div class="container" style="padding-top:40px;"><div class="error-box">${escapeHtml(e?.message||"오류")}</div></div>`;
   }
 
-  html += `</div></div>`;
-  main.innerHTML = html;
-}
+  window.showWrite = () => document.getElementById("writeForm").style.display = "block";
+  window.hideWrite = () => document.getElementById("writeForm").style.display = "none";
 
-// ── 실행 ───────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
-  renderShell();
-  renderNoticePage();
+  window.submitNotice = async function() {
+    const title = document.getElementById("nTitle").value.trim();
+    const content = document.getElementById("nContent").value.trim();
+    const category = document.getElementById("nCat").value;
+    const is_pinned = document.getElementById("nPin").checked;
+    if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
+    const res = await fetch(`${API}/api/notices`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, category, is_pinned, author: user?.character_name||"운영진", author_guild: user?.guild||"" }),
+    });
+    if (res.ok) location.reload();
+    else alert("등록 실패");
+  };
+
+  window.openPost = async function(id) {
+    const res = await fetch(`${API}/api/notices`);
+    const list = await res.json();
+    const post = list.find(n => n.id === id);
+    if (!post) return;
+    document.getElementById("postContent").innerHTML = `
+      <div style="padding:28px 28px 24px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+          <span class="board-cat" style="font-size:0.82rem;">${post.category||"공지"}</span>
+          ${post.is_pinned ? `<span style="font-size:0.78rem;color:#f59e0b;font-weight:700;">📌 고정</span>` : ""}
+        </div>
+        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:10px;line-height:1.4;">${escapeHtml(post.title)}</h2>
+        <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:20px;display:flex;gap:16px;">
+          <span>${escapeHtml(post.author||"운영진")}</span>
+          <span>${new Date(post.created_at).toLocaleString("ko-KR")}</span>
+        </div>
+        <div style="font-size:0.92rem;line-height:1.9;white-space:pre-wrap;color:#374151;border-top:1px solid #f3f4f6;padding-top:20px;">${escapeHtml(post.content)}</div>
+        <div style="margin-top:24px;display:flex;justify-content:space-between;">
+          <button onclick="closeModal()" class="board-cancel-btn">← 목록</button>
+          ${isAdmin ? `<button onclick="deleteNotice(${post.id})" class="board-delete-btn">🗑️ 삭제</button>` : ""}
+        </div>
+      </div>
+    `;
+    document.getElementById("postModal").style.display = "flex";
+    document.body.style.overflow = "hidden";
+  };
+
+  window.closeModal = function() {
+    document.getElementById("postModal").style.display = "none";
+    document.body.style.overflow = "";
+  };
+
+  window.deleteNotice = async function(id) {
+    if (!confirm("삭제할까요?")) return;
+    await fetch(`${API}/api/notices/${id}`, { method: "DELETE" });
+    closeModal(); location.reload();
+  };
 });
