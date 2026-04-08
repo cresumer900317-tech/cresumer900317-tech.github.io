@@ -268,9 +268,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div style="font-size:${cfg.popLabelSize};color:var(--text-faint);font-weight:600;margin-top:2px;">인기도</div>
               </div>
-              ${item.serverRank
-                ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 전투력 ${formatNumber(item.serverRank)}위</div>`
-                : ""}
+              ${item.popServerRank
+                ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 인기도 ${formatNumber(item.popServerRank)}위</div>`
+                : item.serverRank
+                  ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 전투력 ${formatNumber(item.serverRank)}위</div>`
+                  : ""}
             </div>
           </div>
         `;
@@ -315,7 +317,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div class="rk-c-right">
             <div style="font-size:1.05rem;font-weight:900;color:#e11d48;white-space:nowrap;">❤️ ${pop}</div>
-            <div class="rk-c-server">${item.serverRank ? "서버 전투력 " + formatNumber(item.serverRank) + "위" : "-"}</div>
+            <div class="rk-c-server">${
+              item.popServerRank
+                ? "서버 인기도 " + formatNumber(item.popServerRank) + "위"
+                : item.serverRank
+                  ? "서버 전투력 " + formatNumber(item.serverRank) + "위"
+                  : "-"
+            }</div>
           </div>
         </div>
       `;
