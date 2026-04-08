@@ -2055,23 +2055,13 @@ main { padding: 0 0 48px; }
   text-align: center;
 }
 .rv2-member-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
-.rv2-member-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 20%;
-  transform: scale(3);
-  transform-origin: center center;
+.rv2-member-avatar .character-avatar {
+  width: 40px;
+  height: 40px;
 }
 .rv2-member-info { flex: 1; min-width: 0; }
 .rv2-member-name {

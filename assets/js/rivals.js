@@ -86,18 +86,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           const parts = pt.trim().split(/\s+/).filter(Boolean);
           const dispPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(m.power);
 
-          const avatarUrl = m.detail_url
-            ? `https://mgf.gg/ranking_image.php?n=${encodeURIComponent(m.name)}`
-            : null;
-
           return `
             <div class="rv2-member-cell" style="border-color:${t.border}20;">
               <div class="rv2-member-rank" style="color:${t.color};">${i + 1}</div>
               <div class="rv2-member-avatar">
-                ${avatarUrl
-                  ? `<img src="${avatarUrl}" alt="${escapeHtml(m.name)}" onerror="this.parentNode.classList.add('no-image');this.remove();" />`
-                  : `<span style="font-size:0.75rem;color:var(--text-faint);">${escapeHtml((m.name||"").slice(0,2))}</span>`
-                }
+                ${characterAvatarHtml(m)}
               </div>
               <div class="rv2-member-info">
                 <div class="rv2-member-name">${escapeHtml(m.name || "-")}</div>
