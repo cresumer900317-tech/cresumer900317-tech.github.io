@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>친구패밀리 | 공헌도 관리</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; background: #fafafa; color: #1a1a1a; }
+    .top-bar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar h1 { font-size: 1rem; font-weight: 700; }
+    .top-bar a { font-size: 0.82rem; color: #6b7280; text-decoration: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+    /* 월 선택 */
+    .month-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .month-bar label { font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .month-bar input[type=month] {
+      padding: 7px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .month-bar button {
+      padding: 7px 16px;
+      background: #f59e0b;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .month-bar button:hover { background: #d97706; }
+
+    /* 탭 */
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 6px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      background: #fff;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    .tab-btn.active {
+      background: #fef3c7;
+      border-color: #fbbf24;
+      color: #92400e;
+      font-weight: 700;
+    }
+
+    /* 입력 폼 */
+    .input-section {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .input-section h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: #374151; }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: end;
+    }
+    .input-row label { font-size: 0.78rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 4px; }
+    .input-row input, .input-row select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+    .input-row input:focus, .input-row select:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245,158,11,0.15);
+    }
+    .add-btn {
+      padding: 9px 18px;
+      background: #f59e0b;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .add-btn:hover { background: #d97706; }
+
+    /* 일괄 입력 */
+    .bulk-section {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .bulk-section h2 { font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: #92400e; }
+    .bulk-section textarea {
+      width: 100%;
+      height: 140px;
+      padding: 10px;
+      border: 1px solid #fbbf24;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-family: monospace;
+      resize: vertical;
+      background: #fff;
+    }
+    .bulk-hint { font-size: 0.75rem; color: #b45309; margin: 6px 0 10px; line-height: 1.5; }
+    .bulk-btn {
+      padding: 8px 18px;
+      background: #d97706;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .bulk-btn:hover { background: #b45309; }
+
+    /* 목록 */
+    .list-section {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .list-header h2 { font-size: 0.9rem; font-weight: 700; color: #374151; }
+    .total-chip {
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .member-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid #f3f4f6;
+      gap: 12px;
+    }
+    .member-row:last-child { border-bottom: none; }
+    .member-row:hover { background: #fffbeb; }
+    .member-name { font-size: 0.88rem; font-weight: 600; }
+    .member-contrib {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f59e0b;
+      min-width: 80px;
+      text-align: right;
+    }
+    .edit-input {
+      width: 90px;
+      padding: 4px 8px;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      text-align: right;
+    }
+    .del-btn {
+      padding: 4px 10px;
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .del-btn:hover { background: #fca5a5; }
+    .save-btn {
+      padding: 4px 10px;
+      background: #dcfce7;
+      color: #16a34a;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .save-btn:hover { background: #bbf7d0; }
+    .empty-box {
+      text-align: center;
+      padding: 32px;
+      color: #9ca3af;
+      font-size: 0.88rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 600px) {
+      .input-row { grid-template-columns: 1fr 1fr; }
+      .input-row .add-btn { grid-column: span 2; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>😊 친구패밀리 · 공헌도 관리</h1>
+  <a href="./index.html">← 홈으로</a>
+</div>
+
+<div class="container">
+
+  <!-- 월 선택 -->
+  <div class="month-bar">
+    <label>📅 대상 월</label>
+    <input type="month" id="monthInput" />
+    <button onclick="loadData()">불러오기</button>
+  </div>
+
+  <!-- 길드 탭 -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-guild="친구들" onclick="selectGuild('친구들', this)">친구들</button>
+    <button class="tab-btn" data-guild="친구둘" onclick="selectGuild('친구둘', this)">친구둘</button>
+    <button class="tab-btn" data-guild="친구삼" onclick="selectGuild('친구삼', this)">친구삼</button>
+    <button class="tab-btn" data-guild="친구넷" onclick="selectGuild('친구넷', this)">친구넷</button>
+    <button class="tab-btn" data-guild="친구닷" onclick="selectGuild('친구닷', this)">친구닷</button>
+  </div>
+
+  <!-- 개별 입력 -->
+  <div class="input-section">
+    <h2>➕ 공헌도 입력</h2>
+    <div class="input-row">
+      <div>
+        <label>캐릭터명</label>
+        <input type="text" id="memberInput" placeholder="캐릭터명 입력" />
+      </div>
+      <div>
+        <label>공헌도</label>
+        <input type="number" id="contribInput" placeholder="숫자 입력" min="0" />
+      </div>
+      <button class="add-btn" onclick="addContribution()">추가</button>
+    </div>
+  </div>
+
+  <!-- 일괄 입력 -->
+  <div class="bulk-section">
+    <h2>📋 일괄 입력 (복붙)</h2>
+    <div class="bulk-hint">
+      한 줄에 하나씩: <strong>캐릭터명 공헌도</strong> 형식으로 입력<br>
+      예) 가을호떡 15000<br>
+      군보 12500
+    </div>
+    <textarea id="bulkInput" placeholder="가을호떡 15000&#10;군보 12500&#10;낭만김감롱 9800"></textarea>
+    <button class="bulk-btn" onclick="bulkAdd()">📋 일괄 저장</button>
+  </div>
+
+  <!-- 목록 -->
+  <div class="list-section">
+    <div class="list-header">
+      <h2 id="listTitle">친구들 공헌도</h2>
+      <span class="total-chip" id="totalChip">합계: 0</span>
+    </div>
+    <div id="memberList"><div class="empty-box">데이터를 불러오는 중...</div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://guild-backend-production-75a6.up.railway.app";
+let currentGuild = "친구들";
+let currentMonth = "";
+let allRows = [];
+
+// 초기화
+window.onload = () => {
+  const now = new Date();
+  const m = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById("monthInput").value = m;
+  currentMonth = m;
+  loadData();
+};
+
+function showToast(msg, ok = true) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.background = ok ? "#1f2937" : "#dc2626";
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+async function loadData() {
+  currentMonth = document.getElementById("monthInput").value;
+  if (!currentMonth) return;
+  try {
+    const res = await fetch(`${API}/api/contributions?month=${currentMonth}`);
+    const data = await res.json();
+    allRows = data.rows || [];
+    renderList();
+  } catch(e) {
+    showToast("데이터 로드 실패", false);
+  }
+}
+
+function selectGuild(guild, btn) {
+  currentGuild = guild;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderList();
+}
+
+function renderList() {
+  const rows = allRows.filter(r => r.guild_name === currentGuild)
+    .sort((a,b) => b.contribution - a.contribution);
+  const total = rows.reduce((s,r) => s + r.contribution, 0);
+
+  document.getElementById("listTitle").textContent = `${currentGuild} 공헌도`;
+  document.getElementById("totalChip").textContent = `합계: ${total.toLocaleString()}`;
+
+  const el = document.getElementById("memberList");
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-box">아직 입력된 공헌도가 없어요<br><small>위에서 입력해주세요</small></div>`;
+    return;
+  }
+
+  el.innerHTML = rows.map((r, i) => `
+    <div class="member-row">
+      <div>
+        <span style="color:#9ca3af;font-size:0.75rem;margin-right:6px;">${i+1}</span>
+        <span class="member-name">${r.member_name}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input class="edit-input" type="number" value="${r.contribution}" id="edit_${encodeURIComponent(r.member_name)}" />
+        <button class="save-btn" onclick="saveEdit('${r.member_name}')">저장</button>
+      </div>
+      <button class="del-btn" onclick="deleteRow('${r.member_name}')">삭제</button>
+    </div>
+  `).join("");
+}
+
+async function addContribution() {
+  const name = document.getElementById("memberInput").value.trim();
+  const contrib = parseInt(document.getElementById("contribInput").value);
+  if (!name || isNaN(contrib) || contrib < 0) {
+    showToast("캐릭터명과 공헌도를 입력해주세요", false);
+    return;
+  }
+  await upsert(name, contrib);
+  document.getElementById("memberInput").value = "";
+  document.getElementById("contribInput").value = "";
+  document.getElementById("memberInput").focus();
+}
+
+async function saveEdit(memberName) {
+  const el = document.getElementById("edit_" + encodeURIComponent(memberName));
+  const val = parseInt(el.value);
+  if (isNaN(val) || val < 0) { showToast("올바른 숫자를 입력해주세요", false); return; }
+  await upsert(memberName, val);
+}
+
+async function upsert(memberName, contribution) {
+  try {
+    const res = await fetch(`${API}/api/contributions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        month: currentMonth,
+        guild_name: currentGuild,
+        member_name: memberName,
+        contribution,
+      }),
+    });
+    if (!res.ok) throw new Error();
+    // 로컬 갱신
+    const idx = allRows.findIndex(r => r.guild_name === currentGuild && r.member_name === memberName);
+    if (idx >= 0) allRows[idx].contribution = contribution;
+    else allRows.push({ guild_name: currentGuild, member_name: memberName, contribution, month: currentMonth });
+    renderList();
+    showToast(`${memberName} 저장 완료 ✓`);
+  } catch {
+    showToast("저장 실패", false);
+  }
+}
+
+async function deleteRow(memberName) {
+  if (!confirm(`${memberName} 공헌도를 삭제할까요?`)) return;
+  try {
+    await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(memberName)}`, {
+      method: "DELETE",
+    });
+    allRows = allRows.filter(r => !(r.guild_name === currentGuild && r.member_name === memberName));
+    renderList();
+    showToast(`${memberName} 삭제 완료`);
+  } catch {
+    showToast("삭제 실패", false);
+  }
+}
+
+async function bulkAdd() {
+  const text = document.getElementById("bulkInput").value.trim();
+  if (!text) { showToast("내용을 입력해주세요", false); return; }
+
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  let success = 0, fail = 0;
+
+  for (const line of lines) {
+    const parts = line.split(/\s+/);
+    if (parts.length < 2) { fail++; continue; }
+    const name = parts.slice(0, -1).join(" ");
+    const contrib = parseInt(parts[parts.length - 1].replace(/,/g, ""));
+    if (!name || isNaN(contrib)) { fail++; continue; }
+
+    try {
+      await fetch(`${API}/api/contributions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: name, contribution: contrib }),
+      });
+      const idx = allRows.findIndex(r => r.guild_name === currentGuild && r.member_name === name);
+      if (idx >= 0) allRows[idx].contribution = contrib;
+      else allRows.push({ guild_name: currentGuild, member_name: name, contribution: contrib, month: currentMonth });
+      success++;
+    } catch { fail++; }
+  }
+
+  renderList();
+  document.getElementById("bulkInput").value = "";
+  showToast(`${success}명 저장 완료${fail ? ` (${fail}명 실패)` : ""}`);
+}
+</script>
+</body>
+</html>
