@@ -299,6 +299,17 @@ function getUser() {
   } catch { return null; }
 }
 
+function getToken() {
+  return sessionStorage.getItem("token") || "";
+}
+
+function authHeaders() {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
   const restricted = ["notice", "tips"];
@@ -311,5 +322,6 @@ function requireLogin(page) {
 
 function logout() {
   sessionStorage.removeItem("user");
+  sessionStorage.removeItem("token");
   location.href = "./index.html";
 }

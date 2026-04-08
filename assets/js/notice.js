@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const is_pinned = document.getElementById("nPin").checked;
       if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
       const res = await fetch(`${API_BASE}/api/notices`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: authHeaders(),
         body: JSON.stringify({ title, content, category, is_pinned, author: user?.character_name||"운영진", author_guild: user?.guild||"" }),
       });
       if (res.ok) location.reload();
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function deleteNotice(id) {
       if (!confirm("삭제할까요?")) return;
-      await fetch(`${API_BASE}/api/notices/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE}/api/notices/${id}`, { method: "DELETE", headers: authHeaders() });
       closeModal(); location.reload();
     }
 

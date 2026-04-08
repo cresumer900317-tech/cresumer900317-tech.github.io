@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
       if (!user) { alert("로그인이 필요합니다"); return; }
       const res = await fetch(`${API_BASE}/api/tips`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: authHeaders(),
         body: JSON.stringify({ title, content, category, author: user.character_name, author_guild: user.guild||"" }),
       });
       if (res.ok) location.reload();
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function likeTip(id) {
-      const res = await fetch(`${API_BASE}/api/tips/${id}/like`, { method: "POST" });
+      const res = await fetch(`${API_BASE}/api/tips/${id}/like`, { method: "POST", headers: authHeaders() });
       const data = await res.json();
       const btn = document.getElementById("tipLikeBtn");
       if (btn) btn.innerHTML = `❤️ ${data.likes}`;
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function deleteTip(id) {
       if (!confirm("삭제할까요?")) return;
-      await fetch(`${API_BASE}/api/tips/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE}/api/tips/${id}`, { method: "DELETE", headers: authHeaders() });
       closeTipModal(); location.reload();
     }
 

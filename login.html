@@ -191,7 +191,7 @@
 
 <script src="./assets/js/common.js?v=4"></script>
 <script>
-const API = "https://guild-backend-production-75a6.up.railway.app";
+// API_BASE는 common.js에서 정의됨
 
 function showTab(tab) {
   document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
@@ -226,7 +226,7 @@ async function doLogin() {
   btn.disabled = true; btn.textContent = "로그인 중...";
 
   try {
-    const res = await fetch(`${API}/api/auth/login`, {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, password: pw }),
@@ -236,6 +236,7 @@ async function doLogin() {
 
     // 세션 저장
     sessionStorage.setItem("user", JSON.stringify(data.user));
+    if (data.token) sessionStorage.setItem("token", data.token);
     // 원래 가려던 페이지로 이동
     const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
     location.href = redirect;
@@ -260,7 +261,7 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = "신청 중...";
 
   try {
-    const res = await fetch(`${API}/api/auth/register`, {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, password: pw }),
