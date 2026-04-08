@@ -143,12 +143,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const STAT_ITEMS = [
       { label: "⚔️ 합산 전투력", key: "total_power",      fmt: v => formatCompactPower(v), higher: true },
       { label: "📈 이달 성장",   key: "monthly_growth",   fmt: v => v ? `+${formatCompactPower(v)}` : "-", higher: true, skipNull: true },
-      { label: "🔥 에이스",      key: "top1_power",        fmt: v => formatCompactPower(v), higher: true },
-      { label: "💎 평균 전투력", key: "avg_power",         fmt: v => formatCompactPower(v), higher: true },
       { label: "⭐ 평균 레벨",   key: "avg_level",         fmt: v => `Lv ${v}`, higher: true },
       { label: "📊 성장률",      key: "growth_rate",       fmt: v => v ? `${v}%` : "-", higher: true, skipNull: true },
       { label: "❤️ 인기도",     key: "total_popularity",  fmt: v => v ? formatNumber(v) : "-", higher: true, skipNull: true },
-      { label: "👥 인원수",      key: "member_count",      fmt: v => `${v}명`, higher: true },
     ];
 
     function medalBoardHtml() {
