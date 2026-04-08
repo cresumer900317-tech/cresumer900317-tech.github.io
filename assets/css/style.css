@@ -1878,83 +1878,108 @@ main { padding: 0 0 48px; }
 }
 
 
-/* ===== 길드 라이벌전 v2 ===== */
 
-/* 승부 결과판 */
+/* ===== 길드 라이벌전 v3 ===== */
+
+/* 이번 주 승자 배너 */
+.rv2-winner-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px solid;
+  border-radius: var(--radius-xl);
+  padding: 16px 20px;
+  margin-bottom: 0;
+}
+.rv2-winner-crown {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  display: block;
+  margin-bottom: 4px;
+}
+.rv2-winner-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rv2-winner-sub {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-top: 3px;
+}
+.rv2-winner-right { font-size: 2.5rem; }
+.rv2-us-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--yellow);
+  color: var(--white);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* 결과판 */
 .rv2-result-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 8px;
 }
 .rv2-result-card {
   border: 1.5px solid;
   border-radius: var(--radius-xl);
-  padding: 20px 16px 16px;
+  padding: 20px 14px 16px;
   text-align: center;
   position: relative;
   transition: transform 0.15s;
 }
-.rv2-result-card:hover { transform: translateY(-3px); }
-.rv2-result-first {
-  border-width: 2px !important;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+.rv2-result-card:hover { transform: translateY(-2px); }
+
+/* 우리 길드 강조 */
+.rv2-result-us {
+  border-width: 2.5px !important;
+  box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 8px 24px rgba(245,158,11,0.2) !important;
+  transform: scale(1.02);
 }
-.rv2-first-crown {
+.rv2-result-us:hover { transform: scale(1.03) translateY(-2px); }
+.rv2-us-crown {
   position: absolute;
   top: -1px; left: 50%;
   transform: translateX(-50%);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--white);
   padding: 3px 12px;
   border-radius: 0 0 10px 10px;
   white-space: nowrap;
 }
-.rv2-result-medal { font-size: 2.2rem; margin-bottom: 4px; }
-.rv2-result-guild { font-size: 1rem; font-weight: 800; margin-bottom: 3px; }
-.rv2-result-tag {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 8px;
-  border-radius: 999px;
-  margin-bottom: 8px;
-}
+.rv2-result-medal { font-size: 2rem; margin-bottom: 4px; }
+.rv2-result-guild { font-size: 1rem; font-weight: 800; margin: 4px 0 2px; }
 .rv2-result-power {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 900;
   line-height: 1;
   margin-bottom: 2px;
 }
-.rv2-result-sub {
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  margin-bottom: 10px;
-}
+.rv2-result-sub { font-size: 0.68rem; color: var(--text-faint); margin-bottom: 10px; }
 .rv2-result-stats {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   margin-bottom: 10px;
 }
-.rv2-rs-item {
-  font-size: 0.78rem;
-  color: var(--text-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
+.rv2-rs-item { font-size: 0.78rem; color: var(--text-soft); }
+.rv2-rs-winner { color: #059669 !important; font-weight: 700; }
 .rv2-result-top1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
   padding-top: 8px;
   border-top: 1px solid var(--border-light);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 /* 항목별 메달 */
@@ -1967,172 +1992,69 @@ main { padding: 0 0 48px; }
 .rv2-medal-row {
   display: grid;
   grid-template-columns: 1.2fr repeat(3, 1fr);
-  gap: 0;
   border-bottom: 1px solid var(--border-light);
   align-items: center;
 }
 .rv2-medal-row:last-child { border-bottom: none; }
-.rv2-medal-header {
-  background: var(--bg);
-  padding: 10px 16px;
-}
-.rv2-medal-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-soft);
-  padding: 10px 16px;
-}
+.rv2-medal-header { background: var(--bg); }
+.rv2-medal-label { font-size: 0.82rem; font-weight: 600; color: var(--text-soft); padding: 10px 14px; }
 .rv2-medal-guild {
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: center;
-  padding: 10px 8px;
+  font-size: 0.82rem; font-weight: 700; text-align: center; padding: 10px 6px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
 }
 .rv2-medal-cell {
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 10px 8px;
+  font-size: 0.82rem; text-align: center; padding: 10px 6px;
   border-left: 1px solid var(--border-light);
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
 .rv2-medal-best { font-weight: 700; }
-.rv2-medal-icon { font-size: 0.9rem; }
 
-/* 전원 대전 그리드 */
-.rv2-battle-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.rv2-member-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.rv2-header-row { margin-bottom: 4px; }
+/* 전원 대전 */
+.rv2-battle-grid { display: flex; flex-direction: column; gap: 3px; }
+.rv2-member-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.rv2-header-row { margin-bottom: 4px; gap: 4px; }
 .rv2-col-header {
   border: 1.5px solid;
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 12px 8px;
   text-align: center;
 }
-.rv2-mini-bar-track {
-  height: 6px;
-  background: var(--border-light);
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 6px 0 4px;
-}
-.rv2-mini-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-}
+.rv2-mini-bar-track { height: 5px; background: var(--border-light); border-radius: 999px; overflow: hidden; margin: 5px 0 3px; }
+.rv2-mini-bar-fill { height: 100%; border-radius: 999px; }
 .rv2-member-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 8px;
   background: var(--white);
   border: 1px solid;
   border-radius: var(--radius-md);
   transition: background 0.1s;
 }
 .rv2-member-cell:hover { background: var(--bg); }
-.rv2-empty-cell {
-  background: var(--bg);
-  border-color: var(--border-light) !important;
-  min-height: 52px;
-}
-.rv2-member-rank {
-  font-size: 0.8rem;
-  font-weight: 700;
-  width: 20px;
-  flex-shrink: 0;
-  text-align: center;
-}
-.rv2-member-avatar {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-}
-.rv2-member-avatar .character-avatar {
-  width: 40px;
-  height: 40px;
-}
+.rv2-empty-cell { background: var(--bg) !important; min-height: 50px; }
+.rv2-member-rank { font-size: 0.75rem; font-weight: 700; width: 18px; flex-shrink: 0; text-align: center; }
+.rv2-member-avatar { width: 36px; height: 36px; flex-shrink: 0; }
+.rv2-member-avatar .character-avatar { width: 36px; height: 36px; }
 .rv2-member-info { flex: 1; min-width: 0; }
-.rv2-member-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rv2-member-meta {
-  font-size: 0.7rem;
-  color: var(--text-faint);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rv2-member-power {
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
+.rv2-member-name { font-size: 0.8rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv2-member-meta { font-size: 0.68rem; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv2-member-power { font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
 
-/* 반응형 */
+/* 모바일 */
 @media (max-width: 768px) {
-  .rv2-result-grid { grid-template-columns: 1fr; }
+  .rv2-result-grid { grid-template-columns: 1fr; gap: 8px; }
+  .rv2-result-us { transform: none; }
   .rv2-medal-row { grid-template-columns: 1fr repeat(3, 0.9fr); }
-  /* 전원대전: 모바일에서 3열 유지 */
-  .rv2-member-row { grid-template-columns: repeat(3, 1fr); }
-  .rv2-battle-grid { gap: 2px; }
-  .rv2-member-row { gap: 2px; }
 }
 @media (max-width: 600px) {
-  /* 모바일 압축 카드 */
-  .rv2-member-cell {
-    padding: 5px 4px;
-    gap: 4px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .rv2-member-rank {
-    display: none;
-  }
-  .rv2-member-avatar {
-    width: 32px;
-    height: 32px;
-    align-self: center;
-  }
-  .rv2-member-avatar .character-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  .rv2-member-info { width: 100%; }
-  .rv2-member-name {
-    font-size: 0.72rem;
-    font-weight: 700;
-  }
-  .rv2-member-meta {
-    font-size: 0.62rem;
-  }
-  .rv2-member-power {
-    font-size: 0.68rem;
-  }
-  .rv2-col-header {
-    padding: 8px 4px;
-  }
-  .rv2-col-header div:first-child {
-    font-size: 0.85rem !important;
-  }
-  .rv2-result-power { font-size: 1.1rem; }
-  .rv2-medal-row { grid-template-columns: 0.9fr repeat(3, 1fr); font-size: 0.75rem; }
-  .rv2-medal-label { padding: 8px 6px; font-size: 0.75rem; }
-  .rv2-medal-cell { padding: 8px 4px; font-size: 0.75rem; }
+  .rv2-member-cell { padding: 5px 4px; gap: 4px; flex-direction: column; align-items: flex-start; }
+  .rv2-member-rank { display: none; }
+  .rv2-member-avatar { width: 30px; height: 30px; align-self: center; }
+  .rv2-member-avatar .character-avatar { width: 30px; height: 30px; }
+  .rv2-member-name { font-size: 0.72rem; }
+  .rv2-member-meta { font-size: 0.62rem; }
+  .rv2-member-power { font-size: 0.68rem; }
+  .rv2-col-header { padding: 8px 4px; }
+  .rv2-medal-label { padding: 8px 6px; font-size: 0.74rem; }
+  .rv2-medal-cell { padding: 8px 4px; font-size: 0.74rem; }
+  .rv2-medal-guild { padding: 8px 4px; font-size: 0.74rem; }
 }
