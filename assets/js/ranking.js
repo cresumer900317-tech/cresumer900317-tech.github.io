@@ -8,14 +8,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── 전투력 정렬 ──
     const sortedPower = [...rows].sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
 
-    // ── 인기도 정렬 (popularity 없는 멤버 제외) ──
+    // ── 인기도 정렬 (0 또는 null 제외) ──
     const sortedPopularity = [...rows]
       .filter(m => m.popularity != null && Number(m.popularity) > 0)
       .sort((a, b) => Number(b.popularity || 0) - Number(a.popularity || 0));
 
     const CUT = 30;
-
-    // ── 현재 탭 상태 ──
     let currentTab = "power";
 
     // 시즌 타이머
@@ -29,8 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function getCutDistance(item, sorted) {
       const cutItem = sorted[CUT - 1];
       if (!cutItem) return null;
-      const diff = Number(item.power || 0) - Number(cutItem.power || 0);
-      return diff;
+      return Number(item.power || 0) - Number(cutItem.power || 0);
     }
 
     function cutDistanceHtml(diff) {
@@ -65,21 +62,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `<span style="font-size:1.05rem;font-weight:800;color:var(--amber);">${escapeHtml(fallback)}</span>`;
     }
 
-    // ── 탭 버튼 HTML ──
+    // ── 탭 바 ──
     function tabBarHtml(active) {
       return `
         <div class="rk-tab-bar">
-          <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">
-            ⚔️ 전투력
-          </button>
-          <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">
-            ❤️ 인기도
-          </button>
+          <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">⚔️ 전투력</button>
+          <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">❤️ 인기도</button>
         </div>
       `;
     }
 
-    // ── 전투력 탭: TOP3 히어로 ──
+    // ════════════════════════════════
+    //  전투력 탭
+    // ════════════════════════════════
     function renderPowerHero(sorted) {
       if (sorted.length === 0) return "";
       const [first, second, third] = sorted;
@@ -158,68 +153,124 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // ── 인기도 탭: 포디움(시상대) ──
+    // ════════════════════════════════
+    //  인기도 탭: 포디움
+    // ════════════════════════════════
     function renderPopularityPodium(sorted) {
       if (sorted.length === 0) return "";
       const [first, second, third] = sorted;
 
+      // 인기도 기준 길드 내 순위 배지 표시용
+      // serverRank = 전투력 기준 서버 순위 (크롤링된 값 그대로 활용)
       function podiumCard(item, rank) {
         if (!item) return `<div class="rk-pod-slot"></div>`;
         const pop = formatNumber(Number(item.popularity || 0));
+
         const cfg = {
           1: {
-            crown: "👑", color: "#f59e0b",
-            bg: "linear-gradient(160deg,#fffbeb,#fef3c7)",
-            border: "#f59e0b", avatarSize: "80px",
-            nameSize: "1.05rem", popSize: "1.1rem",
-            padding: "18px 12px 16px",
-            shadow: "0 8px 32px rgba(245,158,11,0.35)",
-            crownSize: "2.8rem", extraHeight: "30px"
+            crown: "👑",
+            accentColor: "#d97706",
+            borderColor: "#f59e0b",
+            bg: "linear-gradient(170deg, #fffbeb 0%, #fef3c7 100%)",
+            shadow: "0 12px 40px rgba(245,158,11,0.4)",
+            avatarSize: "110px",
+            crownSize: "3.2rem",
+            nameSize: "1.15rem",
+            popSize: "1.5rem",
+            popLabelSize: "0.75rem",
+            padding: "22px 16px 20px",
+            rankBadge: `<div style="
+              position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+              background:#f59e0b;color:#fff;font-size:0.72rem;font-weight:800;
+              padding:3px 12px;border-radius:999px;white-space:nowrap;
+              box-shadow:0 2px 8px rgba(245,158,11,0.5);letter-spacing:0.05em;
+            ">✨ 1위</div>`,
+            extraBottom: "28px",
           },
           2: {
-            crown: "🥈", color: "#64748b",
-            bg: "linear-gradient(160deg,#f8fafc,#f1f5f9)",
-            border: "#94a3b8", avatarSize: "64px",
-            nameSize: "0.9rem", popSize: "0.98rem",
-            padding: "14px 10px 14px",
-            shadow: "0 4px 16px rgba(148,163,184,0.2)",
-            crownSize: "2.2rem", extraHeight: "0px"
+            crown: "🥈",
+            accentColor: "#475569",
+            borderColor: "#94a3b8",
+            bg: "linear-gradient(170deg, #f8fafc 0%, #e2e8f0 100%)",
+            shadow: "0 6px 20px rgba(100,116,139,0.2)",
+            avatarSize: "88px",
+            crownSize: "2.4rem",
+            nameSize: "1rem",
+            popSize: "1.2rem",
+            popLabelSize: "0.68rem",
+            padding: "16px 12px 16px",
+            rankBadge: `<div style="
+              position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+              background:#94a3b8;color:#fff;font-size:0.68rem;font-weight:800;
+              padding:2px 10px;border-radius:999px;white-space:nowrap;
+            ">2위</div>`,
+            extraBottom: "0px",
           },
           3: {
-            crown: "🥉", color: "#b45309",
-            bg: "linear-gradient(160deg,#fdf8f5,#fef3ea)",
-            border: "#d4a76a", avatarSize: "60px",
-            nameSize: "0.88rem", popSize: "0.92rem",
-            padding: "12px 8px 12px",
-            shadow: "0 4px 12px rgba(180,83,9,0.15)",
-            crownSize: "2rem", extraHeight: "0px"
-          }
+            crown: "🥉",
+            accentColor: "#92400e",
+            borderColor: "#c9873a",
+            bg: "linear-gradient(170deg, #fdf8f3 0%, #fdecd4 100%)",
+            shadow: "0 6px 16px rgba(180,83,9,0.18)",
+            avatarSize: "82px",
+            crownSize: "2.2rem",
+            nameSize: "0.95rem",
+            popSize: "1.1rem",
+            popLabelSize: "0.65rem",
+            padding: "14px 10px 14px",
+            rankBadge: `<div style="
+              position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+              background:#c9873a;color:#fff;font-size:0.65rem;font-weight:800;
+              padding:2px 10px;border-radius:999px;white-space:nowrap;
+            ">3위</div>`,
+            extraBottom: "0px",
+          },
         }[rank];
 
         return `
-          <div class="rk-pod-slot" style="align-self:flex-end;margin-bottom:${cfg.extraHeight};">
+          <div class="rk-pod-slot" style="align-self:flex-end;margin-bottom:${cfg.extraBottom};">
             <div style="
+              position:relative;
               background:${cfg.bg};
-              border:2px solid ${cfg.border};
+              border:2px solid ${cfg.borderColor};
               box-shadow:${cfg.shadow};
-              border-radius:16px;
+              border-radius:20px;
               display:flex;flex-direction:column;align-items:center;
-              padding:${cfg.padding};gap:5px;text-align:center;
-              transition:transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-              <div style="font-size:${cfg.crownSize};line-height:1;">${cfg.crown}</div>
-              <div style="width:${cfg.avatarSize};height:${cfg.avatarSize};border-radius:50%;overflow:hidden;border:2px solid ${cfg.border};">
-                ${characterAvatarHtml(item)}
-              </div>
-              <div style="font-size:${cfg.nameSize};font-weight:800;color:var(--text);line-height:1.2;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${escapeHtml(item.name || "-")}
-              </div>
+              padding:${cfg.padding};gap:8px;text-align:center;
+              transition:transform 0.18s, box-shadow 0.18s;
+              width:100%;
+            "
+            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='${cfg.shadow.replace(')', ', 1.2)')}'"
+            onmouseout="this.style.transform='';this.style.boxShadow='${cfg.shadow}'">
+              ${cfg.rankBadge}
+              <div style="font-size:${cfg.crownSize};line-height:1;margin-top:6px;">${cfg.crown}</div>
+              <div style="
+                width:${cfg.avatarSize};height:${cfg.avatarSize};
+                border-radius:50%;overflow:hidden;
+                border:3px solid ${cfg.borderColor};
+                box-shadow:0 4px 12px rgba(0,0,0,0.12);
+                flex-shrink:0;
+              ">${characterAvatarHtml(item)}</div>
+              <div style="
+                font-size:${cfg.nameSize};font-weight:800;
+                color:var(--text);line-height:1.2;
+                max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+              ">${escapeHtml(item.name || "-")}</div>
               <div>${guildBadgeHtml(item.guild || "길드 없음")}</div>
-              <div style="margin-top:3px;background:rgba(255,255,255,0.6);border-radius:8px;padding:4px 10px;">
-                <div style="font-size:${cfg.popSize};font-weight:900;color:${cfg.color};">❤️ ${pop}</div>
-                <div style="font-size:0.65rem;color:var(--text-faint);font-weight:500;">인기도</div>
+              <div style="
+                background:rgba(255,255,255,0.75);
+                border:1px solid ${cfg.borderColor};
+                border-radius:12px;padding:8px 14px;
+                margin-top:2px;min-width:90px;
+              ">
+                <div style="font-size:${cfg.popSize};font-weight:900;color:${cfg.accentColor};line-height:1.1;">
+                  ❤️ ${pop}
+                </div>
+                <div style="font-size:${cfg.popLabelSize};color:var(--text-faint);font-weight:600;margin-top:2px;">인기도</div>
               </div>
-              ${item.serverRank ? `<div style="font-size:0.68rem;color:var(--text-faint);">서버 ${formatNumber(item.serverRank)}위</div>` : ""}
+              ${item.serverRank
+                ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 전투력 ${formatNumber(item.serverRank)}위</div>`
+                : ""}
             </div>
           </div>
         `;
@@ -227,9 +278,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       return `
         <div class="rk-pod-wrap">
-          <div style="font-size:0.82rem;font-weight:700;color:var(--amber-dark);text-align:center;margin-bottom:14px;letter-spacing:0.04em;">
-            ✨ 인기도 TOP 3 ✨
-          </div>
+          <div style="
+            font-size:0.88rem;font-weight:700;color:var(--amber-dark);
+            text-align:center;margin-bottom:18px;letter-spacing:0.06em;
+          ">✨ 인기도 TOP 3 · Scania 11 서버 ✨</div>
           <div class="rk-pod-grid">
             ${podiumCard(second, 2)}
             ${podiumCard(first, 1)}
@@ -243,8 +295,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── 인기도 4위 이하 리스트 카드 ──
     function renderPopularityCard(item, rank) {
       const pop = formatNumber(Number(item.popularity || 0));
-      const numColor = rank <= 10 ? "#d97706" : rank <= 20 ? "#059669" : "var(--text-soft)";
-      const numWeight = rank <= 10 ? "800" : "700";
+      let numColor, numWeight;
+      if (rank <= 10) { numColor = "#d97706"; numWeight = "800"; }
+      else if (rank <= 20) { numColor = "#059669"; numWeight = "700"; }
+      else { numColor = "var(--text-soft)"; numWeight = "700"; }
 
       return `
         <div class="rk-compact-card" data-pop-row="${escapeHtml(String(item.name || "").toLowerCase())}">
@@ -261,22 +315,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div class="rk-c-right">
             <div style="font-size:1.05rem;font-weight:900;color:#e11d48;white-space:nowrap;">❤️ ${pop}</div>
-            <div class="rk-c-server">${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</div>
+            <div class="rk-c-server">${item.serverRank ? "서버 전투력 " + formatNumber(item.serverRank) + "위" : "-"}</div>
           </div>
         </div>
       `;
     }
 
-    // ── 전투력 탭 ──
+    // ════════════════════════════════
+    //  탭별 컨텐츠 조립
+    // ════════════════════════════════
     function renderPowerContent() {
       const heroHtml = renderPowerHero(sortedPower);
       const top3Html = sortedPower.slice(0, 3).map((item, i) => renderPowerCard(item, i + 1, sortedPower)).join("");
       const restHtml = sortedPower.slice(3).map((item, i) => renderPowerCard(item, i + 4, sortedPower)).join("");
       return `
         <div id="powerContent">
-          <div style="padding:16px 0 4px;">
-            <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">전투력 기준 · ${formatNumber(sortedPower.length)}명 · TOP ${CUT} 친구들 길드 승격</p>
-          </div>
+          <p style="font-size:0.85rem;color:var(--text-soft);margin:12px 0 0;">전투력 기준 · ${formatNumber(sortedPower.length)}명 · TOP ${CUT} 친구들 길드 승격</p>
           ${heroHtml}
           <div class="toolbar-card" style="margin-top:20px;">
             <label class="search-field">
@@ -294,7 +348,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // ── 인기도 탭 ──
     function renderPopularityContent() {
       if (sortedPopularity.length === 0) {
         return `<div style="padding:40px 0;">${createEmptyBox("인기도 데이터가 없습니다.")}</div>`;
@@ -303,12 +356,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const restHtml = sortedPopularity.slice(3).map((item, i) => renderPopularityCard(item, i + 4)).join("");
       return `
         <div id="popularityContent">
-          <div style="padding:16px 0 4px;">
-            <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">인기도 기준 · ${formatNumber(sortedPopularity.length)}명</p>
-          </div>
+          <p style="font-size:0.85rem;color:var(--text-soft);margin:12px 0 0;">인기도 기준 · ${formatNumber(sortedPopularity.length)}명 · Scania 11 서버</p>
           ${podiumHtml}
           ${restHtml ? `
-            <div class="rk-cutline-divider" style="margin:20px 0 12px;">
+            <div class="rk-cutline-divider" style="margin:24px 0 14px;">
               <div class="rk-cutline-line"></div>
               <div class="rk-cutline-badge">4위 이하</div>
               <div class="rk-cutline-line"></div>
@@ -326,7 +377,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // ── 전체 페이지 렌더 ──
+    // ════════════════════════════════
+    //  페이지 렌더 + 이벤트 바인딩
+    // ════════════════════════════════
     function renderPage(tab) {
       const content = tab === "power" ? renderPowerContent() : renderPopularityContent();
       document.querySelector("main").innerHTML = `
@@ -341,14 +394,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
               </div>
             </div>
-
             ${tabBarHtml(tab)}
             ${content}
           </div>
         </div>
       `;
 
-      // 탭 이벤트
+      // 탭 전환
       document.querySelectorAll(".rk-tab-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           currentTab = btn.dataset.tab;
@@ -370,11 +422,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             let first = null;
             cards.forEach(c => {
               if ((c.getAttribute("data-character-row") || "").includes(kw)) {
-                c.classList.add("highlight-card");
-                if (!first) first = c;
-              } else {
-                c.classList.add("dim-card");
-              }
+                c.classList.add("highlight-card"); if (!first) first = c;
+              } else { c.classList.add("dim-card"); }
             });
             if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
           }
@@ -397,11 +446,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             let first = null;
             cards.forEach(c => {
               if ((c.getAttribute("data-pop-row") || "").includes(kw)) {
-                c.classList.add("highlight-card");
-                if (!first) first = c;
-              } else {
-                c.classList.add("dim-card");
-              }
+                c.classList.add("highlight-card"); if (!first) first = c;
+              } else { c.classList.add("dim-card"); }
             });
             if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
           }

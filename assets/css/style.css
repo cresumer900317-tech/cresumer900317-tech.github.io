@@ -1404,30 +1404,31 @@ main { padding: 0 0 48px; }
   background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 60%, #fffbeb 100%);
   border: 1px solid var(--yellow-border);
   border-radius: var(--radius-xl);
-  padding: 24px 16px 0;
+  padding: 30px 20px 0;
   margin: 16px 0 0;
-  overflow: hidden;
+  overflow: visible;
 }
 .rk-pod-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 14px;
   align-items: flex-end;
 }
 .rk-pod-slot {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 }
 .rk-pod-stage {
-  height: 22px;
-  margin: 10px -16px 0;
-  background: linear-gradient(180deg, var(--yellow) 0%, var(--amber) 100%);
+  height: 28px;
+  margin: 14px -20px 0;
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-  opacity: 0.35;
+  opacity: 0.45;
 }
 @media (max-width: 600px) {
-  .rk-pod-grid { gap: 6px; }
+  .rk-pod-grid { grid-template-columns: 1fr 1.25fr 1fr; gap: 8px; }
+  .rk-pod-wrap { padding: 24px 12px 0; }
   .rk-tab-btn { font-size: 0.85rem; padding: 9px 0; }
 }
 
