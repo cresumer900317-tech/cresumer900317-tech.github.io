@@ -74,8 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="hero-dot"></span>
             메이플키우기 · 스카니아 11서버
           </div>
-          <h1 class="hero-title">🔥 TOP30 승격 경쟁<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">지금 참여하면 운영진이 길드를 직접 배정해드립니다</p>
+          <h1 class="hero-title">🌱 함께 성장하는<br><span class="accent">친구패밀리</span></h1>
+          <p class="hero-desc">내 활동 스타일에 맞는 길드로 자동 배정돼요</p>
           <div style="display:flex;align-items:center;gap:8px;margin:8px 0 14px;flex-wrap:wrap;">
             <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 이번 달 마감 임박</span>
             <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명 참여 중</span>
@@ -85,15 +85,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
           <div style="margin-top:10px;font-size:0.78rem;color:var(--text-soft);">
-            운영진이 활동 성향에 맞게 길드를 배정해드립니다 · 과밀 방지 / 성장 관리 진행
+            👥 ${formatNumber(memberCount)}명 함께 성장 중
           </div>
           <div class="visitor-cta-bar">
             <span class="visitor-cta-dot"></span>
-            <span class="visitor-cta-count">지금 <strong>${visitorStats.online||0}명</strong> 접속 중</span>
-            ${(visitorStats.online_list||[]).length > 0 ? `
-              <span class="visitor-cta-names">${(visitorStats.online_list||[]).slice(0,8).map(u => escapeHtml(u.name)).join(" · ")}${(visitorStats.online_list||[]).length > 8 ? ` 외 ${(visitorStats.online_list||[]).length-8}명` : ""}</span>
-            ` : ""}
-            <span class="visitor-cta-extra">· 오늘 ${visitorStats.today||0}명 · 누적 ${formatNumber(visitorStats.total||0)}명</span>
+            ${(visitorStats.online||0) > 0
+              ? `<span class="visitor-cta-count">지금 <strong>${visitorStats.online}명</strong>이 함께 보고 있어요</span>
+                 ${(visitorStats.online_list||[]).length > 0 ? `<span class="visitor-cta-names">${(visitorStats.online_list||[]).slice(0,5).map(u => escapeHtml(u.name)).join(" · ")}${(visitorStats.online_list||[]).length > 5 ? ` 외 ${(visitorStats.online_list||[]).length-5}명` : ""}</span>` : ""}`
+              : `<span class="visitor-cta-count">함께 보고 있는 멤버들이 있어요</span>`
+            }
+            <span class="visitor-cta-extra">· 누적 ${formatNumber(visitorStats.total||0)}명 방문</span>
           </div>
           <p class="hero-update" style="margin-top:6px;">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
           <div class="kpi-grid">
