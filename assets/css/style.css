@@ -1368,6 +1368,69 @@ main { padding: 0 0 48px; }
 
 /* ===== 랭킹 페이지 개편 ===== */
 
+/* 전투력/인기도 탭 바 */
+.rk-tab-bar {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.rk-tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: 2px solid var(--yellow-border);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.rk-tab-btn:hover {
+  border-color: var(--yellow);
+  color: var(--amber-dark);
+  background: var(--yellow-bg);
+}
+.rk-tab-btn.rk-tab-active {
+  background: var(--yellow);
+  border-color: var(--amber);
+  color: var(--white);
+  box-shadow: 0 3px 10px rgba(245,158,11,0.3);
+}
+
+/* 인기도 포디움(시상대) */
+.rk-pod-wrap {
+  background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 60%, #fffbeb 100%);
+  border: 1px solid var(--yellow-border);
+  border-radius: var(--radius-xl);
+  padding: 24px 16px 0;
+  margin: 16px 0 0;
+  overflow: hidden;
+}
+.rk-pod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 10px;
+  align-items: flex-end;
+}
+.rk-pod-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rk-pod-stage {
+  height: 22px;
+  margin: 10px -16px 0;
+  background: linear-gradient(180deg, var(--yellow) 0%, var(--amber) 100%);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  opacity: 0.35;
+}
+@media (max-width: 600px) {
+  .rk-pod-grid { gap: 6px; }
+  .rk-tab-btn { font-size: 0.85rem; padding: 9px 0; }
+}
+
 /* TOP3 히어로 영역 */
 .rk-hero-wrap {
   background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%);
