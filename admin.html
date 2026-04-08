@@ -3,274 +3,187 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>친구패밀리 | 공헌도 관리</title>
+  <title>친구패밀리 | 어드민</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, sans-serif; background: #fafafa; color: #1a1a1a; }
 
-    /* 잠금 화면 */
     .lock-screen {
-      position: fixed; inset: 0;
-      background: #fffbeb;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
+      position: fixed; inset: 0; background: #fffbeb;
+      display: flex; align-items: center; justify-content: center; z-index: 999;
     }
     .lock-box {
-      background: #fff;
-      border: 2px solid #fde68a;
-      border-radius: 16px;
-      padding: 40px 32px;
-      text-align: center;
-      width: 320px;
+      background: #fff; border: 2px solid #fde68a; border-radius: 16px;
+      padding: 40px 32px; text-align: center; width: 320px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
     .lock-box h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
     .lock-box p { font-size: 0.82rem; color: #6b7280; margin-bottom: 20px; }
     .lock-box input {
-      width: 100%; padding: 10px 14px;
-      border: 1px solid #d1d5db; border-radius: 8px;
-      font-size: 1rem; text-align: center; letter-spacing: 4px;
-      margin-bottom: 12px;
+      width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 1rem; text-align: center; letter-spacing: 4px; margin-bottom: 12px;
     }
-    .lock-box input:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.15); }
-    .lock-btn {
-      width: 100%; padding: 10px;
-      background: #f59e0b; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 0.95rem; font-weight: 700; cursor: pointer;
-    }
+    .lock-box input:focus { outline: none; border-color: #f59e0b; }
+    .lock-btn { width: 100%; padding: 10px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
     .lock-btn:hover { background: #d97706; }
     .lock-error { color: #dc2626; font-size: 0.82rem; margin-top: 8px; }
 
-    /* 메인 UI (잠금 후 표시) */
     .main-ui { display: none; }
     .main-ui.unlocked { display: block; }
 
     .top-bar {
       background: #fff; border-bottom: 1px solid #e5e7eb;
-      padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 10;
+      padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 8px;
     }
     .top-bar h1 { font-size: 1rem; font-weight: 700; }
-    .top-bar-right { display: flex; align-items: center; gap: 12px; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
     .top-bar a { font-size: 0.82rem; color: #6b7280; text-decoration: none; }
-    .lock-out-btn {
-      font-size: 0.75rem; color: #dc2626; background: none;
-      border: 1px solid #fca5a5; border-radius: 999px;
-      padding: 3px 10px; cursor: pointer;
+    .section-tab {
+      padding: 5px 14px; border: 1px solid #e5e7eb; border-radius: 8px;
+      background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: #6b7280;
     }
+    .section-tab.active { background: #fef3c7; border-color: #fbbf24; color: #92400e; font-weight: 700; }
+    .lock-out-btn { font-size: 0.75rem; color: #dc2626; background: none; border: 1px solid #fca5a5; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+
     .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
 
-    .month-bar {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 20px; flex-wrap: wrap;
-    }
+    /* 공헌도 섹션 */
+    .month-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .month-bar label { font-size: 0.85rem; font-weight: 600; color: #374151; }
-    .month-bar input[type=month] {
-      padding: 7px 12px; border: 1px solid #d1d5db;
-      border-radius: 8px; font-size: 0.9rem;
-    }
-    .month-bar button {
-      padding: 7px 16px; background: #f59e0b; color: #fff;
-      border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
-    }
+    .month-bar input[type=month] { padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; }
+    .month-bar button { padding: 7px 16px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     .month-bar button:hover { background: #d97706; }
 
     .tab-bar { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-    .tab-btn {
-      padding: 6px 16px; border: 1px solid #e5e7eb;
-      border-radius: 999px; background: #fff;
-      font-size: 0.82rem; font-weight: 500; cursor: pointer; color: #6b7280;
-    }
+    .tab-btn { padding: 6px 16px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; font-size: 0.82rem; font-weight: 500; cursor: pointer; color: #6b7280; }
     .tab-btn.active { background: #fef3c7; border-color: #fbbf24; color: #92400e; font-weight: 700; }
 
-    .input-section {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; padding: 20px; margin-bottom: 16px;
-    }
+    .input-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
     .input-section h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: #374151; }
-    .input-row {
-      display: grid; grid-template-columns: 1fr 1fr auto;
-      gap: 8px; align-items: end;
-    }
+    .input-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
     .input-row label { font-size: 0.78rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 4px; }
-    .input-row input, .input-row select {
-      width: 100%; padding: 8px 12px;
-      border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.88rem;
-    }
-    .input-row input:focus, .input-row select:focus {
-      outline: none; border-color: #f59e0b;
-      box-shadow: 0 0 0 2px rgba(245,158,11,0.15);
-    }
-    .add-btn {
-      padding: 9px 18px; background: #f59e0b; color: #fff;
-      border: none; border-radius: 8px; font-weight: 700;
-      font-size: 0.85rem; cursor: pointer; white-space: nowrap;
-    }
+    .input-row input, .input-row select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.88rem; }
+    .input-row input:focus, .input-row select:focus { outline: none; border-color: #f59e0b; }
+    .add-btn { padding: 9px 18px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
     .add-btn:hover { background: #d97706; }
 
-    .bulk-section {
-      background: #fffbeb; border: 1px solid #fde68a;
-      border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
-    }
-    .bulk-section h2 { font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: #92400e; }
-    .bulk-section textarea {
-      width: 100%; height: 120px; padding: 10px;
-      border: 1px solid #fbbf24; border-radius: 8px;
-      font-size: 0.82rem; font-family: monospace; resize: vertical; background: #fff;
-    }
-    .bulk-hint { font-size: 0.75rem; color: #b45309; margin: 4px 0 8px; line-height: 1.5; }
-    .bulk-btn {
-      padding: 8px 18px; background: #d97706; color: #fff;
-      border: none; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;
-    }
-    .bulk-btn:hover { background: #b45309; }
-
     .list-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
-    .list-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; border-bottom: 1px solid #e5e7eb; background: #f9fafb;
-      flex-wrap: wrap; gap: 8px;
-    }
+    .list-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; flex-wrap: wrap; gap: 8px; }
     .list-header h2 { font-size: 0.9rem; font-weight: 700; color: #374151; }
     .list-header-right { display: flex; align-items: center; gap: 8px; }
-    .total-chip {
-      font-size: 0.78rem; font-weight: 700;
-      background: #fef3c7; color: #92400e;
-      padding: 3px 10px; border-radius: 999px;
-    }
-    .save-all-btn {
-      padding: 5px 14px; background: #dcfce7; color: #16a34a;
-      border: 1px solid #bbf7d0; border-radius: 8px;
-      font-size: 0.78rem; font-weight: 700; cursor: pointer;
-    }
-    .save-all-btn:hover { background: #bbf7d0; }
-    .del-all-btn {
-      padding: 5px 14px; background: #fee2e2; color: #dc2626;
-      border: 1px solid #fca5a5; border-radius: 8px;
-      font-size: 0.78rem; font-weight: 700; cursor: pointer;
-    }
-    .del-all-btn:hover { background: #fca5a5; }
+    .total-chip { font-size: 0.78rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 999px; }
+    .save-all-btn { padding: 5px 14px; background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .del-all-btn { padding: 5px 14px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
 
-    .member-row {
-      display: grid; grid-template-columns: auto 1fr auto auto;
-      align-items: center; padding: 10px 20px;
-      border-bottom: 1px solid #f3f4f6; gap: 12px;
-    }
+    .member-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; padding: 10px 20px; border-bottom: 1px solid #f3f4f6; gap: 12px; }
     .member-row:last-child { border-bottom: none; }
     .member-row:hover { background: #fffbeb; }
     .member-rank { font-size: 0.75rem; color: #9ca3af; width: 20px; text-align: center; }
     .member-name { font-size: 0.88rem; font-weight: 600; }
-    .edit-input {
-      width: 100px; padding: 5px 8px;
-      border: 1px solid #fbbf24; border-radius: 6px;
-      font-size: 0.85rem; text-align: right;
-    }
+    .edit-input { width: 100px; padding: 5px 8px; border: 1px solid #fbbf24; border-radius: 6px; font-size: 0.85rem; text-align: right; }
     .row-btns { display: flex; gap: 5px; }
-    .save-btn {
-      padding: 4px 10px; background: #dcfce7; color: #16a34a;
-      border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
-    }
-    .save-btn:hover { background: #bbf7d0; }
-    .del-btn {
-      padding: 4px 10px; background: #fee2e2; color: #dc2626;
-      border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
-    }
-    .del-btn:hover { background: #fca5a5; }
+    .save-btn { padding: 4px 10px; background: #dcfce7; color: #16a34a; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .del-btn { padding: 4px 10px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
     .empty-box { text-align: center; padding: 32px; color: #9ca3af; font-size: 0.88rem; }
 
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: #1f2937; color: #fff;
-      padding: 10px 20px; border-radius: 999px;
-      font-size: 0.85rem; font-weight: 600;
-      opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none;
-    }
+    /* 유저 관리 */
+    .user-row { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f3f4f6; gap: 10px; }
+    .user-row:last-child { border-bottom: none; }
+    .user-row:hover { background: #fffbeb; }
+    .status-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+    .status-active { background: #dcfce7; color: #16a34a; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-inactive { background: #fee2e2; color: #dc2626; }
+    .approve-btn { padding: 5px 12px; background: #dcfce7; color: #16a34a; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .deactivate-btn { padding: 5px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .guild-select { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82rem; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; }
     .toast.show { opacity: 1; }
 
     @media (max-width: 600px) {
       .input-row { grid-template-columns: 1fr 1fr; }
       .input-row .add-btn { grid-column: span 2; width: 100%; }
-      .member-row { grid-template-columns: auto 1fr auto; }
-      .member-row .row-btns { grid-column: span 3; justify-content: flex-end; }
     }
   </style>
 </head>
 <body>
 
-<!-- 잠금 화면 -->
 <div class="lock-screen" id="lockScreen">
   <div class="lock-box">
     <div style="font-size:2.5rem;margin-bottom:12px;">😊</div>
     <h2>친구패밀리 어드민</h2>
-    <p>공헌도 관리 페이지입니다<br>비밀번호를 입력해주세요</p>
-    <input type="password" id="pwInput" placeholder="비밀번호" maxlength="20"
-           onkeydown="if(event.key==='Enter')checkPw()" />
+    <p>비밀번호를 입력해주세요</p>
+    <input type="password" id="pwInput" placeholder="비밀번호" maxlength="20" onkeydown="if(event.key==='Enter')checkPw()" />
     <button class="lock-btn" onclick="checkPw()">입장</button>
     <div class="lock-error" id="pwError"></div>
   </div>
 </div>
 
-<!-- 메인 UI -->
 <div class="main-ui" id="mainUI">
   <div class="top-bar">
-    <h1>😊 친구패밀리 · 공헌도 관리</h1>
+    <h1>😊 친구패밀리 · 어드민</h1>
     <div class="top-bar-right">
-      <a href="./index.html">← 홈으로</a>
+      <button class="section-tab active" id="tabContrib" onclick="showSection('contribution')">📊 공헌도</button>
+      <button class="section-tab" id="tabUsers" onclick="showSection('users')">👥 유저 관리</button>
+      <a href="./index.html">← 홈</a>
       <button class="lock-out-btn" onclick="lockOut()">🔒 잠금</button>
     </div>
   </div>
 
-  <div class="container">
-    <div class="month-bar">
-      <label>📅 대상 월</label>
-      <input type="month" id="monthInput" />
-      <button onclick="loadData()">불러오기</button>
-    </div>
-
-    <div class="tab-bar" id="tabBar">
-      <button class="tab-btn active" data-guild="친구들" onclick="selectGuild('친구들', this)">친구들</button>
-      <button class="tab-btn" data-guild="친구둘" onclick="selectGuild('친구둘', this)">친구둘</button>
-      <button class="tab-btn" data-guild="친구삼" onclick="selectGuild('친구삼', this)">친구삼</button>
-      <button class="tab-btn" data-guild="친구넷" onclick="selectGuild('친구넷', this)">친구넷</button>
-      <button class="tab-btn" data-guild="친구닷" onclick="selectGuild('친구닷', this)">친구닷</button>
-    </div>
-
-    <div class="input-section">
-      <h2>➕ 공헌도 입력</h2>
-      <div class="input-row">
-        <div>
-          <label>캐릭터명</label>
-          <select id="memberSelect">
-            <option value="">-- 선택 --</option>
-          </select>
-        </div>
-        <div>
-          <label>공헌도</label>
-          <input type="number" id="contribInput" placeholder="숫자 입력" min="0" />
-        </div>
-        <button class="add-btn" onclick="addContribution()">추가</button>
+  <!-- 공헌도 섹션 -->
+  <div id="contributionSection">
+    <div class="container">
+      <div class="month-bar">
+        <label>📅 대상 월</label>
+        <input type="month" id="monthInput" />
+        <button onclick="loadData()">불러오기</button>
       </div>
-    </div>
-
-    <div class="bulk-section">
-      <h2>📋 일괄 입력 (복붙)</h2>
-      <div class="bulk-hint">한 줄에 하나씩: <strong>캐릭터명 공헌도</strong> 형식<br>예) 가을호떡 15000</div>
-      <textarea id="bulkInput" placeholder="가을호떡 15000&#10;군보 12500&#10;낭만김감롱 9800"></textarea>
-      <button class="bulk-btn" onclick="bulkAdd()">📋 일괄 저장</button>
-    </div>
-
-    <div class="list-section">
-      <div class="list-header">
-        <h2 id="listTitle">친구들 공헌도</h2>
-        <div class="list-header-right">
-          <span class="total-chip" id="totalChip">합계: 0</span>
-          <button class="save-all-btn" onclick="saveAll()">💾 전체 저장</button>
-          <button class="del-all-btn" onclick="deleteAll()">🗑️ 전체 삭제</button>
+      <div class="tab-bar" id="guildTabBar">
+        <button class="tab-btn active" data-guild="친구들" onclick="selectGuild('친구들', this)">친구들</button>
+        <button class="tab-btn" data-guild="친구둘" onclick="selectGuild('친구둘', this)">친구둘</button>
+        <button class="tab-btn" data-guild="친구삼" onclick="selectGuild('친구삼', this)">친구삼</button>
+        <button class="tab-btn" data-guild="친구넷" onclick="selectGuild('친구넷', this)">친구넷</button>
+        <button class="tab-btn" data-guild="친구닷" onclick="selectGuild('친구닷', this)">친구닷</button>
+      </div>
+      <div class="input-section">
+        <h2>➕ 공헌도 입력</h2>
+        <div class="input-row">
+          <div><label>캐릭터명</label><select id="memberSelect"><option value="">-- 선택 --</option></select></div>
+          <div><label>공헌도</label><input type="number" id="contribInput" placeholder="숫자 입력" min="0" /></div>
+          <button class="add-btn" onclick="addContribution()">추가</button>
         </div>
       </div>
-      <div id="memberList"><div class="empty-box">데이터를 불러오는 중...</div></div>
+      <div class="list-section">
+        <div class="list-header">
+          <h2 id="listTitle">친구들 공헌도</h2>
+          <div class="list-header-right">
+            <span class="total-chip" id="totalChip">합계: 0</span>
+            <button class="save-all-btn" onclick="saveAll()">💾 전체 저장</button>
+            <button class="del-all-btn" onclick="deleteAll()">🗑️ 전체 삭제</button>
+          </div>
+        </div>
+        <div id="memberList"><div class="empty-box">데이터를 불러오는 중...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 유저 관리 섹션 -->
+  <div id="userSection" style="display:none;">
+    <div class="container">
+      <div style="padding:20px 0 16px;">
+        <h2 style="font-size:1rem;font-weight:700;margin-bottom:16px;">👥 유저 관리</h2>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="loadUsers('pending', this)">⏳ 승인 대기</button>
+          <button class="tab-btn" onclick="loadUsers('active', this)">✅ 활성</button>
+          <button class="tab-btn" onclick="loadUsers('inactive', this)">🚫 비활성</button>
+        </div>
+      </div>
+      <div class="list-section">
+        <div class="list-header"><h2 id="userListTitle">승인 대기</h2></div>
+        <div id="userList"><div class="empty-box">불러오는 중...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -279,35 +192,37 @@
 
 <script>
 const API = "https://guild-backend-production-75a6.up.railway.app";
-const PW_HASH = "wedding260606";  // 비밀번호 (변경 원하면 여기 수정)
+const PW = "chingu2024";
 let currentGuild = "친구들";
 let currentMonth = "";
 let allRows = [];
-let guildMembers = {};  // 길드별 멤버 목록
+let guildMembers = {};
 
 // ── 비밀번호 ──
 function checkPw() {
-  const pw = document.getElementById("pwInput").value;
-  if (pw === PW_HASH) {
+  if (document.getElementById("pwInput").value === PW) {
     document.getElementById("lockScreen").style.display = "none";
     document.getElementById("mainUI").classList.add("unlocked");
-    sessionStorage.setItem("admin_unlocked", "1");
+    sessionStorage.setItem("admin_ok", "1");
     init();
   } else {
     document.getElementById("pwError").textContent = "비밀번호가 틀렸습니다";
     document.getElementById("pwInput").value = "";
   }
 }
-function lockOut() {
-  sessionStorage.removeItem("admin_unlocked");
-  location.reload();
-}
-
-// 세션 유지
-if (sessionStorage.getItem("admin_unlocked") === "1") {
+function lockOut() { sessionStorage.removeItem("admin_ok"); location.reload(); }
+if (sessionStorage.getItem("admin_ok") === "1") {
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("mainUI").classList.add("unlocked");
   init();
+}
+
+function showSection(sec) {
+  document.getElementById("contributionSection").style.display = sec === "contribution" ? "block" : "none";
+  document.getElementById("userSection").style.display = sec === "users" ? "block" : "none";
+  document.getElementById("tabContrib").classList.toggle("active", sec === "contribution");
+  document.getElementById("tabUsers").classList.toggle("active", sec === "users");
+  if (sec === "users") loadUsers("pending");
 }
 
 async function init() {
@@ -319,33 +234,26 @@ async function init() {
   await loadData();
 }
 
-// ── 길드원 목록 로드 ──
+// ── 길드원 목록 ──
 async function loadGuildMembers() {
   try {
     const res = await fetch(`${API}/api/members`);
     const data = await res.json();
     const members = Array.isArray(data) ? data : [];
-    const guilds = ["친구들","친구둘","친구삼","친구넷","친구닷"];
-    guilds.forEach(g => {
-      guildMembers[g] = members
-        .filter(m => m.guild === g)
-        .sort((a,b) => (b.power||0) - (a.power||0))
-        .map(m => m.name);
+    ["친구들","친구둘","친구삼","친구넷","친구닷"].forEach(g => {
+      guildMembers[g] = members.filter(m => m.guild === g)
+        .sort((a,b) => (b.power||0) - (a.power||0)).map(m => m.name);
     });
     updateMemberSelect();
-  } catch(e) {
-    console.error("길드원 로드 실패", e);
-  }
+  } catch(e) { console.error(e); }
 }
-
 function updateMemberSelect() {
   const sel = document.getElementById("memberSelect");
-  const members = guildMembers[currentGuild] || [];
   sel.innerHTML = `<option value="">-- 선택 --</option>` +
-    members.map(n => `<option value="${n}">${n}</option>`).join("");
+    (guildMembers[currentGuild]||[]).map(n => `<option value="${n}">${n}</option>`).join("");
 }
 
-// ── 데이터 로드 ──
+// ── 공헌도 로드 ──
 async function loadData() {
   currentMonth = document.getElementById("monthInput").value;
   if (!currentMonth) return;
@@ -354,30 +262,24 @@ async function loadData() {
     const data = await res.json();
     allRows = data.rows || [];
     renderList();
-  } catch(e) { showToast("데이터 로드 실패", false); }
+  } catch { showToast("로드 실패", false); }
 }
 
 function selectGuild(guild, btn) {
   currentGuild = guild;
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("#guildTabBar .tab-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   updateMemberSelect();
   renderList();
 }
 
 function renderList() {
-  const rows = allRows.filter(r => r.guild_name === currentGuild)
-    .sort((a,b) => b.contribution - a.contribution);
+  const rows = allRows.filter(r => r.guild_name === currentGuild).sort((a,b) => b.contribution - a.contribution);
   const total = rows.reduce((s,r) => s + r.contribution, 0);
-
   document.getElementById("listTitle").textContent = `${currentGuild} 공헌도`;
   document.getElementById("totalChip").textContent = `합계: ${total.toLocaleString()}`;
-
   const el = document.getElementById("memberList");
-  if (!rows.length) {
-    el.innerHTML = `<div class="empty-box">아직 입력된 공헌도가 없어요</div>`;
-    return;
-  }
+  if (!rows.length) { el.innerHTML = `<div class="empty-box">아직 입력된 공헌도가 없어요</div>`; return; }
   el.innerHTML = rows.map((r, i) => `
     <div class="member-row">
       <span class="member-rank">${i+1}</span>
@@ -391,7 +293,6 @@ function renderList() {
   `).join("");
 }
 
-// ── 개별 추가 ──
 async function addContribution() {
   const name = document.getElementById("memberSelect").value;
   const contrib = parseInt(document.getElementById("contribInput").value);
@@ -405,15 +306,14 @@ async function addContribution() {
 async function saveEdit(memberName) {
   const el = document.getElementById("edit_" + encodeURIComponent(memberName));
   const val = parseInt(el.value);
-  if (isNaN(val) || val < 0) { showToast("올바른 숫자를 입력해주세요", false); return; }
+  if (isNaN(val)) return;
   await upsert(memberName, val);
 }
 
 async function upsert(memberName, contribution) {
   try {
     await fetch(`${API}/api/contributions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: memberName, contribution }),
     });
     const idx = allRows.findIndex(r => r.guild_name === currentGuild && r.member_name === memberName);
@@ -424,88 +324,106 @@ async function upsert(memberName, contribution) {
   } catch { showToast("저장 실패", false); }
 }
 
-// ── 전체 저장 (현재 입력값 전체 저장) ──
 async function saveAll() {
   const rows = allRows.filter(r => r.guild_name === currentGuild);
   if (!rows.length) { showToast("저장할 데이터가 없어요", false); return; }
-
-  let success = 0;
+  let ok = 0;
   for (const r of rows) {
     const el = document.getElementById("edit_" + encodeURIComponent(r.member_name));
     const val = el ? parseInt(el.value) : r.contribution;
     if (isNaN(val)) continue;
     try {
       await fetch(`${API}/api/contributions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: r.member_name, contribution: val }),
       });
-      r.contribution = val;
-      success++;
+      r.contribution = val; ok++;
     } catch {}
   }
-  renderList();
-  showToast(`${success}명 전체 저장 완료 ✓`);
+  renderList(); showToast(`${ok}명 전체 저장 완료 ✓`);
 }
 
-// ── 전체 삭제 ──
 async function deleteAll() {
   const rows = allRows.filter(r => r.guild_name === currentGuild);
   if (!rows.length) { showToast("삭제할 데이터가 없어요", false); return; }
   if (!confirm(`${currentGuild} 공헌도 전체(${rows.length}명)를 삭제할까요?`)) return;
-
-  let success = 0;
   for (const r of rows) {
-    try {
-      await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(r.member_name)}`, {
-        method: "DELETE",
-      });
-      success++;
-    } catch {}
+    try { await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(r.member_name)}`, { method: "DELETE" }); } catch {}
   }
   allRows = allRows.filter(r => r.guild_name !== currentGuild);
-  renderList();
-  showToast(`${success}명 전체 삭제 완료`);
+  renderList(); showToast(`전체 삭제 완료`);
 }
 
-// ── 개별 삭제 ──
 async function deleteRow(memberName) {
   if (!confirm(`${memberName} 공헌도를 삭제할까요?`)) return;
   try {
     await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(memberName)}`, { method: "DELETE" });
     allRows = allRows.filter(r => !(r.guild_name === currentGuild && r.member_name === memberName));
-    renderList();
-    showToast(`${memberName} 삭제 완료`);
+    renderList(); showToast(`${memberName} 삭제 완료`);
   } catch { showToast("삭제 실패", false); }
 }
 
-// ── 일괄 입력 ──
-async function bulkAdd() {
-  const text = document.getElementById("bulkInput").value.trim();
-  if (!text) { showToast("내용을 입력해주세요", false); return; }
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  let success = 0, fail = 0;
-  for (const line of lines) {
-    const parts = line.split(/\s+/);
-    if (parts.length < 2) { fail++; continue; }
-    const name = parts.slice(0, -1).join(" ");
-    const contrib = parseInt(parts[parts.length-1].replace(/,/g,""));
-    if (!name || isNaN(contrib)) { fail++; continue; }
-    try {
-      await fetch(`${API}/api/contributions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: name, contribution: contrib }),
-      });
-      const idx = allRows.findIndex(r => r.guild_name === currentGuild && r.member_name === name);
-      if (idx >= 0) allRows[idx].contribution = contrib;
-      else allRows.push({ guild_name: currentGuild, member_name: name, contribution: contrib, month: currentMonth });
-      success++;
-    } catch { fail++; }
+// ── 유저 관리 ──
+async function loadUsers(status, btn) {
+  if (btn) {
+    document.querySelectorAll("#userSection .tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
   }
-  renderList();
-  document.getElementById("bulkInput").value = "";
-  showToast(`${success}명 저장 완료${fail ? ` (${fail}명 실패)` : ""}`);
+  const labels = { pending: "승인 대기", active: "활성 유저", inactive: "비활성 유저" };
+  document.getElementById("userListTitle").textContent = labels[status] || status;
+  try {
+    const res = await fetch(`${API}/api/auth/users?status=${status}`);
+    const users = await res.json();
+    const el = document.getElementById("userList");
+    if (!users.length) { el.innerHTML = `<div class="empty-box">해당하는 유저가 없어요</div>`; return; }
+    el.innerHTML = users.map(u => `
+      <div class="user-row">
+        <div>
+          <div style="font-weight:700;font-size:0.9rem;">${u.character_name}</div>
+          <div style="font-size:0.75rem;color:#9ca3af;">${u.guild||"미배정"} · ${new Date(u.created_at).toLocaleDateString("ko-KR")}</div>
+        </div>
+        <span class="status-badge status-${u.status}">${u.status==="active"?"활성":u.status==="pending"?"대기":"비활성"}</span>
+        ${u.status === "pending" ? `
+          <select class="guild-select" id="ug_${u.character_name}">
+            <option value="">길드 선택</option>
+            <option>친구들</option><option>친구둘</option><option>친구삼</option><option>친구넷</option><option>친구닷</option>
+          </select>
+          <button class="approve-btn" onclick="approveUser('${u.character_name}', 'pending')">승인</button>
+        ` : u.status === "active" ? `
+          <span></span>
+          <button class="deactivate-btn" onclick="deactivateUser('${u.character_name}')">비활성화</button>
+        ` : `
+          <span></span>
+          <button class="approve-btn" onclick="approveUser('${u.character_name}', 'inactive')">재활성화</button>
+        `}
+      </div>
+    `).join("");
+  } catch { showToast("로드 실패", false); }
+}
+
+async function approveUser(name, fromStatus) {
+  const guildEl = document.getElementById(`ug_${name}`);
+  const guild = guildEl ? guildEl.value : "";
+  try {
+    await fetch(`${API}/api/auth/approve`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, guild }),
+    });
+    showToast(`${name} 승인 완료 ✓`);
+    loadUsers(fromStatus);
+  } catch { showToast("실패", false); }
+}
+
+async function deactivateUser(name) {
+  if (!confirm(`${name}을 비활성화할까요?`)) return;
+  try {
+    await fetch(`${API}/api/auth/deactivate`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name }),
+    });
+    showToast(`${name} 비활성화 완료`);
+    loadUsers("active");
+  } catch { showToast("실패", false); }
 }
 
 function showToast(msg, ok = true) {

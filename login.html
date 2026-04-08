@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>친구패밀리 | 로그인</title>
+  <link rel="stylesheet" href="./assets/css/style.css?v=4" />
+  <style>
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--yellow-bg);
+      padding: 24px 16px;
+    }
+    .auth-box {
+      background: var(--white);
+      border: 1.5px solid var(--yellow-border);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(245,158,11,0.12);
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .auth-logo .emoji { font-size: 2.5rem; }
+    .auth-logo h1 { font-size: 1.2rem; font-weight: 800; margin: 6px 0 2px; }
+    .auth-logo p { font-size: 0.82rem; color: var(--text-soft); }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      padding: 8px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-soft);
+      border: none;
+      background: none;
+      transition: all 0.15s;
+    }
+    .auth-tab.active {
+      background: var(--white);
+      color: var(--amber-dark);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--yellow);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .submit-btn:hover { background: var(--amber); }
+    .submit-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+    .auth-msg {
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.83rem;
+      font-weight: 500;
+      display: none;
+      margin-top: 4px;
+    }
+    .auth-msg.error { background: #fff5f5; color: #dc2626; border: 1px solid #fca5a5; display: block; }
+    .auth-msg.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: block; }
+
+    .auth-notice {
+      background: var(--yellow-bg);
+      border: 1px solid var(--yellow-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--amber-dark);
+      line-height: 1.5;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.82rem;
+      color: var(--text-soft);
+    }
+    .back-link a { color: var(--amber); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="emoji">😊</div>
+      <h1>친구패밀리</h1>
+      <p>길드 멤버 전용 서비스</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">로그인</button>
+      <button class="auth-tab" onclick="showTab('register')">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="loginForm">
+      <div class="auth-form">
+        <div class="form-group">
+          <label>캐릭터명</label>
+          <input type="text" id="loginName" placeholder="게임 캐릭터명 입력" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label>비밀번호</label>
+          <input type="password" id="loginPw" placeholder="비밀번호 입력"
+                 onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+        </div>
+        <div class="auth-msg" id="loginMsg"></div>
+        <button class="submit-btn" onclick="doLogin()">로그인</button>
+      </div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="registerForm" style="display:none;">
+      <div class="auth-form">
+        <div class="auth-notice">
+          📌 실제 길드원만 가입 가능합니다<br>
+          가입 신청 후 운영진 승인이 필요해요
+        </div>
+        <div class="form-group">
+          <label>캐릭터명</label>
+          <input type="text" id="regName" placeholder="게임 캐릭터명 입력 (정확하게)" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label>비밀번호</label>
+          <input type="password" id="regPw" placeholder="4자 이상" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label>비밀번호 확인</label>
+          <input type="password" id="regPw2" placeholder="비밀번호 재입력"
+                 onkeydown="if(event.key==='Enter')doRegister()" autocomplete="new-password" />
+        </div>
+        <div class="auth-msg" id="registerMsg"></div>
+        <button class="submit-btn" onclick="doRegister()">가입 신청</button>
+      </div>
+    </div>
+
+    <div class="back-link">
+      <a href="./index.html">← 홈으로</a>
+    </div>
+  </div>
+</div>
+
+<script src="./assets/js/common.js?v=4"></script>
+<script>
+const API = "https://guild-backend-production-75a6.up.railway.app";
+
+function showTab(tab) {
+  document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
+  document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
+  document.querySelectorAll(".auth-tab").forEach((t, i) => {
+    t.classList.toggle("active", (i === 0 && tab === "login") || (i === 1 && tab === "register"));
+  });
+  clearMsgs();
+}
+
+function clearMsgs() {
+  ["loginMsg", "registerMsg"].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = "auth-msg";
+    el.textContent = "";
+  });
+}
+
+function showMsg(id, msg, isError = true) {
+  const el = document.getElementById(id);
+  el.className = "auth-msg " + (isError ? "error" : "success");
+  el.textContent = msg;
+}
+
+// 로그인
+async function doLogin() {
+  const name = document.getElementById("loginName").value.trim();
+  const pw = document.getElementById("loginPw").value;
+  if (!name || !pw) { showMsg("loginMsg", "캐릭터명과 비밀번호를 입력해주세요"); return; }
+
+  const btn = document.querySelector("#loginForm .submit-btn");
+  btn.disabled = true; btn.textContent = "로그인 중...";
+
+  try {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg("loginMsg", data.detail || "로그인 실패"); return; }
+
+    // 세션 저장
+    sessionStorage.setItem("user", JSON.stringify(data.user));
+    // 원래 가려던 페이지로 이동
+    const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
+    location.href = redirect;
+  } catch {
+    showMsg("loginMsg", "서버 연결 오류");
+  } finally {
+    btn.disabled = false; btn.textContent = "로그인";
+  }
+}
+
+// 회원가입
+async function doRegister() {
+  const name = document.getElementById("regName").value.trim();
+  const pw = document.getElementById("regPw").value;
+  const pw2 = document.getElementById("regPw2").value;
+
+  if (!name || !pw) { showMsg("registerMsg", "모든 항목을 입력해주세요"); return; }
+  if (pw.length < 4) { showMsg("registerMsg", "비밀번호는 4자 이상이어야 합니다"); return; }
+  if (pw !== pw2) { showMsg("registerMsg", "비밀번호가 일치하지 않습니다"); return; }
+
+  const btn = document.querySelector("#registerForm .submit-btn");
+  btn.disabled = true; btn.textContent = "신청 중...";
+
+  try {
+    const res = await fetch(`${API}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg("registerMsg", data.detail || "가입 신청 실패"); return; }
+
+    showMsg("registerMsg", "✓ " + data.message, false);
+    document.getElementById("regName").value = "";
+    document.getElementById("regPw").value = "";
+    document.getElementById("regPw2").value = "";
+  } catch {
+    showMsg("registerMsg", "서버 연결 오류");
+  } finally {
+    btn.disabled = false; btn.textContent = "가입 신청";
+  }
+}
+
+// 이미 로그인된 경우 홈으로
+if (sessionStorage.getItem("user")) {
+  const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
+  location.href = redirect;
+}
+</script>
+</body>
+</html>

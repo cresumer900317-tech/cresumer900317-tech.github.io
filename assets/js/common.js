@@ -112,6 +112,11 @@ function renderShell() {
   const root = document.getElementById("app-shell");
   if (!root) return;
   const page = document.body.dataset.page || "home";
+  const user = getUser();
+
+  // 공지/팁은 로그인 필요
+  if (!requireLogin(page)) return;
+
   const links = `
     ${navLink("./index.html", "home", "홈", page)}
     ${navLink("./ranking.html", "ranking", "랭킹", page)}
@@ -122,6 +127,15 @@ function renderShell() {
     ${navLink("./notice.html", "notice", "공지", page)}
     ${navLink("./tips.html", "tips", "팁", page)}
   `;
+
+  const userHtml = user
+    ? `<div class="nav-user">
+        <span class="nav-user-name">${escapeHtml(user.character_name)}</span>
+        <span class="nav-user-guild">${escapeHtml(user.guild||"")}</span>
+        <button class="nav-logout-btn" onclick="logout()">로그아웃</button>
+       </div>`
+    : `<a class="nav-login-btn" href="./login.html">로그인</a>`;
+
   root.innerHTML = `
     <header class="site-header-bar">
       <div class="container site-header-inner">
@@ -133,6 +147,7 @@ function renderShell() {
           </div>
         </a>
         <nav class="nav-menu">${links}</nav>
+        ${userHtml}
         <button id="mobileMenuButton" class="mobile-menu-btn" type="button" aria-label="메뉴 열기">☰</button>
       </div>
       <div id="mobileNavPanel" class="mobile-nav-panel">
@@ -200,4 +215,26 @@ function byGuild(rows) {
     grouped[guild].push(row);
   });
   return grouped;
+}
+// ── 인증 유틸 ──────────────────────────────────────────────
+function getUser() {
+  try {
+    const u = sessionStorage.getItem("user");
+    return u ? JSON.parse(u) : null;
+  } catch { return null; }
+}
+
+function requireLogin(page) {
+  // 공지, 팁 페이지는 로그인 필요
+  const restricted = ["notice", "tips"];
+  if (restricted.includes(page) && !getUser()) {
+    location.href = `./login.html?redirect=./${page}.html`;
+    return false;
+  }
+  return true;
+}
+
+function logout() {
+  sessionStorage.removeItem("user");
+  location.href = "./index.html";
 }

@@ -2224,3 +2224,47 @@ main { padding: 0 0 48px; }
   .activity-row { grid-template-columns: 20px 1fr auto auto; gap: 6px; }
   .activity-guild { display: none; }
 }
+
+/* ===== 네비 로그인 상태 ===== */
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-user-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.nav-user-guild {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.nav-logout-btn {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.nav-logout-btn:hover { background: var(--bg); }
+.nav-login-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  background: var(--yellow);
+  color: var(--white);
+  border-radius: 999px;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.nav-login-btn:hover { background: var(--amber); }
+
+@media (max-width: 768px) {
+  .nav-user { display: none; }
+  .nav-login-btn { display: none; }
+}
