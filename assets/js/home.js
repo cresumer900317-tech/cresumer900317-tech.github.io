@@ -224,51 +224,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">🔥 최근 순위 변동</div>
-              <div class="section-sub">서버 순위 상승/하락 TOP 이벤트</div>
-            </div>
-          </div>
-          <div class="activity-log">
-            ${(() => {
-              // 순위 변동 있는 멤버들
-              const movers = sortedRanking
-                .filter(r => r.serverRankDiff && r.serverRankDiff !== 0)
-                .sort((a, b) => Math.abs(b.serverRankDiff || 0) - Math.abs(a.serverRankDiff || 0))
-                .slice(0, 6);
-
-              if (!movers.length) return `<div class="activity-empty">순위 변동 데이터 수집 중...</div>`;
-
-              return movers.map(item => {
-                const diff = item.serverRankDiff || 0;
-                const isUp = diff > 0;
-                const rank = sortedRanking.findIndex(r => r.name === item.name) + 1;
-                const inTop30 = rank <= 30 && rank > 0;
-                const enteredTop30 = inTop30 && (rank + diff) > 30;
-
-                let logText = "";
-                if (enteredTop30) logText = `🎉 TOP30 진입!`;
-                else if (isUp) logText = `▲${formatNumber(Math.abs(diff))} 상승`;
-                else logText = `▼${formatNumber(Math.abs(diff))} 하락`;
-
-                return `
-                  <div class="activity-row${enteredTop30 ? " activity-special" : ""}">
-                    <span class="activity-icon">${enteredTop30 ? "🎉" : isUp ? "🔥" : "📉"}</span>
-                    <span class="activity-name">${escapeHtml(item.name || "-")}</span>
-                    <span class="activity-guild">${guildBadgeHtml(item.guild || "")}</span>
-                    <span class="activity-desc${isUp ? " activity-up" : " activity-down"}">${logText}</span>
-                    <span class="activity-rank">현재 서버 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</span>
-                  </div>
-                `;
-              }).join("");
-            })()}
-          </div>
-        </div>
-      </div>
-
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
               <div class="section-title">🏆 이번 달 성장왕</div>
               <div class="section-sub">월간 성장량 TOP 3</div>
             </div>
