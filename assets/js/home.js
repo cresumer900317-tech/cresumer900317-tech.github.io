@@ -3,12 +3,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
-    const [summary, members, monthlyRes, rankingRes] = await Promise.all([
+    const [summary, members, monthlyRes, rankingRes, visitorRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/ranking`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
     ]);
+    const visitorStats = visitorRes || {};
     const rankingRows = Array.isArray(rankingRes) ? rankingRes : [];
     const sortedRanking = [...rankingRows].sort((a, b) => Number(b.power||0) - Number(a.power||0));
     const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
@@ -154,6 +156,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
               `;
             }).join("")}
+          </div>
+        </div>
+      </div>
+
+      <!-- 방문자 위젯 -->
+      <div style="background:var(--white);border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:8px 0;">
+        <div class="container">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-soft);">
+            <span>🟢 현재 접속 <strong style="color:var(--text);">${visitorStats.online||0}명</strong></span>
+            <span>📅 오늘 방문 <strong style="color:var(--text);">${visitorStats.today||0}명</strong></span>
+            <span>📊 누적 방문 <strong style="color:var(--text);">${formatNumber(visitorStats.total||0)}명</strong></span>
+            ${(visitorStats.online_list||[]).length > 0 ? `
+              <span style="color:var(--text-faint);">
+                ${(visitorStats.online_list||[]).slice(0,5).map(u => escapeHtml(u.name)).join(", ")}
+                ${(visitorStats.online_list||[]).length > 5 ? ` 외 ${(visitorStats.online_list||[]).length - 5}명` : ""}
+              </span>
+            ` : ""}
           </div>
         </div>
       </div>

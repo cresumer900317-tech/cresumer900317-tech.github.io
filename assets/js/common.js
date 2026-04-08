@@ -160,6 +160,11 @@ function renderShell() {
   if (mobileMenuButton && mobileNavPanel) {
     mobileMenuButton.addEventListener("click", () => mobileNavPanel.classList.toggle("is-open"));
   }
+
+  // 방문자 ping
+  pingVisitor();
+  // 3분마다 재핑 (접속 유지)
+  setInterval(pingVisitor, 3 * 60 * 1000);
 }
 
 function renderLoading(targetId, message = "불러오는 중...") {
@@ -216,6 +221,26 @@ function byGuild(rows) {
   });
   return grouped;
 }
+// ── 방문자 트래킹 ──────────────────────────────────────────
+function getSessionId() {
+  let sid = sessionStorage.getItem("session_id");
+  if (!sid) {
+    sid = "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+    sessionStorage.setItem("session_id", sid);
+  }
+  return sid;
+}
+
+function pingVisitor() {
+  const user = getUser();
+  const name = user ? user.character_name : ("guest_" + getSessionId().slice(-4));
+  fetch("https://guild-backend-production-75a6.up.railway.app/api/visitors/ping", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: getSessionId(), character_name: name }),
+  }).catch(() => {});
+}
+
 // ── 인증 유틸 ──────────────────────────────────────────────
 function getUser() {
   try {
