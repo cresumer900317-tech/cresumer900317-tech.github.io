@@ -2063,3 +2063,12 @@ main { padding: 0 0 48px; }
   .rv2-medal-cell { padding: 8px 4px; font-size: 0.74rem; }
   .rv2-medal-guild { padding: 8px 4px; font-size: 0.74rem; }
 }
+
+/* 길드 카드 성향 설명 */
+.guild-board-desc {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin: 6px 0 4px;
+  line-height: 1.4;
+}

@@ -70,15 +70,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             메이플키우기 · 스카니아 11서버
           </div>
           <h1 class="hero-title">🔥 TOP30 승격 경쟁<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">매달 상위 30명 메인 길드 이동 · 실시간 랭킹 시스템 운영</p>
-          <p class="hero-update">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
+          <p class="hero-desc">지금 참여하면 운영진이 길드를 직접 배정해드립니다</p>
+          <div style="display:flex;align-items:center;gap:8px;margin:8px 0 14px;flex-wrap:wrap;">
+            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 이번 달 마감 임박</span>
+            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명 참여 중</span>
+          </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
-            <a class="cta-btn" href="./ranking.html">🏆 랭킹 보기</a>
-            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">💬 빠른 가입 문의</a>
+            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 지금 바로 참여하기</a>
+            <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
-          <div style="margin-top:8px;">
-            <span style="font-size:0.75rem;color:var(--text-faint);">운영진이 길드를 배정해드려요 · 1:1 안내</span>
+          <div style="margin-top:10px;font-size:0.78rem;color:var(--text-soft);">
+            운영진이 활동 성향에 맞게 길드를 배정해드립니다 · 과밀 방지 / 성장 관리 진행
           </div>
+          <p class="hero-update" style="margin-top:6px;">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">총 길드 수</div>
@@ -141,9 +145,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="guild-board-stat-label">합산 전투력</div>
                     <div class="guild-board-stat-val">${formatCompactPower(avg)}</div>
                   </div>
+                  ${({"친구들":"🔥 TOP30 경쟁 메인 길드","친구둘":"⚔️ 내부 리그 강자","친구삼":"📈 균형형 경쟁 길드","친구넷":"🚀 성장형 경쟁 길드","친구닷":"🌱 확장/자유 길드"})[guild] ? `<div class="guild-board-desc">${({"친구들":"🔥 TOP30 경쟁 메인 길드","친구둘":"⚔️ 내부 리그 강자","친구삼":"📈 균형형 경쟁 길드","친구넷":"🚀 성장형 경쟁 길드","친구닷":"🌱 확장/자유 길드"})[guild]}</div>` : ""}
                   <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "🔒 정원 마감" : "✨ 모집 중"}</div>
-                  <div class="guild-board-more">길드 보러가기 →</div>
-                  <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="guild-board-inquiry" onclick="event.stopPropagation()">💬 가입 문의</a>
+                  <div class="guild-board-more">자세히 보기 →</div>
                 </div>
               `;
             }).join("")}
