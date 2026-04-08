@@ -26,9 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── 추가 계산 ──
     guilds.forEach(g => {
       const members = g.members || [];
-      const sorted = [...members].sort((a, b) => (b.power||0) - (a.power||0));
       g.avg_power = members.length ? Math.round(members.reduce((s,m) => s + (m.power||0), 0) / members.length) : 0;
-      g.top10_power = sorted.slice(0, 10).reduce((s,m) => s + (m.power||0), 0);
     });
 
     // ── 이번 주 승자 계산 ──
@@ -104,7 +102,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const STAT_ITEMS = [
       { label: "⚔️ 합산 전투력", key: "total_power",     fmt: v => formatCompactPower(v), higher: true },
       { label: "📈 이달 성장",   key: "monthly_growth",  fmt: v => v ? `+${formatCompactPower(v)}` : "-", higher: true, skipNull: true },
-      { label: "🏅 TOP10 합산",  key: "top10_power",      fmt: v => formatCompactPower(v), higher: true },
       { label: "⭐ 평균 레벨",   key: "avg_level",        fmt: v => `Lv ${v}`, higher: true },
       { label: "🗺️ 서버 순위",  key: "server_rank",      fmt: v => v ? `${formatNumber(v)}위` : "-", higher: false },
       { label: "📊 성장률",      key: "growth_rate",      fmt: v => v ? `${v}%` : "-", higher: true, skipNull: true },
