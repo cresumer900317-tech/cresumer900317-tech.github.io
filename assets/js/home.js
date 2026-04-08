@@ -192,11 +192,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 else trendHtml = `<span class="cl-flat">—</span>`;
 
                 let distHtml = "";
-                if (rank !== 30) {
+                if (rank === 30) {
+                  distHtml = `<span class="cl-cut-label">🏆 컷</span>`;
+                } else if (rank > 30) {
                   const absDiff = Math.abs(diff);
-                  distHtml = diff >= 0
-                    ? `<span class="cl-dist-safe">+${formatCompactPower(absDiff)}</span>`
-                    : `<span class="cl-dist-danger">-${formatCompactPower(absDiff)}</span>`;
+                  distHtml = `<span class="cl-dist-danger">-${formatCompactPower(absDiff)}</span>`;
+                } else {
+                  const absDiff = Math.abs(diff);
+                  distHtml = `<span class="cl-dist-safe">+${formatCompactPower(absDiff)}</span>`;
                 }
 
                 return `
@@ -210,6 +213,51 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="cl-dist">${distHtml}</span>
                   </div>
                   ${isCut ? `<div class="cl-cutline-bar cl-cutline-below"><span>── 컷라인 이하 ──</span></div>` : ""}
+                `;
+              }).join("");
+            })()}
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🔥 최근 순위 변동</div>
+              <div class="section-sub">서버 순위 상승/하락 TOP 이벤트</div>
+            </div>
+          </div>
+          <div class="activity-log">
+            ${(() => {
+              // 순위 변동 있는 멤버들
+              const movers = sortedRanking
+                .filter(r => r.serverRankDiff && r.serverRankDiff !== 0)
+                .sort((a, b) => Math.abs(b.serverRankDiff || 0) - Math.abs(a.serverRankDiff || 0))
+                .slice(0, 6);
+
+              if (!movers.length) return `<div class="activity-empty">순위 변동 데이터 수집 중...</div>`;
+
+              return movers.map(item => {
+                const diff = item.serverRankDiff || 0;
+                const isUp = diff > 0;
+                const rank = sortedRanking.findIndex(r => r.name === item.name) + 1;
+                const inTop30 = rank <= 30 && rank > 0;
+                const enteredTop30 = inTop30 && (rank + diff) > 30;
+
+                let logText = "";
+                if (enteredTop30) logText = `🎉 TOP30 진입!`;
+                else if (isUp) logText = `▲${formatNumber(Math.abs(diff))} 상승`;
+                else logText = `▼${formatNumber(Math.abs(diff))} 하락`;
+
+                return `
+                  <div class="activity-row${enteredTop30 ? " activity-special" : ""}">
+                    <span class="activity-icon">${enteredTop30 ? "🎉" : isUp ? "🔥" : "📉"}</span>
+                    <span class="activity-name">${escapeHtml(item.name || "-")}</span>
+                    <span class="activity-guild">${guildBadgeHtml(item.guild || "")}</span>
+                    <span class="activity-desc${isUp ? " activity-up" : " activity-down"}">${logText}</span>
+                    <span class="activity-rank">현재 서버 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</span>
+                  </div>
                 `;
               }).join("");
             })()}

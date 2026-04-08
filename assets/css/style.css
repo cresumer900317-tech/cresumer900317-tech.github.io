@@ -2176,3 +2176,51 @@ main { padding: 0 0 48px; }
   .cl-dist { display: none; }
   .growth-king-grid { grid-template-columns: 1fr; }
 }
+
+/* 컷라인 레이블 */
+.cl-cut-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--amber-dark);
+  background: var(--yellow);
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* 활동 로그 */
+.activity-log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.activity-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: background 0.1s;
+}
+.activity-row:hover { background: var(--bg); }
+.activity-special {
+  background: var(--yellow-bg) !important;
+  border-color: var(--yellow-border) !important;
+  border-width: 1.5px !important;
+}
+.activity-icon { font-size: 1rem; text-align: center; }
+.activity-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+.activity-guild { flex-shrink: 0; }
+.activity-desc { font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
+.activity-up { color: #059669; }
+.activity-down { color: #dc2626; }
+.activity-rank { font-size: 0.75rem; color: var(--text-faint); white-space: nowrap; }
+.activity-empty { text-align: center; padding: 20px; color: var(--text-faint); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .activity-row { grid-template-columns: 20px 1fr auto auto; gap: 6px; }
+  .activity-guild { display: none; }
+}
