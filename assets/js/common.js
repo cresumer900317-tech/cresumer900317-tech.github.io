@@ -186,6 +186,37 @@ function renderShell() {
   setInterval(pingVisitor, 3 * 60 * 1000);
 }
 
+function getPowerDisplay(item) {
+  const pt = item.powerText || "";
+  const parts = pt.trim().split(/\s+/).filter(Boolean);
+  return parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+}
+
+function bindCardSearch(inputId, resetBtnId, listId, dataAttr) {
+  const input = document.getElementById(inputId);
+  const resetBtn = document.getElementById(resetBtnId);
+  const wrap = document.getElementById(listId);
+  if (!input || !wrap) return;
+  function apply() {
+    const kw = String(input.value || "").trim().toLowerCase();
+    const cards = Array.from(wrap.querySelectorAll(`[${dataAttr}]`));
+    cards.forEach(c => c.classList.remove("highlight-card", "dim-card"));
+    if (!kw) return;
+    let first = null;
+    cards.forEach(c => {
+      if ((c.getAttribute(dataAttr) || "").includes(kw)) {
+        c.classList.add("highlight-card");
+        if (!first) first = c;
+      } else {
+        c.classList.add("dim-card");
+      }
+    });
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  input.addEventListener("input", apply);
+  if (resetBtn) resetBtn.addEventListener("click", () => { input.value = ""; apply(); input.focus(); });
+}
+
 function renderLoading(targetId, message = "불러오는 중...") {
   const el = document.getElementById(targetId) || document.querySelector("main");
   if (el) el.innerHTML = `<div class="container" style="padding-top:40px;"><div class="loading-box">${escapeHtml(message)}</div></div>`;
@@ -253,7 +284,7 @@ function getSessionId() {
 function pingVisitor() {
   const user = getUser();
   const name = user ? user.character_name : ("guest_" + getSessionId().slice(-4));
-  fetch("https://guild-backend-production-75a6.up.railway.app/api/visitors/ping", {
+  fetch(`${API_BASE}/api/visitors/ping`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: getSessionId(), character_name: name }),

@@ -1,12 +1,11 @@
 document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
-  const API = "https://guild-backend-production-75a6.up.railway.app";
   const user = getUser();
   const isAdmin = user?.role === "admin";
 
   try {
-    const res = await fetch(`${API}/api/notices`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/notices`, { cache: "no-store" });
     const notices = await res.json();
 
     function categoryColor(cat) {
@@ -89,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const category = document.getElementById("nCat").value;
     const is_pinned = document.getElementById("nPin").checked;
     if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
-    const res = await fetch(`${API}/api/notices`, {
+    const res = await fetch(`${API_BASE}/api/notices`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, content, category, is_pinned, author: user?.character_name||"운영진", author_guild: user?.guild||"" }),
     });
@@ -98,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   window.openPost = async function(id) {
-    const res = await fetch(`${API}/api/notices`);
+    const res = await fetch(`${API_BASE}/api/notices`);
     const list = await res.json();
     const post = list.find(n => n.id === id);
     if (!post) return;
@@ -131,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.deleteNotice = async function(id) {
     if (!confirm("삭제할까요?")) return;
-    await fetch(`${API}/api/notices/${id}`, { method: "DELETE" });
+    await fetch(`${API_BASE}/api/notices/${id}`, { method: "DELETE" });
     closeModal(); location.reload();
   };
 });

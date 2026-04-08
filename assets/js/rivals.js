@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
   try {
-    const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
     const res = await fetch(`${API_BASE}/api/rivals`, { cache: "no-store" });
     if (!res.ok) throw new Error("데이터를 불러오지 못했습니다.");
     const guilds = await res.json();
@@ -248,10 +247,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   } catch (error) {
     console.error(error);
-    document.querySelector("main").innerHTML = `
-      <div class="container" style="padding-top:40px;">
-        <div class="error-box">데이터를 불러오지 못했습니다: ${escapeHtml(error?.message||"오류")}</div>
-      </div>
-    `;
+    renderError(null, error);
   }
 });

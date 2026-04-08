@@ -58,8 +58,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const smallSize = size === "lg" ? "1rem" : "0.82rem";
         return `<span style="font-size:${bigSize};font-weight:900;color:var(--amber);">${escapeHtml(parts[0])}</span><span style="font-size:0.65rem;color:var(--text-faint);margin:0 3px;font-weight:400;">|</span><span style="font-size:${smallSize};font-weight:700;color:var(--amber-dark);">${escapeHtml(parts[1])}</span>`;
       }
-      const fallback = pt || formatCompactPower(item.power);
-      return `<span style="font-size:1.05rem;font-weight:800;color:var(--amber);">${escapeHtml(fallback)}</span>`;
+      return `<span style="font-size:1.05rem;font-weight:800;color:var(--amber);">${escapeHtml(getPowerDisplay(item))}</span>`;
     }
 
     // ── 탭 바 ──
@@ -418,50 +417,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // 전투력 검색
       if (tab === "power") {
-        const input = document.getElementById("rankingSearchInput");
-        const resetBtn = document.getElementById("rankingResetButton");
-        const wrap = document.getElementById("rankingCardList");
-        if (input && wrap) {
-          function applySearch() {
-            const kw = String(input.value || "").trim().toLowerCase();
-            const cards = Array.from(wrap.querySelectorAll("[data-character-row]"));
-            cards.forEach(c => c.classList.remove("highlight-card", "dim-card"));
-            if (!kw) return;
-            let first = null;
-            cards.forEach(c => {
-              if ((c.getAttribute("data-character-row") || "").includes(kw)) {
-                c.classList.add("highlight-card"); if (!first) first = c;
-              } else { c.classList.add("dim-card"); }
-            });
-            if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-          input.addEventListener("input", applySearch);
-          resetBtn.addEventListener("click", () => { input.value = ""; applySearch(); input.focus(); });
-        }
+        bindCardSearch("rankingSearchInput", "rankingResetButton", "rankingCardList", "data-character-row");
       }
 
       // 인기도 검색
       if (tab === "popularity") {
-        const input = document.getElementById("popSearchInput");
-        const resetBtn = document.getElementById("popResetButton");
-        const wrap = document.getElementById("popCardList");
-        if (input && wrap) {
-          function applyPopSearch() {
-            const kw = String(input.value || "").trim().toLowerCase();
-            const cards = Array.from(wrap.querySelectorAll("[data-pop-row]"));
-            cards.forEach(c => c.classList.remove("highlight-card", "dim-card"));
-            if (!kw) return;
-            let first = null;
-            cards.forEach(c => {
-              if ((c.getAttribute("data-pop-row") || "").includes(kw)) {
-                c.classList.add("highlight-card"); if (!first) first = c;
-              } else { c.classList.add("dim-card"); }
-            });
-            if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-          input.addEventListener("input", applyPopSearch);
-          resetBtn.addEventListener("click", () => { input.value = ""; applyPopSearch(); input.focus(); });
-        }
+        bindCardSearch("popSearchInput", "popResetButton", "popCardList", "data-pop-row");
       }
     }
 
@@ -469,10 +430,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   } catch (error) {
     console.error(error);
-    document.querySelector("main").innerHTML = `
-      <div class="container" style="padding-top:40px;">
-        <div class="error-box">데이터를 불러오지 못했습니다: ${escapeHtml(error?.message || "오류")}</div>
-      </div>
-    `;
+    renderError(null, error);
   }
 });

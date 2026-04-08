@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
   try {
-    const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
     const res = await fetch(`${API_BASE}/api/monthly`, { cache: "no-store" });
     if (!res.ok) throw new Error("월간 성장 데이터를 불러오지 못했습니다.");
     const members = await res.json();
@@ -55,9 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return list.map((item, idx) => {
         const rank = idx + 1;
         const isFirst = rank === 1;
-        const pt = item.powerText || "";
-        const parts = pt.trim().split(/\s+/).filter(Boolean);
-        const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+        const displayPower = getPowerDisplay(item);
 
         return `
           <article class="list-card monthly-card${isFirst ? " monthly-card-first" : ""}" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
@@ -140,37 +137,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `;
 
-    const input = document.getElementById("monthlySearchInput");
-    const resetButton = document.getElementById("monthlyResetButton");
-    const wrap = document.getElementById("monthlyCardList");
-
-    function applySearch() {
-      const keyword = String(input.value || "").trim().toLowerCase();
-      const cards = Array.from(wrap.querySelectorAll("[data-character-row]"));
-      cards.forEach(card => card.classList.remove("highlight-card", "dim-card"));
-      if (!keyword) return;
-      let firstMatch = null;
-      cards.forEach(card => {
-        const name = card.getAttribute("data-character-row") || "";
-        if (name.includes(keyword)) {
-          card.classList.add("highlight-card");
-          if (!firstMatch) firstMatch = card;
-        } else {
-          card.classList.add("dim-card");
-        }
-      });
-      if (firstMatch) firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-
-    input.addEventListener("input", applySearch);
-    resetButton.addEventListener("click", () => { input.value = ""; applySearch(); });
+    bindCardSearch("monthlySearchInput", "monthlyResetButton", "monthlyCardList", "data-character-row");
 
   } catch (error) {
     console.error(error);
-    document.querySelector("main").innerHTML = `
-      <div class="container" style="padding-top:40px;">
-        <div class="error-box">데이터를 불러오지 못했습니다: ${escapeHtml(error?.message || "오류")}</div>
-      </div>
-    `;
+    renderError(null, error);
   }
 });

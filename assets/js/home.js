@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
   try {
-    const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
     const user = getUser();
     const [summary, members, monthlyRes, rankingRes, visitorRes] = await Promise.all([
       getHomeData(),
@@ -64,9 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const top500Count = rows.filter((r) => Number(r.serverRank || 0) > 0 && Number(r.serverRank) <= 500).length;
     const top500Rate = memberCount > 0 ? ((top500Count / memberCount) * 100).toFixed(1) : "0.0";
     const topPlayer = [...rows].sort((a, b) => Number(b.power || 0) - Number(a.power || 0))[0] || {};
-    const topPlayerPt = topPlayer.powerText || "";
-    const topPlayerParts = topPlayerPt.trim().split(/\s+/).filter(Boolean);
-    const topPlayerPower = topPlayerParts.length >= 2 ? topPlayerParts[0] + " " + topPlayerParts[1] : topPlayerPt || formatCompactPower(topPlayer.power);
+    const topPlayerPower = getPowerDisplay(topPlayer);
 
     document.querySelector("main").innerHTML = `
       <div class="home-hero">
@@ -195,9 +192,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const isAbove = rank <= 30;
                 const diff = Number(item.power || 0) - cutPower;
                 const rankDiff = item.serverRankDiff || 0;
-                const pt = item.powerText || "";
-                const parts = pt.trim().split(/\s+/).filter(Boolean);
-                const dispPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+                const dispPower = getPowerDisplay(item);
 
                 let statusClass = isAbove ? "cl-safe" : "cl-neutral";
                 if (rank >= 28 && rank <= 30) statusClass = "cl-watch";
@@ -379,9 +374,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
 
         document.getElementById("modalTop5").innerHTML = sorted.map((item, i) => {
-          const pt = item.powerText || "";
-          const parts = pt.trim().split(/\s+/).filter(Boolean);
-          const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+          const displayPower = getPowerDisplay(item);
           return `
             <div class="modal-member-row">
               <span class="modal-member-rank">${i + 1}</span>
@@ -413,10 +406,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   } catch (error) {
     console.error(error);
-    document.querySelector("main").innerHTML = `
-      <div class="container" style="padding-top:40px;">
-        <div class="error-box">데이터를 불러오지 못했습니다: ${escapeHtml(error?.message || "오류")}</div>
-      </div>
-    `;
+    renderError(null, error);
   }
 });

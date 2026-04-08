@@ -1,11 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
-  const API = "https://guild-backend-production-75a6.up.railway.app";
   const user = getUser();
 
   try {
-    const res = await fetch(`${API}/api/tips`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/tips`, { cache: "no-store" });
     const tips = await res.json();
 
     function categoryColor(cat) {
@@ -105,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const category = document.getElementById("tCat").value;
     if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
     if (!user) { alert("로그인이 필요합니다"); return; }
-    const res = await fetch(`${API}/api/tips`, {
+    const res = await fetch(`${API_BASE}/api/tips`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, content, category, author: user.character_name, author_guild: user.guild||"" }),
     });
@@ -114,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   window.openTip = async function(id) {
-    const res = await fetch(`${API}/api/tips`);
+    const res = await fetch(`${API_BASE}/api/tips`);
     const list = await res.json();
     const tip = list.find(t => t.id === id);
     if (!tip) return;
@@ -150,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   window.likeTip = async function(id) {
-    const res = await fetch(`${API}/api/tips/${id}/like`, { method: "POST" });
+    const res = await fetch(`${API_BASE}/api/tips/${id}/like`, { method: "POST" });
     const data = await res.json();
     // 좋아요 수 업데이트
     const btn = document.querySelector(`button[onclick="likeTip(${id})"]`);
@@ -164,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.deleteTip = async function(id) {
     if (!confirm("삭제할까요?")) return;
-    await fetch(`${API}/api/tips/${id}`, { method: "DELETE" });
+    await fetch(`${API_BASE}/api/tips/${id}`, { method: "DELETE" });
     closeTipModal(); location.reload();
   };
 });

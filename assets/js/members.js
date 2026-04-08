@@ -37,12 +37,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    function getPowerDisplay(item) {
-      const pt = item.powerText || "";
-      const parts = pt.trim().split(/\s+/).filter(Boolean);
-      return parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
-    }
-
     // 길드 요약 카드 (항상 고정)
     function renderGuildSummary() {
       return `
@@ -238,10 +232,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   } catch (error) {
     console.error(error);
-    document.querySelector("main").innerHTML = `
-      <div class="container" style="padding-top:40px;">
-        <div class="error-box">데이터를 불러오지 못했습니다: ${escapeHtml(error?.message || "오류")}</div>
-      </div>
-    `;
+    renderError(null, error);
   }
 });
