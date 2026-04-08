@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
+    const user = getUser();
     const [summary, members, monthlyRes, rankingRes, visitorRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
