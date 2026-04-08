@@ -10,12 +10,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 길드별 테마
     const THEMES = {
-      "친구들":  { color: "#f59e0b", light: "#fffbeb", border: "#fde68a", dark: "#92400e", emoji: "😊", tag: "우리 길드" },
-      "싸이월드": { color: "#3b82f6", light: "#eff6ff", border: "#bfdbfe", dark: "#1d4ed8", emoji: "🌐", tag: "라이벌" },
-      "리안":    { color: "#8b5cf6", light: "#f5f3ff", border: "#ddd6fe", dark: "#6d28d9", emoji: "⚔️", tag: "라이벌" },
+      "친구들":  { color: "#f59e0b", light: "#fffbeb", border: "#fde68a", dark: "#92400e", emoji: "😊", icon: null, tag: "우리 길드" },
+      "싸이월드": { color: "#3b82f6", light: "#eff6ff", border: "#bfdbfe", dark: "#1d4ed8", emoji: "🌐", icon: "./assets/img/cyworld-imoge.png", tag: "라이벌" },
+      "리안":    { color: "#8b5cf6", light: "#f5f3ff", border: "#ddd6fe", dark: "#6d28d9", emoji: "⚔️", icon: "./assets/img/lian-imoge.png", tag: "라이벌" },
     };
     function theme(name) {
-      return THEMES[name] || { color: "#6b7280", light: "#f9fafb", border: "#e5e7eb", dark: "#374151", emoji: "🏰", tag: "" };
+      return THEMES[name] || { color: "#6b7280", light: "#f9fafb", border: "#e5e7eb", dark: "#374151", emoji: "🏰", icon: null, tag: "" };
+    }
+    function guildIconHtml(t, size = 28) {
+      if (t.icon) {
+        return `<img src="${t.icon}" alt="길드마크" style="width:${size}px;height:${size}px;image-rendering:pixelated;vertical-align:middle;" />`;
+      }
+      return `<span style="font-size:${size * 0.9}px;line-height:1;">${t.emoji}</span>`;
     }
 
     const maxPower = Math.max(...guilds.map(g => g.total_power || 0));
@@ -39,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="rv2-result-card${isFirst ? " rv2-result-first" : ""}" style="border-color:${t.border};background:${t.light};">
           ${isFirst ? `<div class="rv2-first-crown" style="background:${t.color};">👑 1위</div>` : ""}
           <div class="rv2-result-medal">${medals[rank - 1] || rank + "위"}</div>
-          <div class="rv2-result-guild" style="color:${t.color};">${t.emoji} ${escapeHtml(guild.guild_name)}</div>
+          <div class="rv2-result-guild" style="color:${t.color};">${guildIconHtml(t, 24)} ${escapeHtml(guild.guild_name)}</div>
           ${t.tag ? `<div class="rv2-result-tag" style="background:${t.color}20;color:${t.dark};">${t.tag}</div>` : ""}
           <div class="rv2-result-power" style="color:${t.color};">${formatCompactPower(guild.total_power)}</div>
           <div class="rv2-result-sub">총 전투력</div>
@@ -65,7 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const pct = maxPower > 0 ? Math.round((g.total_power / maxPower) * 100) : 0;
         return `
           <div class="rv2-col-header" style="border-color:${t.border};background:${t.light};">
-            <div style="font-size:1.1rem;font-weight:800;color:${t.color};">${t.emoji} ${escapeHtml(g.guild_name)}</div>
+            <div style="font-size:1rem;font-weight:800;color:${t.color};">${guildIconHtml(t, 26)} ${escapeHtml(g.guild_name)}</div>
             <div style="font-size:0.78rem;color:var(--text-soft);margin:2px 0;">${g.member_count}명</div>
             <div class="rv2-mini-bar-track">
               <div class="rv2-mini-bar-fill" style="width:${pct}%;background:${t.color};"></div>
@@ -192,7 +198,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="rv2-medal-label">항목</div>
                 ${guilds.map(g => {
                   const t = theme(g.guild_name);
-                  return `<div class="rv2-medal-guild" style="color:${t.color};">${t.emoji} ${escapeHtml(g.guild_name)}</div>`;
+                  return `<div class="rv2-medal-guild" style="color:${t.color};">${guildIconHtml(t, 20)} ${escapeHtml(g.guild_name)}</div>`;
                 }).join("")}
               </div>
               ${medalBoardHtml()}
