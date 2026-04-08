@@ -16,11 +16,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     function theme(name) {
       return THEMES[name] || { color: "#6b7280", light: "#f9fafb", border: "#e5e7eb", dark: "#374151", emoji: "🏰", icon: null, tag: "" };
     }
-    function guildIconHtml(t, size = 28) {
+    function guildIconHtml(t, size = 28, inline = false) {
       if (t.icon) {
-        return `<img src="${t.icon}" alt="길드마크" style="width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;mix-blend-mode:multiply;display:block;margin:0 auto;" />`;
+        const style = inline
+          ? `width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;mix-blend-mode:multiply;display:inline-block;vertical-align:middle;`
+          : `width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;mix-blend-mode:multiply;display:block;margin:0 auto;`;
+        return `<img src="${t.icon}" alt="길드마크" style="${style}" />`;
       }
-      return `<span style="font-size:${size}px;line-height:1;display:block;text-align:center;">${t.emoji}</span>`;
+      return inline
+        ? `<span style="font-size:${size}px;line-height:1;vertical-align:middle;">${t.emoji}</span>`
+        : `<span style="font-size:${size}px;line-height:1;display:block;text-align:center;">${t.emoji}</span>`;
     }
 
     // ── 추가 계산 ──
@@ -226,7 +231,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="rv2-medal-label">항목</div>
                 ${guilds.map(g => {
                   const t = theme(g.guild_name);
-                  return `<div class="rv2-medal-guild" style="color:${t.color};">${guildIconHtml(t, 18)} ${escapeHtml(g.guild_name)}</div>`;
+                  return `<div class="rv2-medal-guild" style="color:${t.color};">${guildIconHtml(t, 18, true)} ${escapeHtml(g.guild_name)}</div>`;
                 }).join("")}
               </div>
               ${medalBoardHtml()}

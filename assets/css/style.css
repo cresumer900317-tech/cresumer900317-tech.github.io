@@ -2000,7 +2000,12 @@ main { padding: 0 0 48px; }
 .rv2-medal-label { font-size: 0.82rem; font-weight: 600; color: var(--text-soft); padding: 10px 14px; }
 .rv2-medal-guild {
   font-size: 0.82rem; font-weight: 700; text-align: center; padding: 10px 6px;
-  display: flex; align-items: center; justify-content: center; gap: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.rv2-medal-guild img {
+  display: inline !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
 }
 .rv2-medal-cell {
   font-size: 0.82rem; text-align: center; padding: 10px 6px;
