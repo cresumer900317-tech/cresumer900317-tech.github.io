@@ -3,11 +3,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
-    const [summary, members, monthlyRes] = await Promise.all([
+    const [summary, members, monthlyRes, rankingRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/api/ranking`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
     ]);
+    const rankingRows = Array.isArray(rankingRes) ? rankingRes : [];
+    const sortedRanking = [...rankingRows].sort((a, b) => Number(b.power||0) - Number(a.power||0));
     const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
 
     const rows = Array.isArray(members) ? members : [];
@@ -159,26 +162,88 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">패밀리 TOP 3</div>
-              <div class="section-sub">전체 전투력 기준</div>
+              <div class="section-title">⚡ 컷라인 경쟁 현황</div>
+              <div class="section-sub">26위~35위 실시간 순위 변동</div>
             </div>
             <a class="section-link" href="./ranking.html">전체 랭킹 보기 →</a>
           </div>
-          <div class="top3-grid">
-            ${powerTop3.length ? powerTop3.map((item, i) => {
+          <div class="cutline-log">
+            ${(() => {
+              const zone = sortedRanking.slice(25, 35); // 26~35위
+              const cutItem = sortedRanking[29]; // 30위
+              const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
+
+              return zone.map((item, i) => {
+                const rank = 26 + i;
+                const isCut = rank === 30;
+                const isAbove = rank <= 30;
+                const diff = Number(item.power || 0) - cutPower;
+                const rankDiff = item.serverRankDiff || 0;
+                const pt = item.powerText || "";
+                const parts = pt.trim().split(/\s+/).filter(Boolean);
+                const dispPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
+
+                let statusClass = isAbove ? "cl-safe" : "cl-challenge";
+                if (rank >= 28 && rank <= 30) statusClass = "cl-danger";
+
+                let trendHtml = "";
+                if (rankDiff > 0) trendHtml = `<span class="cl-up">▲${formatNumber(rankDiff)}</span>`;
+                else if (rankDiff < 0) trendHtml = `<span class="cl-down">▼${formatNumber(Math.abs(rankDiff))}</span>`;
+                else trendHtml = `<span class="cl-flat">—</span>`;
+
+                let distHtml = "";
+                if (rank !== 30) {
+                  const absDiff = Math.abs(diff);
+                  distHtml = diff >= 0
+                    ? `<span class="cl-dist-safe">+${formatCompactPower(absDiff)}</span>`
+                    : `<span class="cl-dist-danger">-${formatCompactPower(absDiff)}</span>`;
+                }
+
+                return `
+                  ${isCut ? `<div class="cl-cutline-bar"><span>── 컷라인 ──</span></div>` : ""}
+                  <div class="cl-row ${statusClass}${isCut ? " cl-cut-row" : ""}">
+                    <span class="cl-rank">${rank}</span>
+                    <span class="cl-name">${escapeHtml(item.name || "-")}</span>
+                    <span class="cl-guild">${guildBadgeHtml(item.guild || "")}</span>
+                    <span class="cl-power">${escapeHtml(dispPower)}</span>
+                    <span class="cl-trend">${trendHtml}</span>
+                    <span class="cl-dist">${distHtml}</span>
+                  </div>
+                  ${isCut ? `<div class="cl-cutline-bar cl-cutline-below"><span>── 컷라인 이하 ──</span></div>` : ""}
+                `;
+              }).join("");
+            })()}
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🏆 이번 달 성장왕</div>
+              <div class="section-sub">월간 성장량 TOP 3</div>
+            </div>
+            <a class="section-link" href="./weekly.html">월간성장 보기 →</a>
+          </div>
+          <div class="growth-king-grid">
+            ${(() => {
+              const top3 = [...monthlyRows]
+                .filter(r => r.hasSnapshot && Number(r.monthlyDiff || 0) > 0)
+                .sort((a, b) => Number(b.monthlyDiff || 0) - Number(a.monthlyDiff || 0))
+                .slice(0, 3);
+              if (!top3.length) return `<div class="empty-box">데이터 수집 중...</div>`;
               const medals = ["🥇", "🥈", "🥉"];
-              const pt = item.powerText || "";
-              const parts = pt.trim().split(/\s+/).filter(Boolean);
-              const displayPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
-              return `
-                <div class="top-card ${i === 0 ? "gold" : ""}">
-                  <div class="top-rank-icon">${medals[i]}</div>
-                  <div class="top-name">${escapeHtml(item.name || "-")}</div>
-                  <div class="top-power">${escapeHtml(displayPower)}</div>
-                  <div class="top-meta">${escapeHtml(item.guild || "-")} · 서버 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</div>
+              return top3.map((item, i) => `
+                <div class="gk-card${i === 0 ? " gk-first" : ""}">
+                  <div class="gk-medal">${medals[i]}</div>
+                  <div class="gk-name">${escapeHtml(item.name || "-")}</div>
+                  <div class="gk-guild">${guildBadgeHtml(item.guild || "")}</div>
+                  <div class="gk-growth">+${formatCompactPower(item.monthlyDiff)}</div>
+                  <div class="gk-rate">${formatRate(item.growthRate || 0)} 성장</div>
                 </div>
-              `;
-            }).join("") : `<div class="empty-box" style="grid-column:1/-1;">데이터가 없습니다.</div>`}
+              `).join("");
+            })()}
           </div>
         </div>
       </div>

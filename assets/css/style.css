@@ -2072,3 +2072,107 @@ main { padding: 0 0 48px; }
   margin: 6px 0 4px;
   line-height: 1.4;
 }
+
+/* ===== 컷라인 경쟁 로그 ===== */
+.cutline-log {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cl-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--white);
+  transition: background 0.1s;
+}
+.cl-row:hover { background: var(--bg); }
+.cl-safe { border-color: var(--border-light); }
+.cl-danger {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+.cl-challenge {
+  background: #fff5f5 !important;
+  border-color: #fecaca !important;
+}
+.cl-cut-row {
+  border-width: 2px !important;
+  border-color: var(--yellow) !important;
+  background: var(--yellow-bg) !important;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.15);
+}
+.cl-cutline-bar {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  padding: 4px 0;
+  font-weight: 600;
+}
+.cl-cutline-below { color: #dc2626 !important; }
+.cl-rank {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-soft);
+  text-align: center;
+}
+.cl-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cl-guild { flex-shrink: 0; }
+.cl-power {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--amber);
+  white-space: nowrap;
+}
+.cl-trend { font-size: 0.82rem; font-weight: 700; min-width: 36px; text-align: center; }
+.cl-up { color: #059669; }
+.cl-down { color: #dc2626; }
+.cl-flat { color: var(--text-faint); }
+.cl-dist { font-size: 0.75rem; font-weight: 600; white-space: nowrap; min-width: 60px; text-align: right; }
+.cl-dist-safe { color: #059669; }
+.cl-dist-danger { color: #dc2626; }
+
+/* ===== 성장왕 그리드 ===== */
+.growth-king-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.gk-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  transition: transform 0.15s;
+}
+.gk-card:hover { transform: translateY(-2px); }
+.gk-first {
+  background: var(--yellow-bg);
+  border-color: var(--yellow-border);
+  border-width: 2px;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.15);
+}
+.gk-medal { font-size: 1.8rem; margin-bottom: 6px; }
+.gk-name { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.gk-guild { margin-bottom: 8px; }
+.gk-growth { font-size: 1.1rem; font-weight: 900; color: var(--amber); }
+.gk-rate { font-size: 0.75rem; color: var(--text-soft); margin-top: 2px; }
+
+@media (max-width: 600px) {
+  .cl-row { grid-template-columns: 28px 1fr auto auto; gap: 6px; }
+  .cl-guild { display: none; }
+  .cl-dist { display: none; }
+  .growth-king-grid { grid-template-columns: 1fr; }
+}
