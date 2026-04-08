@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
             <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 길드 가입 문의하기</a>
-            <a class="cta-btn" href="./ranking" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
+            <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
 
           <div class="visitor-cta-bar">
@@ -115,11 +115,11 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="kpi-value dark">${formatNumber(top500Count)}명 <span style="font-size:0.85rem;color:var(--text-faint);">(${top500Rate}%)</span></div>
               <div style="font-size:0.72rem;color:var(--text-faint);margin-top:3px;">💎 고스펙 유저 밀집</div>
             </div>
-            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly'">
+            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly.html'">
               <div class="kpi-label">이달 누적 성장량</div>
               <div class="kpi-value">${totalMonthlyGrowth > 0 ? "+" + formatCompactPower(totalMonthlyGrowth) : "-"}</div>
             </div>
-            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly'">
+            <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly.html'">
               <div class="kpi-label">이달의 성장왕 🏆</div>
               <div class="kpi-value" style="font-size:1rem;">${monthlyKing ? escapeHtml(monthlyKing.name) : "-"}</div>
               <div style="font-size:0.78rem;color:var(--text-faint);margin-top:3px;">${monthlyKing ? "+" + formatCompactPower(monthlyKing.monthlyDiff) : "스냅샷 집계 중"}</div>
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-title">📊 현재 순위 구간</div>
               <div class="section-sub">26위~35위 실시간 순위 흐름</div>
             </div>
-            <a class="section-link" href="./ranking">전체 랭킹 보기 →</a>
+            <a class="section-link" href="./ranking.html">전체 랭킹 보기 →</a>
           </div>
           <div class="cutline-log">
             ${(() => {
@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-title">🏆 이번 달 성장왕</div>
               <div class="section-sub">월간 성장량 TOP 3</div>
             </div>
-            <a class="section-link" href="./weekly">월간성장 보기 →</a>
+            <a class="section-link" href="./weekly.html">월간성장 보기 →</a>
           </div>
           <div class="growth-king-grid">
             ${(() => {
@@ -268,7 +268,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-title">이번 주 변화</div>
               <div class="section-sub">성장량 · 서버 순위 상승 TOP 5</div>
             </div>
-            <a class="section-link" href="./weekly">월간성장 보기 →</a>
+            <a class="section-link" href="./weekly.html">월간성장 보기 →</a>
           </div>
           <div class="summary-split">
             <div class="summary-panel">

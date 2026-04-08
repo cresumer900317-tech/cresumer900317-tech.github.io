@@ -184,7 +184,7 @@
     </div>
 
     <div class="back-link">
-      <a href="./">← 홈으로</a>
+      <a href="./index.html">← 홈으로</a>
     </div>
   </div>
 </div>
@@ -238,7 +238,7 @@ async function doLogin() {
     sessionStorage.setItem("user", JSON.stringify(data.user));
     if (data.token) sessionStorage.setItem("token", data.token);
     // 원래 가려던 페이지로 이동
-    const redirect = new URLSearchParams(location.search).get("redirect") || "./";
+    const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
     location.href = redirect;
   } catch {
     showMsg("loginMsg", "서버 연결 오류");
@@ -282,7 +282,7 @@ async function doRegister() {
 
 // 이미 로그인된 경우 홈으로
 if (sessionStorage.getItem("user")) {
-  const redirect = new URLSearchParams(location.search).get("redirect") || "./";
+  const redirect = new URLSearchParams(location.search).get("redirect") || "./index.html";
   location.href = redirect;
 }
 
