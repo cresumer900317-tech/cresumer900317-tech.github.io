@@ -86,11 +86,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           <div class="visitor-cta-bar">
             <span class="visitor-cta-dot"></span>
-            ${(visitorStats.online||0) > 0
-              ? `<span class="visitor-cta-count">지금 <strong>${visitorStats.online}명</strong>이 함께 보고 있어요</span>
-                 ${(visitorStats.online_list||[]).length > 0 ? `<span class="visitor-cta-names">${(visitorStats.online_list||[]).slice(0,5).map(u => escapeHtml(u.name)).join(" · ")}${(visitorStats.online_list||[]).length > 5 ? ` 외 ${(visitorStats.online_list||[]).length-5}명` : ""}</span>` : ""}`
-              : `<span class="visitor-cta-count">함께 보고 있는 멤버들이 있어요</span>`
-            }
+            ${(() => {
+              const online = visitorStats.online || 0;
+              const list = visitorStats.online_list || [];
+              const me = user ? user.character_name : null;
+              if (online === 0) return `<span class="visitor-cta-count">함께 보고 있는 멤버들이 있어요</span>`;
+              if (me && list.some(u => u.name === me)) {
+                const others = online - 1;
+                return `<span class="visitor-cta-count"><strong>${escapeHtml(me)}</strong>님${others > 0 ? ` 외 ${others}명` : ""}이 함께 보고 있어요</span>`;
+              }
+              return `<span class="visitor-cta-count">지금 <strong>${online}명</strong>이 함께 보고 있어요</span>`;
+            })()}
             <span class="visitor-cta-extra">· 누적 ${formatNumber(visitorStats.total||0)}명 방문</span>
           </div>
           <p class="hero-update" style="margin-top:6px;">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
