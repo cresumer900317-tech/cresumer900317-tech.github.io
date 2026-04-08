@@ -2470,3 +2470,24 @@ main { padding: 0 0 48px; }
 .role-superadmin { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
 .role-admin { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
 .role-member { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); }
+
+/* ===== 방문자 바 ===== */
+.visitor-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border-light);
+  padding: 7px 0;
+}
+.visitor-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+.visitor-item strong { color: var(--text); font-weight: 700; }
+.visitor-divider { color: var(--border); }
+.visitor-online {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}

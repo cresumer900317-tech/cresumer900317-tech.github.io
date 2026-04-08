@@ -74,18 +74,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="hero-dot"></span>
             메이플키우기 · 스카니아 11서버
           </div>
-          <h1 class="hero-title">🤝 같이 성장하는 길드 시스템<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">지금 참여하면 딱 맞는 길드로 바로 배정</p>
+          <h1 class="hero-title">🔥 TOP30 승격 경쟁<br><span class="accent">친구패밀리</span></h1>
+          <p class="hero-desc">지금 참여하면 운영진이 길드를 직접 배정해드립니다</p>
           <div style="display:flex;align-items:center;gap:8px;margin:8px 0 14px;flex-wrap:wrap;">
-            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 지금 가입자 계속 증가 중</span>
-            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명과 함께 성장 중</span>
+            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 다같이 성장 중</span>
+            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명 참여 중</span>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
             <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 길드 가입 문의하기</a>
             <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
           <div style="margin-top:10px;font-size:0.78rem;color:var(--text-soft);">
-            비슷한 성장 단계의 멤버들과 함께 시작해요
+            운영진이 활동 성향에 맞게 길드를 배정해드립니다 · 과밀 방지 / 성장 관리 진행
           </div>
           <p class="hero-update" style="margin-top:6px;">마지막 업데이트: <span class="time">${lastUpdate}</span></p>
           <div class="kpi-grid">
@@ -160,17 +160,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      <!-- 방문자 위젯 -->
-      <div style="background:var(--white);border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:8px 0;">
+      <!-- 방문자 바 -->
+      <div class="visitor-bar">
         <div class="container">
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-soft);">
-            <span>🟢 현재 접속 <strong style="color:var(--text);">${visitorStats.online||0}명</strong></span>
-            <span>📅 오늘 방문 <strong style="color:var(--text);">${visitorStats.today||0}명</strong></span>
-            <span>📊 누적 방문 <strong style="color:var(--text);">${formatNumber(visitorStats.total||0)}명</strong></span>
+          <div class="visitor-bar-inner">
+            <span class="visitor-item">🟢 현재 접속 <strong>${visitorStats.online||0}명</strong></span>
+            <span class="visitor-divider">·</span>
+            <span class="visitor-item">📅 오늘 <strong>${visitorStats.today||0}명</strong></span>
+            <span class="visitor-divider">·</span>
+            <span class="visitor-item">📊 누적 <strong>${formatNumber(visitorStats.total||0)}명</strong></span>
             ${(visitorStats.online_list||[]).length > 0 ? `
-              <span style="color:var(--text-faint);">
-                ${(visitorStats.online_list||[]).slice(0,5).map(u => escapeHtml(u.name)).join(", ")}
-                ${(visitorStats.online_list||[]).length > 5 ? ` 외 ${(visitorStats.online_list||[]).length - 5}명` : ""}
+              <span class="visitor-divider">|</span>
+              <span class="visitor-online">
+                ${(visitorStats.online_list||[]).slice(0,5).map(u => escapeHtml(u.name)).join(" · ")}
+                ${(visitorStats.online_list||[]).length > 5 ? ` 외 ${(visitorStats.online_list||[]).length-5}명` : ""}
               </span>
             ` : ""}
           </div>
