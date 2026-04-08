@@ -77,16 +77,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h1 class="hero-title">🌱 함께 성장하는<br><span class="accent">친구패밀리</span></h1>
           <p class="hero-desc">내 활동 스타일에 맞는 길드로 자동 배정돼요</p>
           <div style="display:flex;align-items:center;gap:8px;margin:8px 0 14px;flex-wrap:wrap;">
-            <span style="font-size:0.78rem;background:#fee2e2;color:#dc2626;font-weight:700;padding:3px 10px;border-radius:999px;">🔥 이번 달 마감 임박</span>
-            <span style="font-size:0.78rem;color:var(--text-soft);">현재 ${formatNumber(memberCount)}명 참여 중</span>
+            <span style="font-size:0.78rem;background:rgba(245,158,11,0.12);color:var(--amber-dark);font-weight:600;padding:3px 14px;border-radius:999px;">🌱 현재 ${formatNumber(memberCount)}명 함께 성장 중</span>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
-            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 지금 바로 참여하기</a>
+            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">💬 길드 가입 문의하기</a>
             <a class="cta-btn" href="./ranking.html" style="background:var(--white);color:var(--amber-dark);border:1.5px solid var(--yellow-border);">🏆 랭킹 보기</a>
           </div>
-          <div style="margin-top:10px;font-size:0.78rem;color:var(--text-soft);">
-            👥 ${formatNumber(memberCount)}명 함께 성장 중
-          </div>
+
           <div class="visitor-cta-bar">
             <span class="visitor-cta-dot"></span>
             ${(visitorStats.online||0) > 0
