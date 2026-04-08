@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderList(list) {
       if (!list.length) return `<div class="board-empty">등록된 공지가 없습니다</div>`;
       return list.map(n => `
-        <div class="board-row${n.is_pinned ? " board-row-pinned" : ""}" onclick="openPost(${n.id})" style="cursor:pointer;">
+        <div class="board-row${n.is_pinned ? " board-row-pinned" : ""}" data-notice-id="${n.id}" style="cursor:pointer;">
           <div class="board-row-left">
             ${n.is_pinned ? `<span class="board-pin">📌</span>` : `<span class="board-num">${n.id}</span>`}
             <span class="board-cat" style="color:${categoryColor(n.category)};background:${categoryColor(n.category)}15;">${n.category||"공지"}</span>
@@ -30,6 +30,60 @@ document.addEventListener("DOMContentLoaded", async () => {
       `).join("");
     }
 
+    function openPost(id) {
+      const post = notices.find(n => n.id === id);
+      if (!post) return;
+      document.getElementById("postContent").innerHTML = `
+        <div style="padding:28px 28px 24px;">
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+            <span class="board-cat" style="font-size:0.82rem;">${post.category||"공지"}</span>
+            ${post.is_pinned ? `<span style="font-size:0.78rem;color:#f59e0b;font-weight:700;">📌 고정</span>` : ""}
+          </div>
+          <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:10px;line-height:1.4;">${escapeHtml(post.title)}</h2>
+          <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:20px;display:flex;gap:16px;">
+            <span>${escapeHtml(post.author||"운영진")}</span>
+            <span>${new Date(post.created_at).toLocaleString("ko-KR")}</span>
+          </div>
+          <div style="font-size:0.92rem;line-height:1.9;white-space:pre-wrap;color:#374151;border-top:1px solid #f3f4f6;padding-top:20px;">${escapeHtml(post.content)}</div>
+          <div style="margin-top:24px;display:flex;justify-content:space-between;">
+            <button id="noticeBackBtn" class="board-cancel-btn">← 목록</button>
+            ${isAdmin ? `<button id="noticeDeleteBtn" data-id="${post.id}" class="board-delete-btn">🗑️ 삭제</button>` : ""}
+          </div>
+        </div>
+      `;
+      document.getElementById("postModal").style.display = "flex";
+      document.body.style.overflow = "hidden";
+
+      document.getElementById("noticeBackBtn").addEventListener("click", closeModal);
+      const delBtn = document.getElementById("noticeDeleteBtn");
+      if (delBtn) delBtn.addEventListener("click", () => deleteNotice(Number(delBtn.dataset.id)));
+    }
+
+    function closeModal() {
+      document.getElementById("postModal").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    async function submitNotice() {
+      const title = document.getElementById("nTitle").value.trim();
+      const content = document.getElementById("nContent").value.trim();
+      const category = document.getElementById("nCat").value;
+      const is_pinned = document.getElementById("nPin").checked;
+      if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
+      const res = await fetch(`${API_BASE}/api/notices`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content, category, is_pinned, author: user?.character_name||"운영진", author_guild: user?.guild||"" }),
+      });
+      if (res.ok) location.reload();
+      else alert("등록 실패");
+    }
+
+    async function deleteNotice(id) {
+      if (!confirm("삭제할까요?")) return;
+      await fetch(`${API_BASE}/api/notices/${id}`, { method: "DELETE" });
+      closeModal(); location.reload();
+    }
+
     document.querySelector("main").innerHTML = `
       <div class="page-card">
         <div class="container">
@@ -38,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">📢 공지사항</h1>
               <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">길드 운영 관련 공지를 확인하세요</p>
             </div>
-            ${isAdmin ? `<button onclick="showWrite()" class="board-write-btn">✏️ 공지 작성</button>` : ""}
+            ${isAdmin ? `<button id="showWriteBtn" class="board-write-btn">✏️ 공지 작성</button>` : ""}
           </div>
 
           <!-- 작성 폼 -->
@@ -52,8 +106,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             <input type="text" id="nTitle" placeholder="제목" class="board-input" style="margin-bottom:8px;" />
             <textarea id="nContent" placeholder="내용" class="board-textarea"></textarea>
             <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
-              <button onclick="hideWrite()" class="board-cancel-btn">취소</button>
-              <button onclick="submitNotice()" class="board-submit-btn">등록</button>
+              <button id="hideWriteBtn" class="board-cancel-btn">취소</button>
+              <button id="submitNoticeBtn" class="board-submit-btn">등록</button>
             </div>
           </div>
 
@@ -68,69 +122,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
 
       <!-- 모달 -->
-      <div id="postModal" class="board-modal-bg" style="display:none;" onclick="if(event.target===this)closeModal()">
+      <div id="postModal" class="board-modal-bg" style="display:none;">
         <div class="board-modal-box">
           <div id="postContent"></div>
         </div>
       </div>
     `;
 
-  } catch(e) {
-    document.querySelector("main").innerHTML = `<div class="container" style="padding-top:40px;"><div class="error-box">${escapeHtml(e?.message||"오류")}</div></div>`;
-  }
+    // 이벤트 바인딩
+    const showWriteBtn = document.getElementById("showWriteBtn");
+    if (showWriteBtn) showWriteBtn.addEventListener("click", () => document.getElementById("writeForm").style.display = "block");
+    document.getElementById("hideWriteBtn").addEventListener("click", () => document.getElementById("writeForm").style.display = "none");
+    document.getElementById("submitNoticeBtn").addEventListener("click", submitNotice);
 
-  window.showWrite = () => document.getElementById("writeForm").style.display = "block";
-  window.hideWrite = () => document.getElementById("writeForm").style.display = "none";
-
-  window.submitNotice = async function() {
-    const title = document.getElementById("nTitle").value.trim();
-    const content = document.getElementById("nContent").value.trim();
-    const category = document.getElementById("nCat").value;
-    const is_pinned = document.getElementById("nPin").checked;
-    if (!title || !content) { alert("제목과 내용을 입력해주세요"); return; }
-    const res = await fetch(`${API_BASE}/api/notices`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, category, is_pinned, author: user?.character_name||"운영진", author_guild: user?.guild||"" }),
+    document.getElementById("noticeList").addEventListener("click", (e) => {
+      const row = e.target.closest("[data-notice-id]");
+      if (row) openPost(Number(row.dataset.noticeId));
     });
-    if (res.ok) location.reload();
-    else alert("등록 실패");
-  };
 
-  window.openPost = async function(id) {
-    const res = await fetch(`${API_BASE}/api/notices`);
-    const list = await res.json();
-    const post = list.find(n => n.id === id);
-    if (!post) return;
-    document.getElementById("postContent").innerHTML = `
-      <div style="padding:28px 28px 24px;">
-        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
-          <span class="board-cat" style="font-size:0.82rem;">${post.category||"공지"}</span>
-          ${post.is_pinned ? `<span style="font-size:0.78rem;color:#f59e0b;font-weight:700;">📌 고정</span>` : ""}
-        </div>
-        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:10px;line-height:1.4;">${escapeHtml(post.title)}</h2>
-        <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:20px;display:flex;gap:16px;">
-          <span>${escapeHtml(post.author||"운영진")}</span>
-          <span>${new Date(post.created_at).toLocaleString("ko-KR")}</span>
-        </div>
-        <div style="font-size:0.92rem;line-height:1.9;white-space:pre-wrap;color:#374151;border-top:1px solid #f3f4f6;padding-top:20px;">${escapeHtml(post.content)}</div>
-        <div style="margin-top:24px;display:flex;justify-content:space-between;">
-          <button onclick="closeModal()" class="board-cancel-btn">← 목록</button>
-          ${isAdmin ? `<button onclick="deleteNotice(${post.id})" class="board-delete-btn">🗑️ 삭제</button>` : ""}
-        </div>
-      </div>
-    `;
-    document.getElementById("postModal").style.display = "flex";
-    document.body.style.overflow = "hidden";
-  };
+    document.getElementById("postModal").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("postModal")) closeModal();
+    });
 
-  window.closeModal = function() {
-    document.getElementById("postModal").style.display = "none";
-    document.body.style.overflow = "";
-  };
-
-  window.deleteNotice = async function(id) {
-    if (!confirm("삭제할까요?")) return;
-    await fetch(`${API_BASE}/api/notices/${id}`, { method: "DELETE" });
-    closeModal(); location.reload();
-  };
+  } catch(e) {
+    renderError(null, e);
+  }
 });
