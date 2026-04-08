@@ -153,142 +153,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ════════════════════════════════
-    //  인기도 탭: 포디움
+    //  인기도 탭: 포디움 (전투력과 동일 구조)
     // ════════════════════════════════
     function renderPopularityPodium(sorted) {
       if (sorted.length === 0) return "";
       const [first, second, third] = sorted;
-
-      // 인기도 기준 길드 내 순위 배지 표시용
-      // serverRank = 전투력 기준 서버 순위 (크롤링된 값 그대로 활용)
-      function podiumCard(item, rank) {
-        if (!item) return `<div class="rk-pod-slot"></div>`;
+      function popHeroCard(item, rank, center = false) {
+        if (!item) return `<div></div>`;
         const pop = formatNumber(Number(item.popularity || 0));
-
-        const cfg = {
-          1: {
-            crown: "👑",
-            accentColor: "#d97706",
-            borderColor: "#f59e0b",
-            bg: "linear-gradient(170deg, #fffbeb 0%, #fef3c7 100%)",
-            shadow: "0 12px 40px rgba(245,158,11,0.4)",
-            avatarSize: "110px",
-            crownSize: "3.2rem",
-            nameSize: "1.15rem",
-            popSize: "1.5rem",
-            popLabelSize: "0.75rem",
-            padding: "22px 16px 20px",
-            rankBadge: `<div style="
-              position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-              background:#f59e0b;color:#fff;font-size:0.72rem;font-weight:800;
-              padding:3px 12px;border-radius:999px;white-space:nowrap;
-              box-shadow:0 2px 8px rgba(245,158,11,0.5);letter-spacing:0.05em;
-            ">✨ 1위</div>`,
-            extraBottom: "28px",
-          },
-          2: {
-            crown: "🥈",
-            accentColor: "#475569",
-            borderColor: "#94a3b8",
-            bg: "linear-gradient(170deg, #f8fafc 0%, #e2e8f0 100%)",
-            shadow: "0 6px 20px rgba(100,116,139,0.2)",
-            avatarSize: "88px",
-            crownSize: "2.4rem",
-            nameSize: "1rem",
-            popSize: "1.2rem",
-            popLabelSize: "0.68rem",
-            padding: "16px 12px 16px",
-            rankBadge: `<div style="
-              position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-              background:#94a3b8;color:#fff;font-size:0.68rem;font-weight:800;
-              padding:2px 10px;border-radius:999px;white-space:nowrap;
-            ">2위</div>`,
-            extraBottom: "0px",
-          },
-          3: {
-            crown: "🥉",
-            accentColor: "#92400e",
-            borderColor: "#c9873a",
-            bg: "linear-gradient(170deg, #fdf8f3 0%, #fdecd4 100%)",
-            shadow: "0 6px 16px rgba(180,83,9,0.18)",
-            avatarSize: "82px",
-            crownSize: "2.2rem",
-            nameSize: "0.95rem",
-            popSize: "1.1rem",
-            popLabelSize: "0.65rem",
-            padding: "14px 10px 14px",
-            rankBadge: `<div style="
-              position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-              background:#c9873a;color:#fff;font-size:0.65rem;font-weight:800;
-              padding:2px 10px;border-radius:999px;white-space:nowrap;
-            ">3위</div>`,
-            extraBottom: "0px",
-          },
-        }[rank];
-
         return `
-          <div class="rk-pod-slot" style="align-self:flex-end;margin-bottom:${cfg.extraBottom};">
-            <div style="
-              position:relative;
-              background:${cfg.bg};
-              border:2px solid ${cfg.borderColor};
-              box-shadow:${cfg.shadow};
-              border-radius:20px;
-              display:flex;flex-direction:column;align-items:center;
-              padding:${cfg.padding};gap:8px;text-align:center;
-              transition:transform 0.18s, box-shadow 0.18s;
-              width:100%;
-            "
-            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='${cfg.shadow.replace(')', ', 1.2)')}'"
-            onmouseout="this.style.transform='';this.style.boxShadow='${cfg.shadow}'">
-              ${cfg.rankBadge}
-              <div style="font-size:${cfg.crownSize};line-height:1;margin-top:6px;">${cfg.crown}</div>
-              <div style="
-                width:${cfg.avatarSize};height:${cfg.avatarSize};
-                border-radius:50%;overflow:hidden;
-                border:3px solid ${cfg.borderColor};
-                box-shadow:0 4px 12px rgba(0,0,0,0.12);
-                flex-shrink:0;
-              ">${characterAvatarHtml(item)}</div>
-              <div style="
-                font-size:${cfg.nameSize};font-weight:800;
-                color:var(--text);line-height:1.2;
-                max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-              ">${escapeHtml(item.name || "-")}</div>
-              <div>${guildBadgeHtml(item.guild || "길드 없음")}</div>
-              <div style="
-                background:rgba(255,255,255,0.75);
-                border:1px solid ${cfg.borderColor};
-                border-radius:12px;padding:8px 14px;
-                margin-top:2px;min-width:90px;
-              ">
-                <div style="font-size:${cfg.popSize};font-weight:900;color:${cfg.accentColor};line-height:1.1;">
-                  ❤️ ${pop}
-                </div>
-                <div style="font-size:${cfg.popLabelSize};color:var(--text-faint);font-weight:600;margin-top:2px;">인기도</div>
-              </div>
-              ${item.popServerRank
-                ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 인기도 ${formatNumber(item.popServerRank)}위</div>`
-                : item.serverRank
-                  ? `<div style="font-size:0.7rem;color:var(--text-faint);">서버 전투력 ${formatNumber(item.serverRank)}위</div>`
-                  : ""}
-            </div>
+          <div class="rk-hero-card${center ? " rk-hero-center" : ""}">
+            <div class="rk-hero-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>
+            <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
+            <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
+            <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
+            <div class="rk-hero-power" style="color:#e11d48;">❤️ ${pop}</div>
+            ${item.popServerRank
+              ? `<div class="rk-hero-server">서버 인기도 ${formatNumber(item.popServerRank)}위</div>`
+              : item.serverRank
+                ? `<div class="rk-hero-server">서버 전투력 ${formatNumber(item.serverRank)}위</div>`
+                : ""}
           </div>
         `;
       }
-
       return `
-        <div class="rk-pod-wrap">
-          <div style="
-            font-size:0.88rem;font-weight:700;color:var(--amber-dark);
-            text-align:center;margin-bottom:18px;letter-spacing:0.06em;
-          ">✨ 인기도 TOP 3 · Scania 11 서버 ✨</div>
-          <div class="rk-pod-grid">
-            ${podiumCard(second, 2)}
-            ${podiumCard(first, 1)}
-            ${podiumCard(third, 3)}
+        <div class="rk-hero-wrap">
+          <div class="rk-hero-grid">
+            ${popHeroCard(second, 2)}
+            ${popHeroCard(first, 1, true)}
+            ${popHeroCard(third, 3)}
           </div>
-          <div class="rk-pod-stage"></div>
         </div>
       `;
     }
