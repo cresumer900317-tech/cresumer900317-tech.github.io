@@ -86,6 +86,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           const parts = pt.trim().split(/\s+/).filter(Boolean);
           const dispPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(m.power);
 
+          // 직업 영문→한글 변환
+          const JOB_KO = {
+            bishop:"비숍", shadower:"섀도어", darkknight:"다크나이트",
+            hero:"히어로", paladin:"팔라딘", bowmaster:"보우마스터",
+            marksman:"신궁", nightlord:"나이트로드", mage_sc:"썬콜",
+            mage_fd:"불독", dualblade:"듀블", mechanic:"메카닉",
+            battleMage:"배틀메이지", wildhunter:"와헌", blaster:"블래스터",
+            phantom:"팬텀", luminous:"루미너스", evan:"에반",
+            mercedes:"메르세데스", aran:"아란", kaiser:"카이저",
+            kain:"카인", adele:"아델", ark:"아크",
+          };
+          const jobDisplay = JOB_KO[m.job] || m.job || "";
+
           return `
             <div class="rv2-member-cell" style="border-color:${t.border}20;">
               <div class="rv2-member-rank" style="color:${t.color};">${i + 1}</div>
@@ -94,7 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               </div>
               <div class="rv2-member-info">
                 <div class="rv2-member-name">${escapeHtml(m.name || "-")}</div>
-                <div class="rv2-member-meta">${escapeHtml(m.job || "")} · Lv ${m.level || "-"}</div>
+                <div class="rv2-member-meta">${escapeHtml(jobDisplay)} · Lv ${m.level || "-"}</div>
                 <div class="rv2-member-power" style="color:${t.color};">${escapeHtml(dispPower)}</div>
               </div>
             </div>

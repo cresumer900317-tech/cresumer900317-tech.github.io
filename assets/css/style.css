@@ -2089,9 +2089,50 @@ main { padding: 0 0 48px; }
 @media (max-width: 768px) {
   .rv2-result-grid { grid-template-columns: 1fr; }
   .rv2-medal-row { grid-template-columns: 1fr repeat(3, 0.9fr); }
-  .rv2-member-row { grid-template-columns: 1fr; }
-  .rv2-header-row { grid-template-columns: repeat(3, 1fr); }
+  /* 전원대전: 모바일에서 3열 유지 */
+  .rv2-member-row { grid-template-columns: repeat(3, 1fr); }
+  .rv2-battle-grid { gap: 2px; }
+  .rv2-member-row { gap: 2px; }
 }
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  /* 모바일 압축 카드 */
+  .rv2-member-cell {
+    padding: 5px 4px;
+    gap: 4px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .rv2-member-rank {
+    display: none;
+  }
+  .rv2-member-avatar {
+    width: 32px;
+    height: 32px;
+    align-self: center;
+  }
+  .rv2-member-avatar .character-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  .rv2-member-info { width: 100%; }
+  .rv2-member-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .rv2-member-meta {
+    font-size: 0.62rem;
+  }
+  .rv2-member-power {
+    font-size: 0.68rem;
+  }
+  .rv2-col-header {
+    padding: 8px 4px;
+  }
+  .rv2-col-header div:first-child {
+    font-size: 0.85rem !important;
+  }
   .rv2-result-power { font-size: 1.1rem; }
+  .rv2-medal-row { grid-template-columns: 0.9fr repeat(3, 1fr); font-size: 0.75rem; }
+  .rv2-medal-label { padding: 8px 6px; font-size: 0.75rem; }
+  .rv2-medal-cell { padding: 8px 4px; font-size: 0.75rem; }
 }
