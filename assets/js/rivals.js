@@ -19,9 +19,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     function guildIconHtml(t, size = 28) {
       if (t.icon) {
-        return `<img src="${t.icon}" alt="길드마크" style="width:${size}px;height:${size}px;image-rendering:pixelated;vertical-align:middle;" />`;
+        return `<img src="${t.icon}" alt="길드마크" style="width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;mix-blend-mode:multiply;display:block;margin:0 auto;" />`;
       }
-      return `<span style="font-size:${size * 0.9}px;line-height:1;">${t.emoji}</span>`;
+      return `<span style="font-size:${size}px;line-height:1;display:block;text-align:center;">${t.emoji}</span>`;
     }
 
     const maxPower = Math.max(...guilds.map(g => g.total_power || 0));
