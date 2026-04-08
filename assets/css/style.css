@@ -2521,3 +2521,32 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
   font-size: 0.73rem;
 }
+
+/* 모바일 헤더 인증 버튼 */
+.mobile-auth-header {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.mobile-header-register {
+  font-size: 0.78rem; font-weight: 600;
+  padding: 5px 10px;
+  background: var(--white); color: var(--amber-dark);
+  border: 1.5px solid var(--yellow-border);
+  border-radius: 999px; text-decoration: none;
+}
+.mobile-header-login {
+  font-size: 0.78rem; font-weight: 700;
+  padding: 5px 10px;
+  background: var(--yellow); color: var(--white);
+  border-radius: 999px; text-decoration: none;
+}
+.mobile-header-user {
+  font-size: 0.78rem; font-weight: 600; color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .mobile-auth-header { display: flex; }
+}

@@ -151,6 +151,13 @@ function renderShell() {
         </a>
         <nav class="nav-menu">${links}</nav>
         ${userHtml}
+        <div class="mobile-auth-header">
+          ${user
+            ? `<span class="mobile-header-user">😊 ${escapeHtml(user.character_name)}</span>`
+            : `<a href="./login.html?tab=register" class="mobile-header-register">가입</a>
+               <a href="./login.html" class="mobile-header-login">로그인</a>`
+          }
+        </div>
         <button id="mobileMenuButton" class="mobile-menu-btn" type="button" aria-label="메뉴 열기">☰</button>
       </div>
       <div id="mobileNavPanel" class="mobile-nav-panel">
