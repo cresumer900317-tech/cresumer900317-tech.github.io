@@ -2092,13 +2092,13 @@ main { padding: 0 0 48px; }
 }
 .cl-row:hover { background: var(--bg); }
 .cl-safe { border-color: var(--border-light); }
-.cl-danger {
+.cl-watch {
   background: #fffbeb !important;
   border-color: #fde68a !important;
 }
-.cl-challenge {
-  background: #fff5f5 !important;
-  border-color: #fecaca !important;
+.cl-neutral {
+  background: var(--bg) !important;
+  border-color: var(--border-light) !important;
 }
 .cl-cut-row {
   border-width: 2px !important;
@@ -2113,7 +2113,7 @@ main { padding: 0 0 48px; }
   padding: 4px 0;
   font-weight: 600;
 }
-.cl-cutline-below { color: #dc2626 !important; }
+.cl-below-bar { color: var(--text-soft) !important; }
 .cl-rank {
   font-size: 0.88rem;
   font-weight: 800;
@@ -2141,7 +2141,7 @@ main { padding: 0 0 48px; }
 .cl-flat { color: var(--text-faint); }
 .cl-dist { font-size: 0.75rem; font-weight: 600; white-space: nowrap; min-width: 60px; text-align: right; }
 .cl-dist-safe { color: #059669; }
-.cl-dist-danger { color: #dc2626; }
+.cl-dist-gap { color: #9ca3af; }
 
 /* ===== 성장왕 그리드 ===== */
 .growth-king-grid {

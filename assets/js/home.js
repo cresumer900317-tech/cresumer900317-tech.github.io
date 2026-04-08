@@ -177,8 +177,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">⚡ 컷라인 경쟁 현황</div>
-              <div class="section-sub">26위~35위 실시간 순위 변동</div>
+              <div class="section-title">📊 현재 순위 구간</div>
+              <div class="section-sub">26위~35위 실시간 순위 흐름</div>
             </div>
             <a class="section-link" href="./ranking.html">전체 랭킹 보기 →</a>
           </div>
@@ -198,8 +198,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const parts = pt.trim().split(/\s+/).filter(Boolean);
                 const dispPower = parts.length >= 2 ? parts[0] + " " + parts[1] : pt || formatCompactPower(item.power);
 
-                let statusClass = isAbove ? "cl-safe" : "cl-challenge";
-                if (rank >= 28 && rank <= 30) statusClass = "cl-danger";
+                let statusClass = isAbove ? "cl-safe" : "cl-neutral";
+                if (rank >= 28 && rank <= 30) statusClass = "cl-watch";
 
                 let trendHtml = "";
                 if (rankDiff > 0) trendHtml = `<span class="cl-up">▲${formatNumber(rankDiff)}</span>`;
@@ -208,17 +208,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 let distHtml = "";
                 if (rank === 30) {
-                  distHtml = `<span class="cl-cut-label">🏆 컷</span>`;
+                  distHtml = `<span class="cl-cut-label">🎯 기준</span>`;
                 } else if (rank > 30) {
                   const absDiff = Math.abs(diff);
-                  distHtml = `<span class="cl-dist-danger">-${formatCompactPower(absDiff)}</span>`;
+                  distHtml = `<span class="cl-dist-gap">-${formatCompactPower(absDiff)}</span>`;
                 } else {
                   const absDiff = Math.abs(diff);
                   distHtml = `<span class="cl-dist-safe">+${formatCompactPower(absDiff)}</span>`;
                 }
 
                 return `
-                  ${isCut ? `<div class="cl-cutline-bar"><span>── 컷라인 ──</span></div>` : ""}
+                  ${isCut ? `<div class="cl-cutline-bar"><span>🎯 TOP30 기준선</span></div>` : ""}
                   <div class="cl-row ${statusClass}${isCut ? " cl-cut-row" : ""}">
                     <span class="cl-rank">${rank}</span>
                     <span class="cl-name">${escapeHtml(item.name || "-")}</span>
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="cl-trend">${trendHtml}</span>
                     <span class="cl-dist">${distHtml}</span>
                   </div>
-                  ${isCut ? `<div class="cl-cutline-bar cl-cutline-below"><span>── 컷라인 이하 ──</span></div>` : ""}
+                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 컷라인 이하 ──</span></div>` : ""}
                 `;
               }).join("");
             })()}
