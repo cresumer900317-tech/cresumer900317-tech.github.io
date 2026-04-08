@@ -364,11 +364,24 @@ async function deleteRow(memberName) {
 }
 
 // ── 유저 관리 ──
+let isSuperAdmin = false;
+
 async function loadUsers(status, btn) {
   if (btn) {
     document.querySelectorAll("#userSection .tab-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
   }
+  // superadmin 여부 확인
+  try {
+    const meRes = await fetch(`${API}/api/auth/users`);
+    const allUsers = await meRes.json();
+    // 세션에서 캐릭터명 가져오기
+    const savedUser = JSON.parse(sessionStorage.getItem("user") || "null");
+    if (savedUser) {
+      const me = allUsers.find(u => u.character_name === savedUser.character_name);
+      isSuperAdmin = me?.role === "superadmin";
+    }
+  } catch {}
   const labels = { pending: "승인 대기", active: "활성 유저", inactive: "비활성 유저" };
   document.getElementById("userListTitle").textContent = labels[status] || status;
   try {
@@ -376,29 +389,51 @@ async function loadUsers(status, btn) {
     const users = await res.json();
     const el = document.getElementById("userList");
     if (!users.length) { el.innerHTML = `<div class="empty-box">해당하는 유저가 없어요</div>`; return; }
+    // 현재 로그인된 어드민 role 확인 (sessionStorage에서)
+    // superadmin 여부는 API로 확인
     el.innerHTML = users.map(u => `
       <div class="user-row">
         <div>
           <div style="font-weight:700;font-size:0.9rem;">${u.character_name}</div>
           <div style="font-size:0.75rem;color:#9ca3af;">${u.guild||"미배정"} · ${new Date(u.created_at).toLocaleDateString("ko-KR")}</div>
         </div>
-        <span class="status-badge status-${u.status}">${u.status==="active"?"활성":u.status==="pending"?"대기":"비활성"}</span>
-        ${u.status === "pending" ? `
-          <select class="guild-select" id="ug_${u.character_name}">
-            <option value="">길드 선택</option>
-            <option>친구들</option><option>친구둘</option><option>친구삼</option><option>친구넷</option><option>친구닷</option>
-          </select>
-          <button class="approve-btn" onclick="approveUser('${u.character_name}', 'pending')">승인</button>
-        ` : u.status === "active" ? `
-          <span></span>
-          <button class="deactivate-btn" onclick="deactivateUser('${u.character_name}')">비활성화</button>
-        ` : `
-          <span></span>
-          <button class="approve-btn" onclick="approveUser('${u.character_name}', 'inactive')">재활성화</button>
-        `}
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="status-badge status-${u.status}">${u.status==="active"?"활성":u.status==="pending"?"대기":"비활성"}</span>
+          <span class="role-badge role-${u.role||"member"}">${u.role==="superadmin"?"슈퍼어드민":u.role==="admin"?"어드민":"유저"}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          ${isSuperAdmin ? `
+            <select class="guild-select" onchange="changeRole('${u.character_name}', this.value)">
+              <option value="member" ${(u.role||"member")==="member"?"selected":""}>유저</option>
+              <option value="admin" ${u.role==="admin"?"selected":""}>어드민</option>
+              <option value="superadmin" ${u.role==="superadmin"?"selected":""}>슈퍼어드민</option>
+            </select>
+          ` : ""}
+          ${u.status === "pending" ? `
+            <select class="guild-select" id="ug_${u.character_name}">
+              <option value="">길드 선택</option>
+              <option>친구들</option><option>친구둘</option><option>친구삼</option><option>친구넷</option><option>친구닷</option>
+            </select>
+            <button class="approve-btn" onclick="approveUser('${u.character_name}', 'pending')">승인</button>
+          ` : u.status === "active" ? `
+            <button class="deactivate-btn" onclick="deactivateUser('${u.character_name}')">비활성화</button>
+          ` : `
+            <button class="approve-btn" onclick="approveUser('${u.character_name}', 'inactive')">재활성화</button>
+          `}
+        </div>
       </div>
     `).join("");
   } catch { showToast("로드 실패", false); }
+}
+
+async function changeRole(name, role) {
+  try {
+    await fetch(`${API}/api/auth/role`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, role }),
+    });
+    showToast(`${name} → ${role === "superadmin" ? "슈퍼어드민" : role === "admin" ? "어드민" : "유저"} 변경 완료`);
+  } catch { showToast("변경 실패", false); }
 }
 
 async function approveUser(name, fromStatus) {
