@@ -2399,6 +2399,22 @@ main { padding: 0 0 48px; }
   font-family: inherit;
 }
 .board-textarea:focus { outline: none; border-color: var(--yellow); }
+
+/* Quill 에디터 커스텀 */
+#editorWrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; }
+#editorWrap .ql-toolbar { border: none; border-bottom: 1px solid var(--border); background: #f9fafb; }
+#editorWrap .ql-container { border: none; font-size: 0.92rem; font-family: inherit; }
+#editorWrap .ql-editor { min-height: 200px; line-height: 1.8; }
+#editorWrap .ql-editor.ql-blank::before { font-style: normal; color: #9ca3af; }
+#editorWrap .ql-editor img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+
+/* 공지 본문 렌더링 */
+.notice-content-body img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+.notice-content-body a { color: #3b82f6; text-decoration: underline; }
+.notice-content-body blockquote { border-left: 3px solid var(--yellow); padding-left: 12px; color: #6b7280; margin: 8px 0; }
+.notice-content-body pre { background: #1f2937; color: #f3f4f6; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+.notice-content-body ul, .notice-content-body ol { padding-left: 20px; }
+
 .board-cancel-btn {
   padding: 8px 16px;
   border: 1px solid var(--border);
