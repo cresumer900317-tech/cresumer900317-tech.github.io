@@ -1,1 +1,4 @@
 guild_backend/
+
+# Local Netlify folder
+.netlify

@@ -114,7 +114,8 @@
   <div class="lock-box">
     <div style="font-size:2.5rem;margin-bottom:12px;">😊</div>
     <h2>친구패밀리 어드민</h2>
-    <p>비밀번호를 입력해주세요</p>
+    <p>관리자 계정으로 로그인해주세요</p>
+    <input type="text" id="adminName" placeholder="캐릭터명" maxlength="30" style="margin-bottom:8px;letter-spacing:0;" />
     <input type="password" id="pwInput" placeholder="비밀번호" maxlength="20" onkeydown="if(event.key==='Enter')checkPw()" />
     <button class="lock-btn" onclick="checkPw()">입장</button>
     <div class="lock-error" id="pwError"></div>
@@ -192,26 +193,45 @@
 
 <script>
 const API = "https://guild-backend-production-75a6.up.railway.app";
-const PW = "wedding260606";
 let currentGuild = "친구들";
 let currentMonth = "";
 let allRows = [];
 let guildMembers = {};
 
-// ── 비밀번호 ──
-function checkPw() {
-  if (document.getElementById("pwInput").value === PW) {
+// ── 관리자 로그인 ──
+async function checkPw() {
+  const name = document.getElementById("adminName").value.trim();
+  const pw = document.getElementById("pwInput").value;
+  const errEl = document.getElementById("pwError");
+  if (!name || !pw) { errEl.textContent = "캐릭터명과 비밀번호를 입력해주세요"; return; }
+  try {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || "로그인 실패"; document.getElementById("pwInput").value = ""; return; }
+    if (!data.token) { errEl.textContent = "토큰 발급 실패"; return; }
+    // 역할 확인 — admin 또는 superadmin만 허용
+    const role = data.user?.role || "member";
+    if (role !== "admin" && role !== "superadmin") {
+      errEl.textContent = "관리자 권한이 없는 계정입니다";
+      return;
+    }
+    sessionStorage.setItem("token", data.token);
+    sessionStorage.setItem("admin_ok", "1");
+    sessionStorage.setItem("user", JSON.stringify({ character_name: name, role }));
     document.getElementById("lockScreen").style.display = "none";
     document.getElementById("mainUI").classList.add("unlocked");
-    sessionStorage.setItem("admin_ok", "1");
     init();
-  } else {
-    document.getElementById("pwError").textContent = "비밀번호가 틀렸습니다";
-    document.getElementById("pwInput").value = "";
-  }
+  } catch { errEl.textContent = "서버 연결 실패"; }
 }
-function lockOut() { sessionStorage.removeItem("admin_ok"); location.reload(); }
-if (sessionStorage.getItem("admin_ok") === "1") {
+function lockOut() {
+  sessionStorage.removeItem("admin_ok");
+  sessionStorage.removeItem("token");
+  location.reload();
+}
+if (sessionStorage.getItem("admin_ok") === "1" && sessionStorage.getItem("token")) {
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("mainUI").classList.add("unlocked");
   init();
@@ -427,38 +447,47 @@ async function loadUsers(status, btn) {
 }
 
 async function changeRole(name, role) {
+  const token = sessionStorage.getItem("token");
   try {
-    await fetch(`${API}/api/auth/role`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    const res = await fetch(`${API}/api/auth/role`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ character_name: name, role }),
     });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "변경 실패"); }
     showToast(`${name} → ${role === "superadmin" ? "슈퍼어드민" : role === "admin" ? "어드민" : "유저"} 변경 완료`);
-  } catch { showToast("변경 실패", false); }
+  } catch (e) { showToast(e.message || "변경 실패", false); }
 }
 
 async function approveUser(name, fromStatus) {
   const guildEl = document.getElementById(`ug_${name}`);
   const guild = guildEl ? guildEl.value : "";
+  const token = sessionStorage.getItem("token");
   try {
-    await fetch(`${API}/api/auth/approve`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    const res = await fetch(`${API}/api/auth/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ character_name: name, guild }),
     });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "승인 실패"); }
     showToast(`${name} 승인 완료 ✓`);
     loadUsers(fromStatus);
-  } catch { showToast("실패", false); }
+  } catch (e) { showToast(e.message || "실패", false); }
 }
 
 async function deactivateUser(name) {
   if (!confirm(`${name}을 비활성화할까요?`)) return;
+  const token = sessionStorage.getItem("token");
   try {
-    await fetch(`${API}/api/auth/deactivate`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    const res = await fetch(`${API}/api/auth/deactivate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ character_name: name }),
     });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "비활성화 실패"); }
     showToast(`${name} 비활성화 완료`);
     loadUsers("active");
-  } catch { showToast("실패", false); }
+  } catch (e) { showToast(e.message || "실패", false); }
 }
 
 function showToast(msg, ok = true) {
