@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
   const user = getUser();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   try {
     const res = await fetch(`${API_BASE}/api/notices`, { cache: "no-store" });

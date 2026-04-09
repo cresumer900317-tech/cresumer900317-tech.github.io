@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!tip) return;
 
       const isOwner = user?.character_name === tip.author;
-      const isAdmin = user?.role === "admin";
+      const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
       document.getElementById("tipContent").innerHTML = `
         <div style="padding:28px 28px 24px;">
