@@ -1257,6 +1257,26 @@ main { padding: 0 0 48px; }
   .page-title { font-size: 1.3rem; }
   .notice-card-body { padding: 1rem; }
 }
+/* ===== 월간성장 탭 ===== */
+.monthly-tab-btn {
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-soft);
+  transition: all 0.15s;
+}
+.monthly-tab-btn.active {
+  background: var(--yellow-bg);
+  border-color: var(--yellow-border);
+  color: var(--amber-dark);
+  font-weight: 700;
+}
+.monthly-tab-btn:hover:not(.active) { background: var(--bg-light); }
+
 /* ===== 월간성장 카드 레이아웃 ===== */
 .monthly-card { align-items: flex-start; position: relative; }
 
