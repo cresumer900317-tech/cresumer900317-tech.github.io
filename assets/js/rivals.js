@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       { label: "🗺️ 서버 순위",  key: "server_rank",      fmt: v => v ? `${formatNumber(v)}위` : "-", higher: false },
       { label: "📊 성장률",      key: "growth_rate",      fmt: v => v ? `${v}%` : "-", higher: true, skipNull: true },
       { label: "❤️ 인기도",     key: "total_popularity", fmt: v => v ? formatNumber(v) : "-", higher: true, skipNull: true },
-      { label: "🏆 월간 공헌도", key: "total_contribution", fmt: v => v ? formatNumber(v) : "-", higher: true, skipNull: true },
     ];
 
     const maxPower = Math.max(...guilds.map(g => g.total_power||0));
