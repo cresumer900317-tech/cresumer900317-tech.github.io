@@ -118,14 +118,14 @@ function renderShell() {
   if (!requireLogin(page)) return;
 
   const links = `
-    ${navLink("./index.html", "home", "홈", page)}
-    ${navLink("./ranking.html", "ranking", "랭킹", page)}
-    ${navLink("./members.html", "members", "길드원", page)}
-    ${navLink("./weekly.html", "weekly", "월간성장", page)}
-    ${navLink("./rivals.html", "rivals", "⚔️ 라이벌전", page)}
-    ${navLink("./civil.html", "civil", "🛡️ 내전", page)}
-    ${navLink("./notice.html", "notice", "공지", page)}
-    ${navLink("./tips.html", "tips", "팁", page)}
+    ${navLink("./", "home", "홈", page)}
+    ${navLink("./ranking", "ranking", "랭킹", page)}
+    ${navLink("./members", "members", "길드원", page)}
+    ${navLink("./weekly", "weekly", "월간성장", page)}
+    ${navLink("./rivals", "rivals", "⚔️ 라이벌전", page)}
+    ${navLink("./civil", "civil", "🛡️ 내전", page)}
+    ${navLink("./notice", "notice", "공지", page)}
+    ${navLink("./tips", "tips", "팁", page)}
   `;
 
   const userHtml = user
@@ -135,14 +135,14 @@ function renderShell() {
         <button class="nav-logout-btn" onclick="logout()">로그아웃</button>
        </div>`
     : `<div class="nav-auth-btns">
-        <a class="nav-register-btn" href="./login.html?tab=register">회원가입</a>
-        <a class="nav-login-btn" href="./login.html">로그인</a>
+        <a class="nav-register-btn" href="./login?tab=register">회원가입</a>
+        <a class="nav-login-btn" href="./login">로그인</a>
        </div>`;
 
   root.innerHTML = `
     <header class="site-header-bar">
       <div class="container site-header-inner">
-        <a class="brand-box" href="./index.html">
+        <a class="brand-box" href="./">
           <span class="brand-emoji">😊</span>
           <div>
             <div class="brand-title">친구패밀리</div>
@@ -154,8 +154,8 @@ function renderShell() {
         <div class="mobile-auth-header">
           ${user
             ? `<span class="mobile-header-user">😊 ${escapeHtml(user.character_name)}</span>`
-            : `<a href="./login.html?tab=register" class="mobile-header-register">가입</a>
-               <a href="./login.html" class="mobile-header-login">로그인</a>`
+            : `<a href="./login?tab=register" class="mobile-header-register">가입</a>
+               <a href="./login" class="mobile-header-login">로그인</a>`
           }
         </div>
         <button id="mobileMenuButton" class="mobile-menu-btn" type="button" aria-label="메뉴 열기">☰</button>
@@ -166,8 +166,8 @@ function renderShell() {
           <div class="mobile-auth-links">
             ${user
               ? `<span class="mobile-user-info">😊 ${escapeHtml(user.character_name)} <button onclick="logout()" style="background:none;border:none;color:var(--text-soft);font-size:0.78rem;cursor:pointer;">로그아웃</button></span>`
-              : `<a href="./login.html?tab=register" class="mobile-auth-btn mobile-register">회원가입</a>
-                 <a href="./login.html" class="mobile-auth-btn mobile-login">로그인</a>`
+              : `<a href="./login?tab=register" class="mobile-auth-btn mobile-register">회원가입</a>
+                 <a href="./login" class="mobile-auth-btn mobile-login">로그인</a>`
             }
           </div>
         </div>
@@ -314,7 +314,7 @@ function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
   const restricted = ["notice", "tips"];
   if (restricted.includes(page) && !getUser()) {
-    location.href = `./login.html?redirect=./${page}.html`;
+    location.href = `./login?redirect=./${page}`;
     return false;
   }
   return true;
@@ -323,5 +323,5 @@ function requireLogin(page) {
 function logout() {
   sessionStorage.removeItem("user");
   sessionStorage.removeItem("token");
-  location.href = "./index.html";
+  location.href = "./";
 }
