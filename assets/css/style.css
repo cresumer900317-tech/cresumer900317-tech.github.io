@@ -2582,6 +2582,188 @@ main { padding: 0 0 48px; }
   .board-row-right { align-self: flex-end; }
 }
 
+/* ===== 게시판 페이지 뷰 ===== */
+.board-view-page {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.board-view-header {
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+.board-view-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.board-view-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.board-view-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  flex-wrap: wrap;
+}
+.board-view-info span { display: flex; align-items: center; gap: 4px; }
+.board-view-body {
+  padding: 28px;
+  font-size: 0.94rem;
+  line-height: 1.9;
+  color: #374151;
+  min-height: 200px;
+}
+.board-view-footer {
+  padding: 20px 28px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.board-view-like {
+  padding: 8px 20px;
+  background: #fff;
+  border: 1.5px solid #fca5a5;
+  border-radius: 999px;
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.board-view-like:hover { background: #fef2f2; border-color: #ef4444; }
+.board-view-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 게시판 페이지 네비 (이전글/다음글) */
+.board-post-nav {
+  margin-top: 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.board-post-nav-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.88rem;
+  transition: background 0.1s;
+  text-decoration: none;
+  color: inherit;
+}
+.board-post-nav-row:last-child { border-bottom: none; }
+.board-post-nav-row:hover { background: var(--yellow-bg); }
+.board-post-nav-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  flex-shrink: 0;
+  width: 52px;
+}
+.board-post-nav-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* 게시판 글쓰기 페이지 */
+.board-write-page {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.board-write-page .board-input {
+  margin-bottom: 12px;
+  font-size: 1rem;
+  padding: 12px 16px;
+}
+.board-write-page .board-select {
+  padding: 10px 14px;
+  font-size: 0.88rem;
+}
+.board-write-page #editorWrap {
+  margin-bottom: 16px;
+}
+.board-write-page #editorWrap .ql-editor {
+  min-height: 320px;
+}
+.board-write-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* 페이지네이션 */
+.board-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 20px 0;
+}
+.board-pagination button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.board-pagination button:hover { border-color: var(--yellow-border); color: var(--amber); }
+.board-pagination button.active {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--white);
+  font-weight: 700;
+}
+.board-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 게시판 목록 총 게시글 수 */
+.board-total-count {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  margin-bottom: 10px;
+}
+
+@media (max-width: 600px) {
+  .board-view-header { padding: 20px 16px 16px; }
+  .board-view-body { padding: 20px 16px; }
+  .board-view-footer { padding: 16px; }
+  .board-view-title { font-size: 1.1rem; }
+  .board-write-page { padding: 20px 16px; }
+  .board-post-nav-row { padding: 10px 16px; }
+}
+
 /* role 뱃지 */
 .role-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .role-superadmin { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }

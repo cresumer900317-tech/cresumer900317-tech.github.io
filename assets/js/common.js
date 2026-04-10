@@ -312,9 +312,10 @@ function authHeaders() {
 
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["notice", "tips"];
+  const restricted = ["notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write"];
   if (restricted.includes(page) && !getUser()) {
-    location.href = `./login?redirect=./${page}`;
+    const base = page.startsWith("notice") ? "notice" : "tips";
+    location.href = `./login?redirect=./${base}`;
     return false;
   }
   return true;
