@@ -11,31 +11,94 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(`${API_BASE}/api/tips`, { cache: "no-store" });
     const tips = await res.json();
 
-    function categoryColor(cat) {
-      const map = { "공략": "#f59e0b", "성장": "#22c55e", "캐릭터": "#3b82f6", "아이템": "#8b5cf6", "기타": "#6b7280" };
-      return map[cat] || "#6b7280";
+    const catConfig = {
+      "공략": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },
+      "성장": { color: "#2563eb", bg: "#eff6ff", icon: "📈" },
+      "캐릭터": { color: "#0891b2", bg: "#ecfeff", icon: "🧙" },
+      "아이템": { color: "#7c3aed", bg: "#f5f3ff", icon: "🎒" },
+      "기타": { color: "#6b7280", bg: "#f9fafb", icon: "📝" },
+    };
+
+    function getCat(cat) {
+      return catConfig[cat] || catConfig["기타"];
     }
 
     function getFiltered() {
       return currentCat === "전체" ? tips : tips.filter(t => t.category === currentCat);
     }
 
+    // 인기글 (좋아요 + 조회수 기준 상위 3개)
+    function getHotPosts() {
+      return [...tips]
+        .sort((a, b) => ((b.likes || 0) * 3 + (b.views || 0)) - ((a.likes || 0) * 3 + (a.views || 0)))
+        .slice(0, 3)
+        .filter(t => (t.likes || 0) > 0 || (t.views || 0) > 0);
+    }
+
+    function renderHotSection() {
+      const hot = getHotPosts();
+      if (hot.length === 0) return "";
+      const medals = ["🥇", "🥈", "🥉"];
+      return `
+        <div class="tips-hot-section">
+          <div class="tips-hot-title">🔥 인기 꿀팁</div>
+          <div class="tips-hot-grid">
+            ${hot.map((t, i) => {
+              const c = getCat(t.category);
+              return `
+                <a class="tips-hot-card" href="./tips-view?id=${t.id}" style="text-decoration:none;">
+                  <div class="tips-hot-rank">${medals[i]} ${i + 1}위</div>
+                  <div class="tips-hot-card-title">${escapeHtml(t.title)}</div>
+                  <div class="tips-hot-card-meta">
+                    <span class="board-cat" style="color:${c.color};background:${c.bg};font-size:0.68rem;padding:2px 8px;">${c.icon} ${t.category || "기타"}</span>
+                    <span>❤️ ${t.likes || 0}</span>
+                    <span>👁 ${t.views || 0}</span>
+                    <span>${escapeHtml(t.author || "-")}</span>
+                  </div>
+                </a>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function stripHtml(html) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    }
+
+    function getPreview(content) {
+      const text = stripHtml(content || "");
+      return text.length > 50 ? text.substring(0, 50) + "…" : text;
+    }
+
     function renderList(list) {
-      if (!list.length) return `<div class="board-empty">등록된 꿀팁이 없습니다<br><small>첫 번째 꿀팁을 공유해보세요!</small></div>`;
-      return list.map(t => `
+      if (!list.length) return `
+        <div class="board-empty">
+          <div class="board-empty-icon">💡</div>
+          등록된 꿀팁이 없습니다<br><small>첫 번째 꿀팁을 공유해보세요!</small>
+        </div>`;
+      return list.map(t => {
+        const c = getCat(t.category);
+        return `
         <a class="board-row" href="./tips-view?id=${t.id}" style="text-decoration:none;color:inherit;">
           <div class="board-row-left">
-            <span class="board-num">${t.id}</span>
-            <span class="board-cat" style="color:${categoryColor(t.category)};background:${categoryColor(t.category)}15;">${t.category||"기타"}</span>
+            <span class="board-cat" style="color:${c.color};background:${c.bg};">${c.icon} ${t.category||"기타"}</span>
             <span class="board-ttl">${escapeHtml(t.title)}</span>
-            ${t.likes > 0 ? `<span style="font-size:0.72rem;color:#ef4444;margin-left:4px;">❤️ ${t.likes}</span>` : ""}
           </div>
           <div class="board-row-right">
+            <span class="board-stats">
+              ${t.likes > 0 ? `<span class="stat-likes">❤️ ${t.likes}</span>` : ""}
+              <span class="stat-views">👁 ${t.views || 0}</span>
+            </span>
             <span class="board-auth">${escapeHtml(t.author||"-")}</span>
             <span class="board-dt">${new Date(t.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
         </a>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function renderPagination(total) {
@@ -60,6 +123,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("totalCount").textContent = `총 ${filtered.length}건`;
     }
 
+    const catButtons = ["전체","공략","성장","캐릭터","아이템","기타"].map(c => {
+      const cfg = catConfig[c];
+      const icon = cfg ? cfg.icon + " " : "";
+      return `<button class="cat-btn${c==="전체"?" active":""}" data-cat="${c}">${c === "전체" ? "📋 " : icon}${c}</button>`;
+    }).join("");
+
     document.querySelector("main").innerHTML = `
       <div class="page-card">
         <div class="container">
@@ -71,11 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             <a href="./tips-write" class="board-write-btn" style="text-decoration:none;">✏️ 꿀팁 등록</a>
           </div>
 
+          <!-- 인기글 섹션 -->
+          <div id="hotSection">${renderHotSection()}</div>
+
           <!-- 카테고리 필터 -->
           <div id="catFilter" style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-            ${["전체","공략","성장","캐릭터","아이템","기타"].map(c => `
-              <button class="cat-btn${c==="전체"?" active":""}" data-cat="${c}">${c}</button>
-            `).join("")}
+            ${catButtons}
           </div>
 
           <div class="board-total-count" id="totalCount"></div>

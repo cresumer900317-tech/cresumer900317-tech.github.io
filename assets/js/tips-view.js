@@ -13,8 +13,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function categoryColor(cat) {
-    const map = { "공략": "#f59e0b", "성장": "#22c55e", "캐릭터": "#3b82f6", "아이템": "#8b5cf6", "기타": "#6b7280" };
-    return map[cat] || "#6b7280";
+    const map = {
+      "공략": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },
+      "성장": { color: "#2563eb", bg: "#eff6ff", icon: "📈" },
+      "캐릭터": { color: "#0891b2", bg: "#ecfeff", icon: "🧙" },
+      "아이템": { color: "#7c3aed", bg: "#f5f3ff", icon: "🎒" },
+      "기타": { color: "#6b7280", bg: "#f9fafb", icon: "📝" },
+    };
+    return map[cat] || map["기타"];
   }
 
   try {
@@ -35,6 +41,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // 조회수 증가
+    fetch(`${API_BASE}/api/tips/${tip.id}/view`, { method: "POST" })
+      .then(r => r.json())
+      .then(data => {
+        const el = document.getElementById("viewCount");
+        if (el) el.textContent = data.views;
+      })
+      .catch(() => {});
+
     const isOwner = user?.character_name === tip.author;
     const isAdmin = user?.role === "admin" || user?.role === "superadmin";
     const canDelete = isOwner || isAdmin;
@@ -47,6 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const isHtml = tip.content && (tip.content.includes("<") && tip.content.includes(">"));
     const contentHtml = isHtml ? sanitize(tip.content) : `<p style="white-space:pre-wrap;">${escapeHtml(tip.content)}</p>`;
     const cat = tip.category || "기타";
+    const catCfg = categoryColor(cat);
 
     document.querySelector("main").innerHTML = `
       <div class="page-card">
@@ -58,13 +74,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="board-view-page">
             <div class="board-view-header">
               <div class="board-view-meta">
-                <span class="board-cat" style="color:${categoryColor(cat)};background:${categoryColor(cat)}15;">${cat}</span>
+                <span class="board-cat" style="color:${catCfg.color};background:${catCfg.bg};">${catCfg.icon} ${cat}</span>
               </div>
               <h1 class="board-view-title">${escapeHtml(tip.title)}</h1>
               <div class="board-view-info">
-                <span>${escapeHtml(tip.author || "-")}</span>
-                ${tip.author_guild ? `<span>${escapeHtml(tip.author_guild)}</span>` : ""}
-                <span>${new Date(tip.created_at).toLocaleString("ko-KR")}</span>
+                <span>✍️ ${escapeHtml(tip.author || "-")}</span>
+                ${tip.author_guild ? `<span>🏰 ${escapeHtml(tip.author_guild)}</span>` : ""}
+                <span>📅 ${new Date(tip.created_at).toLocaleString("ko-KR")}</span>
+                <span>👁 <span id="viewCount">${(tip.views || 0) + 1}</span></span>
+                <span>❤️ ${tip.likes || 0}</span>
               </div>
             </div>
 
