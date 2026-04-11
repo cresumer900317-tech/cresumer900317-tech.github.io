@@ -23,16 +23,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     return map[cat] || map["기타"];
   }
 
+  // 좋아요 중복 방지 (localStorage)
+  function hasLiked(tipId) {
+    const liked = JSON.parse(localStorage.getItem("tip_likes") || "[]");
+    return liked.includes(tipId);
+  }
+  function markLiked(tipId) {
+    const liked = JSON.parse(localStorage.getItem("tip_likes") || "[]");
+    if (!liked.includes(tipId)) {
+      liked.push(tipId);
+      localStorage.setItem("tip_likes", JSON.stringify(liked));
+    }
+  }
+
   try {
     const params = new URLSearchParams(location.search);
     const postId = Number(params.get("id"));
     if (!postId) { location.href = "./tips"; return; }
 
-    const res = await fetch(`${API_BASE}/api/tips`, { cache: "no-store" });
-    const tips = await res.json();
-    const tip = tips.find(t => t.id === postId);
+    // 단건 조회 + 인접글 + 조회수 증가를 병렬로 요청
+    const [tipRes, adjRes, viewRes] = await Promise.all([
+      fetch(`${API_BASE}/api/tips/${postId}`, { cache: "no-store" }),
+      fetch(`${API_BASE}/api/tips/${postId}/adjacent`, { cache: "no-store" }),
+      fetch(`${API_BASE}/api/tips/${postId}/view`, { method: "POST" }),
+    ]);
 
-    if (!tip) {
+    if (!tipRes.ok) {
       document.querySelector("main").innerHTML = `
         <div class="page-card"><div class="container" style="padding:60px 20px;text-align:center;">
           <p style="font-size:1rem;color:var(--text-soft);">존재하지 않는 게시글입니다.</p>
@@ -41,28 +57,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 조회수 증가
-    fetch(`${API_BASE}/api/tips/${tip.id}/view`, { method: "POST" })
-      .then(r => r.json())
-      .then(data => {
-        const el = document.getElementById("viewCount");
-        if (el) el.textContent = data.views;
-      })
-      .catch(() => {});
+    const tip = await tipRes.json();
+    const adjacent = await adjRes.json();
+    const viewData = await viewRes.json();
+
+    const prevPost = adjacent.prev;
+    const nextPost = adjacent.next;
 
     const isOwner = user?.character_name === tip.author;
     const isAdmin = user?.role === "admin" || user?.role === "superadmin";
     const canDelete = isOwner || isAdmin;
 
-    // 이전/다음 글
-    const idx = tips.indexOf(tip);
-    const prevPost = idx < tips.length - 1 ? tips[idx + 1] : null;
-    const nextPost = idx > 0 ? tips[idx - 1] : null;
-
     const isHtml = tip.content && (tip.content.includes("<") && tip.content.includes(">"));
     const contentHtml = isHtml ? sanitize(tip.content) : `<p style="white-space:pre-wrap;">${escapeHtml(tip.content)}</p>`;
     const cat = tip.category || "기타";
     const catCfg = categoryColor(cat);
+
+    const alreadyLiked = hasLiked(postId);
 
     document.querySelector("main").innerHTML = `
       <div class="page-card">
@@ -81,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <span>✍️ ${escapeHtml(tip.author || "-")}</span>
                 ${tip.author_guild ? `<span>🏰 ${escapeHtml(tip.author_guild)}</span>` : ""}
                 <span>📅 ${new Date(tip.created_at).toLocaleString("ko-KR")}</span>
-                <span>👁 <span id="viewCount">${(tip.views || 0) + 1}</span></span>
+                <span>👁 <span id="viewCount">${viewData.views || (tip.views || 0) + 1}</span></span>
                 <span>❤️ ${tip.likes || 0}</span>
               </div>
             </div>
@@ -91,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="board-view-footer">
               <div style="display:flex;align-items:center;gap:12px;">
                 <a href="./tips" class="board-cancel-btn" style="text-decoration:none;">&larr; 목록</a>
-                <button id="likeBtn" class="board-view-like">❤️ ${tip.likes || 0}</button>
+                <button id="likeBtn" class="board-view-like${alreadyLiked ? " liked" : ""}">❤️ ${tip.likes || 0}</button>
               </div>
               <div class="board-view-actions">
                 ${canDelete ? `<button id="deleteBtn" class="board-delete-btn">🗑️ 삭제</button>` : ""}
@@ -130,9 +141,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 좋아요 버튼
     document.getElementById("likeBtn").addEventListener("click", async () => {
+      if (hasLiked(postId)) {
+        alert("이미 좋아요를 누르셨습니다.");
+        return;
+      }
       const r = await fetch(`${API_BASE}/api/tips/${tip.id}/like`, { method: "POST", headers: authHeaders() });
       const data = await r.json();
-      document.getElementById("likeBtn").innerHTML = `❤️ ${data.likes}`;
+      markLiked(postId);
+      const btn = document.getElementById("likeBtn");
+      btn.innerHTML = `❤️ ${data.likes}`;
+      btn.classList.add("liked");
     });
 
     // 삭제 버튼

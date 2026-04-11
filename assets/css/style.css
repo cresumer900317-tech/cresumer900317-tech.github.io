@@ -2769,6 +2769,13 @@ main { padding: 0 0 48px; }
   transition: all 0.15s;
 }
 .board-view-like:hover { background: #fef2f2; border-color: #ef4444; }
+.board-view-like.liked {
+  background: #fef2f2;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: default;
+}
+.board-view-like.liked:hover { background: #fef2f2; border-color: #d1d5db; }
 .board-view-actions {
   display: flex;
   gap: 8px;
