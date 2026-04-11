@@ -80,22 +80,24 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="board-empty-icon">💡</div>
           등록된 꿀팁이 없습니다<br><small>첫 번째 꿀팁을 공유해보세요!</small>
         </div>`;
-      return list.map(t => {
+      const filtered = getFiltered();
+      const start = (currentPage - 1) * POSTS_PER_PAGE;
+      return list.map((t, i) => {
         const c = getCat(t.category);
+        const num = filtered.length - start - i;
         return `
         <a class="board-row" href="./tips-view?id=${t.id}" style="text-decoration:none;color:inherit;">
-          <div class="board-row-left">
+          <span class="board-row-num">${num}</span>
+          <div class="board-row-title">
             <span class="board-cat" style="color:${c.color};background:${c.bg};">${c.icon} ${t.category||"기타"}</span>
             <span class="board-ttl">${escapeHtml(t.title)}</span>
-          </div>
-          <div class="board-row-right">
             <span class="board-stats">
               ${t.likes > 0 ? `<span class="stat-likes">❤️ ${t.likes}</span>` : ""}
               <span class="stat-views">👁 ${t.views || 0}</span>
             </span>
-            <span class="board-auth">${escapeHtml(t.author||"-")}</span>
-            <span class="board-dt">${new Date(t.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
+          <span class="board-row-author">${escapeHtml(t.author||"-")}</span>
+          <span class="board-row-date">${new Date(t.created_at).toLocaleDateString("ko-KR")}</span>
         </a>
       `;
       }).join("");
