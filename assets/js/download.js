@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.4</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.5</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
               자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
