@@ -27,14 +27,25 @@ document.addEventListener("DOMContentLoaded", () => {
           길드원 전용 자쿰 인기도 매크로입니다. 로그인된 계정으로만 실행할 수 있습니다.
         </p>
 
+        <div style="background:#fef2f2;border:1px solid #fecaca;
+                    border-radius:var(--radius-md);padding:16px 20px;margin-bottom:16px;">
+          <h3 style="font-size:0.95rem;color:#dc2626;margin-bottom:4px;">🚨 필독! 사용 전 반드시 읽어주세요</h3>
+          <p style="font-size:0.82rem;color:#991b1b;">
+            압축 파일 안에 <strong>README_필독.md</strong> 파일이 포함되어 있습니다.<br>
+            매크로 사용법, 요구사항, 주의사항이 안내되어 있으니 <strong>반드시 먼저 확인</strong>해주세요.
+          </p>
+        </div>
+
         <div style="background:var(--yellow-bg);border:1px solid var(--yellow-border);
                     border-radius:var(--radius-md);padding:20px;margin-bottom:20px;">
-          <h3 style="font-size:0.95rem;color:var(--amber-dark);margin-bottom:12px;">📋 사용 방법</h3>
+          <h3 style="font-size:0.95rem;color:var(--amber-dark);margin-bottom:12px;">📋 빠른 사용 가이드</h3>
           <ol style="padding-left:20px;color:var(--text);font-size:0.88rem;line-height:1.8;">
-            <li>아래 버튼을 눌러 매크로를 다운로드합니다</li>
-            <li>압축을 풀고 매크로를 실행합니다</li>
-            <li>길드 홈페이지 계정으로 <strong>로그인</strong>합니다</li>
-            <li>인증이 완료되면 매크로를 사용할 수 있습니다</li>
+            <li><strong>LDPlayer 9</strong> 에뮬레이터 실행 (해상도 960x540)</li>
+            <li>메이플스토리 키우기 접속</li>
+            <li>아래 버튼으로 매크로 다운로드 → 압축 해제</li>
+            <li><strong>ZakumMacro.exe</strong> 실행</li>
+            <li>길드 홈페이지 계정으로 <strong>로그인</strong></li>
+            <li>에뮬레이터 인스턴스 선택 → 난이도 설정 → <strong>START</strong></li>
           </ol>
         </div>
 
@@ -42,9 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.1</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.4</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
-              자쿰 인기도 자동 매크로 · LDPlayer 전용
+              자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
           </div>
           <button id="downloadBtn" class="board-submit-btn"
