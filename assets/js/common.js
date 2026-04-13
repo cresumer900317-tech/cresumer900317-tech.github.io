@@ -126,6 +126,7 @@ function renderShell() {
     ${navLink("./civil", "civil", "🛡️ 내전", page)}
     ${navLink("./notice", "notice", "공지", page)}
     ${navLink("./tips", "tips", "팁", page)}
+    ${navLink("./download", "download", "⬇️ 매크로", page)}
   `;
 
   const userHtml = user
@@ -312,9 +313,9 @@ function authHeaders() {
 
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write"];
+  const restricted = ["notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "download"];
   if (restricted.includes(page) && !getUser()) {
-    const base = page.startsWith("notice") ? "notice" : "tips";
+    const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page;
     location.href = `./login?redirect=./${base}`;
     return false;
   }
