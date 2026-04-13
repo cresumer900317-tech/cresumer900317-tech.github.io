@@ -3,13 +3,52 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const user = getUser();
 
+  function normalizeHrefs(html) {
+    return html.replace(/href="((?!https?:\/\/|data:)[^"]+)"/gi, (_, url) => {
+      return `href="https://${url}"`;
+    });
+  }
+
+  function linkifyText(html) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    const walker = document.createTreeWalker(tmp, NodeFilter.SHOW_TEXT, null);
+    const urlRe = /(?:https?:\/\/|www\.)[^\s<]+/g;
+    const nodes = [];
+    while (walker.nextNode()) {
+      if (walker.currentNode.parentElement?.closest("a")) continue;
+      if (urlRe.test(walker.currentNode.textContent)) nodes.push(walker.currentNode);
+      urlRe.lastIndex = 0;
+    }
+    nodes.forEach(node => {
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      node.textContent.replace(urlRe, (match, offset) => {
+        if (offset > last) frag.appendChild(document.createTextNode(node.textContent.slice(last, offset)));
+        const a = document.createElement("a");
+        a.href = match.startsWith("http") ? match : `https://${match}`;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = match;
+        frag.appendChild(a);
+        last = offset + match.length;
+      });
+      if (last < node.textContent.length) frag.appendChild(document.createTextNode(node.textContent.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    return tmp.innerHTML;
+  }
+
   function sanitize(html) {
-    return DOMPurify.sanitize(html, {
+    const normalized = normalizeHrefs(html);
+    const clean = DOMPurify.sanitize(normalized, {
       ALLOWED_TAGS: ["b","i","u","s","em","strong","p","br","ul","ol","li","h1","h2","h3",
         "span","a","img","blockquote","pre","code","sub","sup","hr"],
       ALLOWED_ATTR: ["href","src","alt","style","target","class","width","height"],
+      ADD_ATTR: ["target"],
       ALLOWED_URI_REGEXP: /^(?:(?:https?|data):)/i,
     });
+    return linkifyText(clean);
   }
 
   function categoryColor(cat) {
