@@ -65,6 +65,33 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <p id="downloadMsg" style="font-size:0.8rem;color:var(--text-soft);margin-top:12px;text-align:center;"></p>
+
+        <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
+          <h2 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:16px;">📝 업데이트 내역</h2>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.5 (2024-04-14)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li><strong>길드원 전용 인증</strong> — 매 실행 시 길드 홈페이지 계정 로그인 필수</li>
+              <li><strong>인기도 체크 안정화</strong> — 100회 레이드마다 자동 캡처 후 디스코드 전송</li>
+              <li><strong>파티 탈퇴 → 마을 복귀 로직 개선</strong> — 파티 끊김/팝업 자동 처리</li>
+              <li><strong>난이도 선택 버그 수정</strong> — 파티 재생성 시 기본 난이도로 잡히던 문제 해결</li>
+              <li><strong>파티 생성 무한루프 수정</strong> — 난이도 탭과 파티 생성 버튼 동시 감지 시 멈추던 문제 해결</li>
+              <li><strong>카오스 난이도 추가</strong> — 쉬움/보통/어려움/카오스 4단계 지원</li>
+              <li><strong>GUI 버전 표시</strong> — 실행 시 현재 버전 확인 가능</li>
+            </ul>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.1 (이전 버전)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li>자쿰 보스 레이드 자동 매칭/수락/나가기</li>
+              <li>도전모드 자동 체크 및 파티 채팅 전송</li>
+              <li>디스코드 웹훅 알림</li>
+              <li>화면 이탈 시 자동 복구</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   `;
