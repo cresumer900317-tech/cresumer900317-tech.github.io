@@ -1578,16 +1578,16 @@ main { padding: 0 0 48px; }
 .rk-cut-marker {
   position: absolute;
   right: 0; top: 0; bottom: 0;
-  width: 28px;
+  width: 24px;
   background: var(--yellow);
   color: var(--white);
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.6rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   writing-mode: vertical-rl;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 /* 위험/도전 카드 */

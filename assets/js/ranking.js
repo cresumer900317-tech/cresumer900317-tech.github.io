@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
             ${cutDiff !== null ? `<div style="margin-top:2px;">${cutDistanceHtml(cutDiff)}</div>` : ""}
           </div>
-          ${isCut ? `<div class="rk-cut-marker">컷</div>` : ""}
+          ${isCut ? `<div class="rk-cut-marker">30위 기준</div>` : ""}
         </div>
       `;
     }
