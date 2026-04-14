@@ -133,6 +133,7 @@ function renderShell() {
     ? `<div class="nav-user">
         <span class="nav-user-name">${escapeHtml(user.character_name)}</span>
         <span class="nav-user-guild">${escapeHtml(user.guild||"")}</span>
+        <a href="./mypage" style="font-size:0.75rem;color:var(--text-soft);text-decoration:none;margin-right:6px;">회원정보</a>
         <button class="nav-logout-btn" onclick="logout()">로그아웃</button>
        </div>`
     : `<div class="nav-auth-btns">

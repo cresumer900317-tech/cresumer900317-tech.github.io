@@ -176,8 +176,15 @@
         </div>
         <div class="form-group">
           <label>비밀번호 확인</label>
-          <input type="password" id="regPw2" placeholder="비밀번호 재입력"
-                 onkeydown="if(event.key==='Enter')doRegister()" autocomplete="new-password" />
+          <input type="password" id="regPw2" placeholder="비밀번호 재입력" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label>이메일</label>
+          <input type="email" id="regEmail" placeholder="example@email.com" />
+        </div>
+        <div class="form-group">
+          <label>생년월일</label>
+          <input type="date" id="regBirth" />
         </div>
         <div class="auth-msg" id="registerMsg"></div>
         <button class="submit-btn" onclick="doRegister()">가입 신청</button>
@@ -187,13 +194,12 @@
     <!-- 비밀번호 변경/찾기 폼 -->
     <div id="changepwForm" style="display:none;">
       <div class="auth-form">
-        <div class="auth-notice">
-          🔑 로그인된 상태에서 비밀번호를 변경할 수 있습니다<br>
-          비밀번호를 잊으셨다면 아래 초기화 요청을 이용하세요
-        </div>
 
         <div id="changepwSection">
-          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">비밀번호 변경</p>
+          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">🔑 비밀번호 변경</p>
+          <div class="auth-notice" style="margin-bottom:14px;">
+            현재 비밀번호를 알고 있는 경우 바로 변경할 수 있습니다
+          </div>
           <div class="form-group">
             <label>캐릭터명</label>
             <input type="text" id="cpName" placeholder="캐릭터명" autocomplete="username" />
@@ -217,18 +223,34 @@
 
         <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;" />
 
-        <div id="resetSection">
-          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">비밀번호를 잊으셨나요?</p>
+        <div id="recoverSection">
+          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">🔍 비밀번호 찾기</p>
+          <div class="auth-notice" style="margin-bottom:14px;">
+            가입 시 등록한 이메일과 생년월일로 본인 확인 후 재설정합니다
+          </div>
           <div class="form-group">
             <label>캐릭터명</label>
-            <input type="text" id="resetName" placeholder="캐릭터명 입력" />
+            <input type="text" id="recoverName" placeholder="캐릭터명" />
           </div>
-          <div class="auth-msg" id="resetMsg"></div>
-          <button class="submit-btn" style="background:var(--text-soft);" onclick="doResetRequest()">초기화 요청</button>
-          <p style="font-size:0.75rem;color:var(--text-soft);margin-top:8px;line-height:1.5;">
-            요청 후 관리자가 확인하면 임시 비밀번호가 설정됩니다.<br>
-            길드 마스터 또는 운영진에게 문의해주세요.
-          </p>
+          <div class="form-group">
+            <label>이메일</label>
+            <input type="email" id="recoverEmail" placeholder="가입 시 등록한 이메일" />
+          </div>
+          <div class="form-group">
+            <label>생년월일</label>
+            <input type="date" id="recoverBirth" />
+          </div>
+          <div class="form-group">
+            <label>새 비밀번호</label>
+            <input type="password" id="recoverNewPw" placeholder="4자 이상" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label>새 비밀번호 확인</label>
+            <input type="password" id="recoverNewPw2" placeholder="새 비밀번호 재입력"
+                   onkeydown="if(event.key==='Enter')doRecover()" autocomplete="new-password" />
+          </div>
+          <div class="auth-msg" id="recoverMsg"></div>
+          <button class="submit-btn" style="background:var(--amber);" onclick="doRecover()">비밀번호 재설정</button>
         </div>
       </div>
     </div>
@@ -255,7 +277,7 @@ function showTab(tab) {
 }
 
 function clearMsgs() {
-  ["loginMsg", "registerMsg", "changepwMsg", "resetMsg"].forEach(id => {
+  ["loginMsg", "registerMsg", "changepwMsg", "recoverMsg"].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.className = "auth-msg"; el.textContent = ""; }
   });
@@ -312,10 +334,12 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = "신청 중...";
 
   try {
+    const email = document.getElementById("regEmail").value.trim();
+    const birthdate = document.getElementById("regBirth").value;
     const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ character_name: name, password: pw }),
+      body: JSON.stringify({ character_name: name, password: pw, email, birthdate }),
     });
     const data = await res.json();
     if (!res.ok) { showMsg("registerMsg", data.detail || "가입 신청 실패"); return; }
@@ -380,27 +404,36 @@ async function doChangePw() {
   }
 }
 
-// 비밀번호 초기화 요청
-async function doResetRequest() {
-  const name = document.getElementById("resetName").value.trim();
-  if (!name) { showMsg("resetMsg", "캐릭터명을 입력해주세요"); return; }
+// 비밀번호 찾기 (본인인증)
+async function doRecover() {
+  const name = document.getElementById("recoverName").value.trim();
+  const email = document.getElementById("recoverEmail").value.trim();
+  const birth = document.getElementById("recoverBirth").value;
+  const newPw = document.getElementById("recoverNewPw").value;
+  const newPw2 = document.getElementById("recoverNewPw2").value;
 
-  const btn = document.querySelector("#resetSection .submit-btn");
-  btn.disabled = true; btn.textContent = "요청 중...";
+  if (!name || !email || !birth || !newPw) { showMsg("recoverMsg", "모든 항목을 입력해주세요"); return; }
+  if (newPw.length < 4) { showMsg("recoverMsg", "새 비밀번호는 4자 이상이어야 합니다"); return; }
+  if (newPw !== newPw2) { showMsg("recoverMsg", "새 비밀번호가 일치하지 않습니다"); return; }
+
+  const btn = document.querySelector("#recoverSection .submit-btn");
+  btn.disabled = true; btn.textContent = "확인 중...";
 
   try {
-    const res = await fetch(`${API_BASE}/api/auth/reset-request`, {
+    const res = await fetch(`${API_BASE}/api/auth/recover-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ character_name: name }),
+      body: JSON.stringify({ character_name: name, email, birthdate: birth, new_password: newPw }),
     });
     const data = await res.json();
-    if (!res.ok) { showMsg("resetMsg", data.detail || "요청 실패"); return; }
-    showMsg("resetMsg", "초기화 요청이 접수되었습니다. 관리자 확인 후 처리됩니다.", false);
+    if (!res.ok) { showMsg("recoverMsg", data.detail || "재설정 실패"); return; }
+    showMsg("recoverMsg", "비밀번호가 재설정되었습니다. 로그인 탭에서 로그인해주세요.", false);
+    document.getElementById("recoverNewPw").value = "";
+    document.getElementById("recoverNewPw2").value = "";
   } catch {
-    showMsg("resetMsg", "서버 연결 오류");
+    showMsg("recoverMsg", "서버 연결 오류");
   } finally {
-    btn.disabled = false; btn.textContent = "초기화 요청";
+    btn.disabled = false; btn.textContent = "비밀번호 재설정";
   }
 }
 
