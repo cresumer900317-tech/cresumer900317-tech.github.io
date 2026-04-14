@@ -25,188 +25,156 @@
       overflow: hidden;
     }
 
-    /* 헤더 */
     .auth-header {
       text-align: center;
       padding: 32px 32px 20px;
       background: linear-gradient(180deg, #fffbeb 0%, #fff 100%);
     }
-    .auth-header .shield { font-size: 2rem; margin-bottom: 8px; }
+    .auth-header .logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(245,158,11,0.25);
+    }
     .auth-header h1 { font-size: 1.15rem; font-weight: 800; color: #1a1a1a; letter-spacing: -0.02em; }
     .auth-header p { font-size: 0.78rem; color: #9ca3af; margin-top: 4px; letter-spacing: 0.5px; }
 
-    /* 탭 */
     .auth-tabs {
       display: flex;
       border-bottom: 2px solid #f3f4f6;
-      margin: 0;
       padding: 0 24px;
     }
     .auth-tab {
-      flex: 1;
-      padding: 12px 0;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: #9ca3af;
-      border: none;
-      background: none;
-      position: relative;
-      transition: color 0.2s;
+      flex: 1; padding: 12px 0; text-align: center;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      color: #9ca3af; border: none; background: none;
+      position: relative; transition: color 0.2s;
     }
     .auth-tab:hover { color: #6b7280; }
     .auth-tab.active { color: #d97706; }
     .auth-tab.active::after {
-      content: "";
-      position: absolute;
-      bottom: -2px;
-      left: 12%;
-      width: 76%;
-      height: 2.5px;
-      background: #f59e0b;
-      border-radius: 2px;
+      content: ""; position: absolute;
+      bottom: -2px; left: 12%; width: 76%; height: 2.5px;
+      background: #f59e0b; border-radius: 2px;
     }
 
-    /* 폼 */
     .auth-body { padding: 24px 28px 28px; }
     .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
     .form-group { position: relative; }
     .form-group label {
-      display: block;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #374151;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.78rem; font-weight: 700; color: #374151;
       margin-bottom: 6px;
-      letter-spacing: -0.01em;
     }
+    .form-group label .icon { font-size: 0.85rem; }
     .form-group input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      color: #1a1a1a;
-      transition: all 0.15s;
-      background: #fafafa;
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 0.9rem; color: #1a1a1a;
+      transition: all 0.15s; background: #fafafa;
     }
     .form-group input:focus {
-      outline: none;
-      border-color: #f59e0b;
-      background: #fff;
+      outline: none; border-color: #f59e0b; background: #fff;
       box-shadow: 0 0 0 3px rgba(245,158,11,0.08);
     }
     .form-group input.invalid { border-color: #ef4444; background: #fef2f2; }
-    .form-group input.valid { border-color: #22c55e; }
-    .form-hint {
-      font-size: 0.72rem;
-      color: #9ca3af;
-      margin-top: 4px;
-      line-height: 1.4;
+    .form-group input.valid { border-color: #22c55e; background: #f0fdf4; }
+    .form-desc {
+      font-size: 0.72rem; color: #9ca3af; margin-top: 5px; line-height: 1.4;
     }
-    .form-hint.error { color: #ef4444; }
+    .form-desc.error { color: #ef4444; font-weight: 500; }
+    .form-desc.success { color: #22c55e; font-weight: 500; }
 
-    /* 버튼 */
     .submit-btn {
-      width: 100%;
-      padding: 13px;
+      width: 100%; padding: 13px;
       background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 6px;
-      letter-spacing: -0.01em;
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; margin-top: 4px;
     }
     .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
     .submit-btn:active { transform: translateY(0); }
     .submit-btn:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
-    .submit-btn.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); }
-    .submit-btn.secondary:hover { box-shadow: 0 4px 12px rgba(107,114,128,0.3); }
 
-    /* 메시지 */
     .auth-msg {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      display: none;
-      line-height: 1.5;
-      animation: fadeIn 0.2s;
+      padding: 10px 14px; border-radius: 10px;
+      font-size: 0.82rem; font-weight: 500;
+      display: none; line-height: 1.5; animation: fadeIn 0.2s;
     }
     .auth-msg.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
     .auth-msg.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; display: block; }
 
-    /* 안내 박스 */
-    .info-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
+    /* 안내 박스 - 차별화 */
+    .notice-box {
+      border-left: 3px solid #f59e0b;
+      background: #fffdf7;
       padding: 12px 14px;
-      font-size: 0.78rem;
-      color: #475569;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.8rem;
+      color: #92400e;
       line-height: 1.6;
     }
-    .info-box strong { color: #334155; }
-    .info-box.warn {
-      background: #fffbeb;
-      border-color: #fde68a;
-      color: #92400e;
+    .notice-box .notice-title {
+      font-weight: 700; font-size: 0.82rem; margin-bottom: 2px;
+      display: flex; align-items: center; gap: 5px;
     }
+    .info-box {
+      border: 1px dashed #d1d5db;
+      background: transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.76rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .info-box strong { color: #374151; }
 
-    /* 서브탭 (비밀번호 변경/찾기) */
+    /* 서브탭 */
     .sub-tabs {
-      display: flex;
-      gap: 4px;
-      background: #f3f4f6;
-      border-radius: 8px;
-      padding: 3px;
-      margin-bottom: 18px;
+      display: flex; gap: 4px;
+      background: #f3f4f6; border-radius: 8px;
+      padding: 3px; margin-bottom: 18px;
     }
     .sub-tab {
-      flex: 1;
-      padding: 8px;
-      text-align: center;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #9ca3af;
-      background: none;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.15s;
+      flex: 1; padding: 8px; text-align: center;
+      font-size: 0.8rem; font-weight: 600;
+      color: #9ca3af; background: none; border: none;
+      border-radius: 6px; cursor: pointer; transition: all 0.15s;
     }
     .sub-tab.active {
-      background: #fff;
-      color: #d97706;
+      background: #fff; color: #d97706;
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
 
-    /* 구분선 */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 8px 0;
-      font-size: 0.72rem;
-      color: #9ca3af;
-    }
-    .divider::before, .divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: #e5e7eb;
-    }
-
     /* 하단 링크 */
+    .login-links {
+      text-align: center; margin-top: 16px;
+      display: flex; flex-direction: column; gap: 8px; align-items: center;
+    }
+    .link-btn {
+      display: inline-block; padding: 9px 24px;
+      border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600; color: #374151;
+      text-decoration: none; cursor: pointer; background: #fff;
+      transition: all 0.15s; width: 100%; text-align: center;
+    }
+    .link-btn:hover { border-color: #d97706; color: #d97706; background: #fffbeb; }
+    .text-link {
+      font-size: 0.8rem; color: #9ca3af; cursor: pointer;
+      text-decoration: none; border: none; background: none;
+      padding: 0;
+    }
+    .text-link:hover { color: #d97706; text-decoration: underline; }
+
     .auth-footer {
-      text-align: center;
-      padding: 16px 28px 24px;
-      font-size: 0.8rem;
-      color: #9ca3af;
+      text-align: center; padding: 16px 28px 24px;
+      font-size: 0.8rem; color: #9ca3af;
     }
     .auth-footer a { color: #d97706; text-decoration: none; font-weight: 600; }
     .auth-footer a:hover { text-decoration: underline; }
@@ -224,7 +192,7 @@
   <div class="auth-box">
 
     <div class="auth-header">
-      <div class="shield">🛡️</div>
+      <div class="logo-icon">🛡️</div>
       <h1>친구패밀리 길드 포털</h1>
       <p>Guild Member Portal</p>
     </div>
@@ -240,20 +208,21 @@
       <div class="auth-body">
         <div class="auth-form">
           <div class="form-group">
-            <label>캐릭터명</label>
-            <input type="text" id="loginName" placeholder="인게임 캐릭터명을 정확히 입력" autocomplete="username" />
+            <label><span class="icon">🎮</span> 캐릭터명</label>
+            <input type="text" id="loginName" placeholder="캐릭터명" autocomplete="username" />
+            <div class="form-desc">게임 내 캐릭터명과 동일하게 입력해주세요</div>
           </div>
           <div class="form-group">
-            <label>비밀번호</label>
-            <input type="password" id="loginPw" placeholder="비밀번호를 입력해주세요"
+            <label><span class="icon">🔒</span> 비밀번호</label>
+            <input type="password" id="loginPw" placeholder="비밀번호"
                    onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
           </div>
           <div class="auth-msg" id="loginMsg"></div>
           <button class="submit-btn" onclick="doLogin()">로그인하기</button>
-          <div class="divider">또는</div>
-          <div style="display:flex;gap:8px;">
-            <button class="submit-btn secondary" style="font-size:0.8rem;padding:10px;" onclick="showTab('register')">회원가입</button>
-            <button class="submit-btn secondary" style="font-size:0.8rem;padding:10px;" onclick="showTab('changepw')">비밀번호 찾기</button>
+
+          <div class="login-links">
+            <button class="link-btn" onclick="showTab('register')">아직 계정이 없으신가요? 회원가입</button>
+            <button class="text-link" onclick="showTab('changepw')">비밀번호를 잊으셨나요?</button>
           </div>
         </div>
       </div>
@@ -263,45 +232,44 @@
     <div id="registerForm" style="display:none;">
       <div class="auth-body">
         <div class="auth-form">
-          <div class="info-box warn">
-            <strong>길드원 전용 서비스입니다</strong><br>
-            가입 신청 후 운영진 승인이 완료되면 이용할 수 있습니다.
+          <div class="notice-box">
+            <div class="notice-title">📌 길드원 전용 서비스</div>
+            실제 길드원만 가입 가능하며, 운영진 승인 후 이용할 수 있습니다.
           </div>
 
           <div class="form-group">
-            <label>캐릭터명</label>
-            <input type="text" id="regName" placeholder="인게임 캐릭터명 (정확히 입력)" autocomplete="username"
+            <label><span class="icon">🎮</span> 캐릭터명</label>
+            <input type="text" id="regName" placeholder="캐릭터명" autocomplete="username"
                    oninput="validateRegName()" />
-            <div class="form-hint" id="regNameHint">게임에서 사용 중인 캐릭터명과 동일해야 합니다</div>
+            <div class="form-desc" id="regNameHint">인게임 캐릭터명과 정확히 동일하게 입력해주세요</div>
           </div>
 
           <div class="form-group">
-            <label>비밀번호</label>
-            <input type="password" id="regPw" placeholder="4자 이상 입력" autocomplete="new-password"
+            <label><span class="icon">🔒</span> 비밀번호</label>
+            <input type="password" id="regPw" placeholder="4자 이상" autocomplete="new-password"
                    oninput="validateRegPw()" />
-            <div class="form-hint" id="regPwHint">영문, 숫자 조합을 권장합니다</div>
+            <div class="form-desc" id="regPwHint">영문, 숫자 조합을 권장합니다</div>
           </div>
 
           <div class="form-group">
-            <label>비밀번호 확인</label>
-            <input type="password" id="regPw2" placeholder="비밀번호를 다시 입력" autocomplete="new-password"
+            <label><span class="icon">🔒</span> 비밀번호 확인</label>
+            <input type="password" id="regPw2" placeholder="비밀번호 재입력" autocomplete="new-password"
                    oninput="validateRegPw2()" />
-            <div class="form-hint" id="regPw2Hint"></div>
+            <div class="form-desc" id="regPw2Hint"></div>
           </div>
 
           <div class="info-box">
-            <strong>이메일 / 생년월일 등록 안내</strong><br>
-            비밀번호 분실 시 본인 확인에 사용됩니다. 정확한 정보를 입력해주세요.
+            <strong>📧 이메일 / 📅 생년월일</strong>은 비밀번호 분실 시 본인 확인에 사용됩니다. 정확한 정보를 입력해주세요.
           </div>
 
           <div class="form-group">
-            <label>이메일</label>
+            <label><span class="icon">📧</span> 이메일</label>
             <input type="email" id="regEmail" placeholder="example@email.com" />
           </div>
 
           <div class="form-group">
-            <label>생년월일</label>
-            <input type="date" id="regBirth" />
+            <label><span class="icon">📅</span> 생년월일</label>
+            <input type="date" id="regBirth" style="color-scheme:light;" />
           </div>
 
           <div class="auth-msg" id="registerMsg"></div>
@@ -314,67 +282,69 @@
     <div id="changepwForm" style="display:none;">
       <div class="auth-body">
         <div class="sub-tabs">
-          <button class="sub-tab active" onclick="showSubTab('change')">비밀번호 변경</button>
-          <button class="sub-tab" onclick="showSubTab('recover')">비밀번호 찾기</button>
+          <button class="sub-tab active" onclick="showSubTab('change')">🔑 비밀번호 변경</button>
+          <button class="sub-tab" onclick="showSubTab('recover')">🔍 비밀번호 찾기</button>
         </div>
 
-        <!-- 비밀번호 변경 -->
+        <!-- 변경 -->
         <div id="changepwSection">
           <div class="auth-form">
-            <div class="info-box">
+            <div class="notice-box">
+              <div class="notice-title">🔑 비밀번호 변경</div>
               현재 비밀번호를 알고 있는 경우, 새 비밀번호로 바로 변경할 수 있습니다.
             </div>
             <div class="form-group">
-              <label>캐릭터명</label>
-              <input type="text" id="cpName" placeholder="캐릭터명 입력" autocomplete="username" />
+              <label><span class="icon">🎮</span> 캐릭터명</label>
+              <input type="text" id="cpName" placeholder="캐릭터명" autocomplete="username" />
             </div>
             <div class="form-group">
-              <label>현재 비밀번호</label>
-              <input type="password" id="cpOldPw" placeholder="현재 사용 중인 비밀번호" autocomplete="current-password" />
+              <label><span class="icon">🔒</span> 현재 비밀번호</label>
+              <input type="password" id="cpOldPw" placeholder="현재 비밀번호" autocomplete="current-password" />
             </div>
             <div class="form-group">
-              <label>새 비밀번호</label>
-              <input type="password" id="cpNewPw" placeholder="4자 이상 입력" autocomplete="new-password"
+              <label><span class="icon">🔒</span> 새 비밀번호</label>
+              <input type="password" id="cpNewPw" placeholder="4자 이상" autocomplete="new-password"
                      oninput="validateCpNewPw()" />
-              <div class="form-hint" id="cpNewPwHint"></div>
+              <div class="form-desc" id="cpNewPwHint"></div>
             </div>
             <div class="form-group">
-              <label>새 비밀번호 확인</label>
-              <input type="password" id="cpNewPw2" placeholder="새 비밀번호를 다시 입력"
+              <label><span class="icon">🔒</span> 새 비밀번호 확인</label>
+              <input type="password" id="cpNewPw2" placeholder="새 비밀번호 재입력"
                      onkeydown="if(event.key==='Enter')doChangePw()" autocomplete="new-password"
                      oninput="validateCpNewPw2()" />
-              <div class="form-hint" id="cpNewPw2Hint"></div>
+              <div class="form-desc" id="cpNewPw2Hint"></div>
             </div>
             <div class="auth-msg" id="changepwMsg"></div>
             <button class="submit-btn" onclick="doChangePw()">비밀번호 변경하기</button>
           </div>
         </div>
 
-        <!-- 비밀번호 찾기 -->
+        <!-- 찾기 -->
         <div id="recoverSection" style="display:none;">
           <div class="auth-form">
-            <div class="info-box">
-              가입 시 등록한 <strong>이메일</strong>과 <strong>생년월일</strong>로 본인 확인 후 비밀번호를 재설정합니다.
+            <div class="notice-box">
+              <div class="notice-title">🔍 비밀번호 찾기</div>
+              가입 시 등록한 이메일과 생년월일로 본인 확인 후 재설정합니다.
             </div>
             <div class="form-group">
-              <label>캐릭터명</label>
-              <input type="text" id="recoverName" placeholder="캐릭터명 입력" />
+              <label><span class="icon">🎮</span> 캐릭터명</label>
+              <input type="text" id="recoverName" placeholder="캐릭터명" />
             </div>
             <div class="form-group">
-              <label>가입 시 등록한 이메일</label>
+              <label><span class="icon">📧</span> 가입 시 등록한 이메일</label>
               <input type="email" id="recoverEmail" placeholder="example@email.com" />
             </div>
             <div class="form-group">
-              <label>생년월일</label>
-              <input type="date" id="recoverBirth" />
+              <label><span class="icon">📅</span> 생년월일</label>
+              <input type="date" id="recoverBirth" style="color-scheme:light;" />
             </div>
             <div class="form-group">
-              <label>새 비밀번호</label>
-              <input type="password" id="recoverNewPw" placeholder="4자 이상 입력" autocomplete="new-password" />
+              <label><span class="icon">🔒</span> 새 비밀번호</label>
+              <input type="password" id="recoverNewPw" placeholder="4자 이상" autocomplete="new-password" />
             </div>
             <div class="form-group">
-              <label>새 비밀번호 확인</label>
-              <input type="password" id="recoverNewPw2" placeholder="새 비밀번호를 다시 입력"
+              <label><span class="icon">🔒</span> 새 비밀번호 확인</label>
+              <input type="password" id="recoverNewPw2" placeholder="새 비밀번호 재입력"
                      onkeydown="if(event.key==='Enter')doRecover()" autocomplete="new-password" />
             </div>
             <div class="auth-msg" id="recoverMsg"></div>
@@ -393,29 +363,26 @@
 <script src="./assets/js/common.js?v=8"></script>
 <script>
 
-// ── 탭 전환 ──
+// ── 탭 ──
 function showTab(tab) {
   document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
   document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
   document.getElementById("changepwForm").style.display = tab === "changepw" ? "block" : "none";
   const tabs = ["login", "register", "changepw"];
-  document.querySelectorAll(".auth-tab").forEach((t, i) => {
-    t.classList.toggle("active", tabs[i] === tab);
-  });
+  document.querySelectorAll(".auth-tab").forEach((t, i) => t.classList.toggle("active", tabs[i] === tab));
   clearMsgs();
 }
 
 function showSubTab(sub) {
   document.getElementById("changepwSection").style.display = sub === "change" ? "block" : "none";
   document.getElementById("recoverSection").style.display = sub === "recover" ? "block" : "none";
-  document.querySelectorAll(".sub-tab").forEach((t, i) => {
-    t.classList.toggle("active", (i === 0 && sub === "change") || (i === 1 && sub === "recover"));
-  });
+  document.querySelectorAll(".sub-tab").forEach((t, i) =>
+    t.classList.toggle("active", (i === 0 && sub === "change") || (i === 1 && sub === "recover")));
   clearMsgs();
 }
 
 function clearMsgs() {
-  ["loginMsg", "registerMsg", "changepwMsg", "recoverMsg"].forEach(id => {
+  ["loginMsg","registerMsg","changepwMsg","recoverMsg"].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.className = "auth-msg"; el.textContent = ""; }
   });
@@ -424,26 +391,26 @@ function clearMsgs() {
 function showMsg(id, msg, isError = true) {
   const el = document.getElementById(id);
   el.className = "auth-msg " + (isError ? "error" : "success");
-  el.textContent = msg;
+  el.textContent = (isError ? "❌ " : "✅ ") + msg;
 }
 
-// ── 실시간 유효성 검사 ──
+// ── 실시간 검증 ──
 function validateRegName() {
   const v = document.getElementById("regName").value.trim();
   const el = document.getElementById("regName");
-  const hint = document.getElementById("regNameHint");
-  if (!v) { el.className = ""; hint.className = "form-hint"; hint.textContent = "게임에서 사용 중인 캐릭터명과 동일해야 합니다"; }
-  else if (v.length < 2) { el.className = "invalid"; hint.className = "form-hint error"; hint.textContent = "캐릭터명이 너무 짧습니다"; }
-  else { el.className = "valid"; hint.className = "form-hint"; hint.textContent = ""; }
+  const h = document.getElementById("regNameHint");
+  if (!v) { el.className = ""; h.className = "form-desc"; h.textContent = "인게임 캐릭터명과 정확히 동일하게 입력해주세요"; }
+  else if (v.length < 2) { el.className = "invalid"; h.className = "form-desc error"; h.textContent = "캐릭터명이 너무 짧습니다"; }
+  else { el.className = "valid"; h.className = "form-desc success"; h.textContent = ""; }
 }
 
 function validateRegPw() {
   const v = document.getElementById("regPw").value;
   const el = document.getElementById("regPw");
-  const hint = document.getElementById("regPwHint");
-  if (!v) { el.className = ""; hint.className = "form-hint"; hint.textContent = "영문, 숫자 조합을 권장합니다"; }
-  else if (v.length < 4) { el.className = "invalid"; hint.className = "form-hint error"; hint.textContent = "4자 이상 입력해주세요"; }
-  else { el.className = "valid"; hint.className = "form-hint"; hint.textContent = "사용 가능한 비밀번호입니다"; }
+  const h = document.getElementById("regPwHint");
+  if (!v) { el.className = ""; h.className = "form-desc"; h.textContent = "영문, 숫자 조합을 권장합니다"; }
+  else if (v.length < 4) { el.className = "invalid"; h.className = "form-desc error"; h.textContent = "4자 이상 입력해주세요"; }
+  else { el.className = "valid"; h.className = "form-desc success"; h.textContent = "사용 가능한 비밀번호입니다"; }
   validateRegPw2();
 }
 
@@ -451,27 +418,27 @@ function validateRegPw2() {
   const pw = document.getElementById("regPw").value;
   const pw2 = document.getElementById("regPw2").value;
   const el = document.getElementById("regPw2");
-  const hint = document.getElementById("regPw2Hint");
-  if (!pw2) { el.className = ""; hint.textContent = ""; }
-  else if (pw !== pw2) { el.className = "invalid"; hint.className = "form-hint error"; hint.textContent = "비밀번호가 일치하지 않습니다"; }
-  else { el.className = "valid"; hint.className = "form-hint"; hint.textContent = "비밀번호가 일치합니다"; hint.style.color = "#22c55e"; }
+  const h = document.getElementById("regPw2Hint");
+  if (!pw2) { el.className = ""; h.textContent = ""; h.className = "form-desc"; }
+  else if (pw !== pw2) { el.className = "invalid"; h.className = "form-desc error"; h.textContent = "비밀번호가 일치하지 않습니다"; }
+  else { el.className = "valid"; h.className = "form-desc success"; h.textContent = "비밀번호가 일치합니다"; }
 }
 
 function validateCpNewPw() {
   const v = document.getElementById("cpNewPw").value;
-  const hint = document.getElementById("cpNewPwHint");
-  if (!v) hint.textContent = "";
-  else if (v.length < 4) { hint.className = "form-hint error"; hint.textContent = "4자 이상 입력해주세요"; }
-  else { hint.className = "form-hint"; hint.textContent = ""; }
+  const h = document.getElementById("cpNewPwHint");
+  if (!v) { h.textContent = ""; h.className = "form-desc"; }
+  else if (v.length < 4) { h.className = "form-desc error"; h.textContent = "4자 이상 입력해주세요"; }
+  else { h.className = "form-desc success"; h.textContent = "사용 가능합니다"; }
 }
 
 function validateCpNewPw2() {
   const pw = document.getElementById("cpNewPw").value;
   const pw2 = document.getElementById("cpNewPw2").value;
-  const hint = document.getElementById("cpNewPw2Hint");
-  if (!pw2) hint.textContent = "";
-  else if (pw !== pw2) { hint.className = "form-hint error"; hint.textContent = "비밀번호가 일치하지 않습니다"; }
-  else { hint.className = "form-hint"; hint.textContent = ""; hint.style.color = "#22c55e"; hint.textContent = "일치합니다"; }
+  const h = document.getElementById("cpNewPw2Hint");
+  if (!pw2) { h.textContent = ""; h.className = "form-desc"; }
+  else if (pw !== pw2) { h.className = "form-desc error"; h.textContent = "비밀번호가 일치하지 않습니다"; }
+  else { h.className = "form-desc success"; h.textContent = "일치합니다"; }
 }
 
 // ── 로그인 ──
@@ -485,8 +452,7 @@ async function doLogin() {
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, password: pw }),
     });
     const data = await res.json();
@@ -508,7 +474,6 @@ async function doRegister() {
   const name = document.getElementById("regName").value.trim();
   const pw = document.getElementById("regPw").value;
   const pw2 = document.getElementById("regPw2").value;
-
   const email = document.getElementById("regEmail").value.trim();
   const birthdate = document.getElementById("regBirth").value;
 
@@ -525,15 +490,14 @@ async function doRegister() {
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, password: pw, email, birthdate }),
     });
     const data = await res.json();
     if (!res.ok) { showMsg("registerMsg", data.detail || "가입 요청에 실패했습니다"); return; }
 
     showMsg("registerMsg", "가입 요청이 완료되었습니다. 운영진 승인 후 이용할 수 있습니다.", false);
-    ["regName","regPw","regPw2","regEmail","regBirth"].forEach(id => { document.getElementById(id).value = ""; });
+    ["regName","regPw","regPw2","regEmail","regBirth"].forEach(id => document.getElementById(id).value = "");
   } catch {
     showMsg("registerMsg", "서버에 연결할 수 없습니다");
   } finally {
@@ -557,14 +521,12 @@ async function doChangePw() {
 
   try {
     const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, password: oldPw }),
     });
     if (!loginRes.ok) {
       const err = await loginRes.json().catch(() => ({}));
-      showMsg("changepwMsg", err.detail || "현재 비밀번호가 올바르지 않습니다");
-      return;
+      showMsg("changepwMsg", err.detail || "현재 비밀번호가 올바르지 않습니다"); return;
     }
     const loginData = await loginRes.json();
 
@@ -577,7 +539,7 @@ async function doChangePw() {
     if (!res.ok) { showMsg("changepwMsg", data.detail || "변경에 실패했습니다"); return; }
 
     showMsg("changepwMsg", "비밀번호가 성공적으로 변경되었습니다.", false);
-    ["cpOldPw","cpNewPw","cpNewPw2"].forEach(id => { document.getElementById(id).value = ""; });
+    ["cpOldPw","cpNewPw","cpNewPw2"].forEach(id => document.getElementById(id).value = "");
   } catch {
     showMsg("changepwMsg", "서버에 연결할 수 없습니다");
   } finally {
@@ -602,14 +564,13 @@ async function doRecover() {
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/recover-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ character_name: name, email, birthdate: birth, new_password: newPw }),
     });
     const data = await res.json();
     if (!res.ok) { showMsg("recoverMsg", data.detail || "재설정에 실패했습니다"); return; }
     showMsg("recoverMsg", "비밀번호가 재설정되었습니다. 로그인 탭에서 새 비밀번호로 로그인해주세요.", false);
-    ["recoverNewPw","recoverNewPw2"].forEach(id => { document.getElementById(id).value = ""; });
+    ["recoverNewPw","recoverNewPw2"].forEach(id => document.getElementById(id).value = "");
   } catch {
     showMsg("recoverMsg", "서버에 연결할 수 없습니다");
   } finally {
@@ -622,7 +583,6 @@ if (sessionStorage.getItem("user")) {
   const redirect = new URLSearchParams(location.search).get("redirect") || "./";
   location.href = redirect;
 }
-
 const tabParam = new URLSearchParams(location.search).get("tab");
 if (tabParam === "register") showTab("register");
 if (tabParam === "changepw") showTab("changepw");
