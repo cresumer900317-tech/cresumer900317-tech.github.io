@@ -269,7 +269,8 @@
 
           <div class="form-group">
             <label><span class="icon">📅</span> 생년월일</label>
-            <input type="date" id="regBirth" style="color-scheme:light;" />
+            <input type="text" id="regBirth" placeholder="예: 1990-03-17" maxlength="10"
+                   oninput="formatBirthInput(this)" />
           </div>
 
           <div class="auth-msg" id="registerMsg"></div>
@@ -336,7 +337,8 @@
             </div>
             <div class="form-group">
               <label><span class="icon">📅</span> 생년월일</label>
-              <input type="date" id="recoverBirth" style="color-scheme:light;" />
+              <input type="text" id="recoverBirth" placeholder="예: 1990-03-17" maxlength="10"
+                     oninput="formatBirthInput(this)" />
             </div>
             <div class="form-group">
               <label><span class="icon">🔒</span> 새 비밀번호</label>
@@ -392,6 +394,15 @@ function showMsg(id, msg, isError = true) {
   const el = document.getElementById(id);
   el.className = "auth-msg " + (isError ? "error" : "success");
   el.textContent = (isError ? "❌ " : "✅ ") + msg;
+}
+
+// ── 생년월일 자동 포맷 (YYYY-MM-DD) ──
+function formatBirthInput(el) {
+  let v = el.value.replace(/[^0-9]/g, "");
+  if (v.length > 8) v = v.slice(0, 8);
+  if (v.length >= 6) v = v.slice(0, 4) + "-" + v.slice(4, 6) + "-" + v.slice(6);
+  else if (v.length >= 4) v = v.slice(0, 4) + "-" + v.slice(4);
+  el.value = v;
 }
 
 // ── 실시간 검증 ──
