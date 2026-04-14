@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.5</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.6</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
               자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
@@ -70,13 +70,20 @@ document.addEventListener("DOMContentLoaded", () => {
           <h2 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:16px;">📝 업데이트 내역</h2>
 
           <div style="margin-bottom:16px;">
-            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.5 (2024-04-14)</h3>
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.6 (2026-04-14)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li><strong>난이도 선택 버그 수정</strong> — 설정한 난이도가 무시되고 다른 난이도로 파티가 생성되던 문제 해결</li>
+              <li><strong>채팅 테스트 개선</strong> — 전투 중이 아닌 상태에서도 Test 버튼 정상 동작</li>
+              <li><strong>로그 정리</strong> — 불필요한 탭 좌표 출력 제거</li>
+            </ul>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.5</h3>
             <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
               <li><strong>길드원 전용 인증</strong> — 매 실행 시 길드 홈페이지 계정 로그인 필수</li>
               <li><strong>인기도 체크 안정화</strong> — 100회 레이드마다 자동 캡처 후 디스코드 전송</li>
               <li><strong>파티 탈퇴 → 마을 복귀 로직 개선</strong> — 파티 끊김/팝업 자동 처리</li>
-              <li><strong>난이도 선택 버그 수정</strong> — 파티 재생성 시 기본 난이도로 잡히던 문제 해결</li>
-              <li><strong>파티 생성 무한루프 수정</strong> — 난이도 탭과 파티 생성 버튼 동시 감지 시 멈추던 문제 해결</li>
               <li><strong>카오스 난이도 추가</strong> — 쉬움/보통/어려움/카오스 4단계 지원</li>
               <li><strong>GUI 버전 표시</strong> — 실행 시 현재 버전 확인 가능</li>
             </ul>
