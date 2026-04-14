@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.6</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.7</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
               자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
@@ -68,6 +68,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
           <h2 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:16px;">📝 업데이트 내역</h2>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.7 (2026-04-14)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li><strong>LDPlayer 자동 탐지</strong> — 설치 경로를 자동으로 찾아 어떤 PC에서든 바로 실행 가능</li>
+            </ul>
+          </div>
 
           <div style="margin-bottom:16px;">
             <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.6 (2026-04-14)</h3>
