@@ -176,7 +176,14 @@ function renderShell() {
           ${links}
           <div class="mobile-auth-links">
             ${user
-              ? `<span class="mobile-user-info">👤 ${escapeHtml(user.character_name)} <button onclick="logout()" style="background:none;border:none;color:var(--text-soft);font-size:0.78rem;cursor:pointer;">로그아웃</button></span>`
+              ? `<div class="mobile-user-info">
+                  <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:8px;">👤 ${escapeHtml(user.character_name)} <span style="font-size:0.72rem;font-weight:400;color:var(--text-faint);">${escapeHtml(user.guild||"")}</span></div>
+                  <div style="display:flex;gap:8px;">
+                    <a href="./mypage" class="mobile-auth-btn mobile-register" style="flex:1;">회원정보</a>
+                    <a href="./login?tab=changepw" class="mobile-auth-btn mobile-register" style="flex:1;">비밀번호 변경</a>
+                  </div>
+                  <button onclick="logout()" class="mobile-auth-btn mobile-login" style="width:100%;margin-top:8px;border:none;cursor:pointer;">로그아웃</button>
+                </div>`
               : `<a href="./login?tab=register" class="mobile-auth-btn mobile-register">회원가입</a>
                  <a href="./login" class="mobile-auth-btn mobile-login">로그인</a>`
             }
