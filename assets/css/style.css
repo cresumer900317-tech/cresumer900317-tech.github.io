@@ -1577,18 +1577,20 @@ main { padding: 0 0 48px; }
 }
 .rk-cut-marker {
   position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 24px;
+  right: -1px; top: -1px; bottom: -1px;
+  width: 22px;
   background: var(--yellow);
   color: var(--white);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   writing-mode: vertical-rl;
   letter-spacing: 1px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
+.rk-cut-card { padding-right: 32px !important; }
 
 /* 위험/도전 카드 */
 .rk-danger-card {

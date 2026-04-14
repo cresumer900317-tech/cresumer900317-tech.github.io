@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function cutDistanceHtml(diff) {
       if (diff === null) return "";
       if (diff >= 0) return `<span style="font-size:0.72rem;color:#059669;font-weight:600;">+${formatCompactPower(diff)} 여유</span>`;
-      return `<span style="font-size:0.72rem;color:#dc2626;font-weight:600;">컷라인까지 -${formatCompactPower(Math.abs(diff))}</span>`;
+      return `<span style="font-size:0.72rem;color:#dc2626;font-weight:600;">${CUT}위까지 -${formatCompactPower(Math.abs(diff))}</span>`;
     }
 
     function getStatus(rank) {
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (st === "challenge") cardClass += " rk-challenge-card";
 
       return `
-        ${isJustBelow ? `<div class="rk-below-line"><span>── 컷라인 이하 ──</span></div>` : ""}
+        ${isJustBelow ? `<div class="rk-below-line"><span>── ${CUT}위 밖 ──</span></div>` : ""}
         <div class="${cardClass}" data-character-row="${escapeHtml(String(item.name || "").toLowerCase())}">
           <div class="rk-c-rank">
             ${rank <= 3
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
             ${cutDiff !== null ? `<div style="margin-top:2px;">${cutDistanceHtml(cutDiff)}</div>` : ""}
           </div>
-          ${isCut ? `<div class="rk-cut-marker">30위 기준</div>` : ""}
+          ${isCut ? `<div class="rk-cut-marker">TOP ${CUT}</div>` : ""}
         </div>
       `;
     }
