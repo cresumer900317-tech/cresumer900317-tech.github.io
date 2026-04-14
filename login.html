@@ -136,9 +136,10 @@
       <p>길드 멤버 전용 서비스</p>
     </div>
 
-    <div class="auth-tabs">
+    <div class="auth-tabs" style="grid-template-columns:1fr 1fr 1fr;">
       <button class="auth-tab active" onclick="showTab('login')">로그인</button>
       <button class="auth-tab" onclick="showTab('register')">회원가입</button>
+      <button class="auth-tab" onclick="showTab('changepw')">비밀번호</button>
     </div>
 
     <!-- 로그인 폼 -->
@@ -183,6 +184,55 @@
       </div>
     </div>
 
+    <!-- 비밀번호 변경/찾기 폼 -->
+    <div id="changepwForm" style="display:none;">
+      <div class="auth-form">
+        <div class="auth-notice">
+          🔑 로그인된 상태에서 비밀번호를 변경할 수 있습니다<br>
+          비밀번호를 잊으셨다면 아래 초기화 요청을 이용하세요
+        </div>
+
+        <div id="changepwSection">
+          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">비밀번호 변경</p>
+          <div class="form-group">
+            <label>캐릭터명</label>
+            <input type="text" id="cpName" placeholder="캐릭터명" autocomplete="username" />
+          </div>
+          <div class="form-group">
+            <label>현재 비밀번호</label>
+            <input type="password" id="cpOldPw" placeholder="현재 비밀번호" autocomplete="current-password" />
+          </div>
+          <div class="form-group">
+            <label>새 비밀번호</label>
+            <input type="password" id="cpNewPw" placeholder="4자 이상" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label>새 비밀번호 확인</label>
+            <input type="password" id="cpNewPw2" placeholder="새 비밀번호 재입력"
+                   onkeydown="if(event.key==='Enter')doChangePw()" autocomplete="new-password" />
+          </div>
+          <div class="auth-msg" id="changepwMsg"></div>
+          <button class="submit-btn" onclick="doChangePw()">비밀번호 변경</button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;" />
+
+        <div id="resetSection">
+          <p style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:10px;">비밀번호를 잊으셨나요?</p>
+          <div class="form-group">
+            <label>캐릭터명</label>
+            <input type="text" id="resetName" placeholder="캐릭터명 입력" />
+          </div>
+          <div class="auth-msg" id="resetMsg"></div>
+          <button class="submit-btn" style="background:var(--text-soft);" onclick="doResetRequest()">초기화 요청</button>
+          <p style="font-size:0.75rem;color:var(--text-soft);margin-top:8px;line-height:1.5;">
+            요청 후 관리자가 확인하면 임시 비밀번호가 설정됩니다.<br>
+            길드 마스터 또는 운영진에게 문의해주세요.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div class="back-link">
       <a href="./">← 홈으로</a>
     </div>
@@ -196,17 +246,18 @@
 function showTab(tab) {
   document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
   document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
+  document.getElementById("changepwForm").style.display = tab === "changepw" ? "block" : "none";
+  const tabs = ["login", "register", "changepw"];
   document.querySelectorAll(".auth-tab").forEach((t, i) => {
-    t.classList.toggle("active", (i === 0 && tab === "login") || (i === 1 && tab === "register"));
+    t.classList.toggle("active", tabs[i] === tab);
   });
   clearMsgs();
 }
 
 function clearMsgs() {
-  ["loginMsg", "registerMsg"].forEach(id => {
+  ["loginMsg", "registerMsg", "changepwMsg", "resetMsg"].forEach(id => {
     const el = document.getElementById(id);
-    el.className = "auth-msg";
-    el.textContent = "";
+    if (el) { el.className = "auth-msg"; el.textContent = ""; }
   });
 }
 
@@ -280,6 +331,79 @@ async function doRegister() {
   }
 }
 
+// 비밀번호 변경
+async function doChangePw() {
+  const name = document.getElementById("cpName").value.trim();
+  const oldPw = document.getElementById("cpOldPw").value;
+  const newPw = document.getElementById("cpNewPw").value;
+  const newPw2 = document.getElementById("cpNewPw2").value;
+
+  if (!name || !oldPw || !newPw) { showMsg("changepwMsg", "모든 항목을 입력해주세요"); return; }
+  if (newPw.length < 4) { showMsg("changepwMsg", "새 비밀번호는 4자 이상이어야 합니다"); return; }
+  if (newPw !== newPw2) { showMsg("changepwMsg", "새 비밀번호가 일치하지 않습니다"); return; }
+
+  const btn = document.querySelector("#changepwSection .submit-btn");
+  btn.disabled = true; btn.textContent = "변경 중...";
+
+  try {
+    // 먼저 로그인해서 토큰 발급
+    const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, password: oldPw }),
+    });
+    if (!loginRes.ok) {
+      const err = await loginRes.json().catch(() => ({}));
+      showMsg("changepwMsg", err.detail || "현재 비밀번호가 일치하지 않습니다");
+      return;
+    }
+    const loginData = await loginRes.json();
+    const token = loginData.token;
+
+    // 비밀번호 변경 요청
+    const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ current_password: oldPw, new_password: newPw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg("changepwMsg", data.detail || "변경 실패"); return; }
+
+    showMsg("changepwMsg", "비밀번호가 변경되었습니다", false);
+    document.getElementById("cpOldPw").value = "";
+    document.getElementById("cpNewPw").value = "";
+    document.getElementById("cpNewPw2").value = "";
+  } catch {
+    showMsg("changepwMsg", "서버 연결 오류");
+  } finally {
+    btn.disabled = false; btn.textContent = "비밀번호 변경";
+  }
+}
+
+// 비밀번호 초기화 요청
+async function doResetRequest() {
+  const name = document.getElementById("resetName").value.trim();
+  if (!name) { showMsg("resetMsg", "캐릭터명을 입력해주세요"); return; }
+
+  const btn = document.querySelector("#resetSection .submit-btn");
+  btn.disabled = true; btn.textContent = "요청 중...";
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/reset-request`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg("resetMsg", data.detail || "요청 실패"); return; }
+    showMsg("resetMsg", "초기화 요청이 접수되었습니다. 관리자 확인 후 처리됩니다.", false);
+  } catch {
+    showMsg("resetMsg", "서버 연결 오류");
+  } finally {
+    btn.disabled = false; btn.textContent = "초기화 요청";
+  }
+}
+
 // 이미 로그인된 경우 홈으로
 if (sessionStorage.getItem("user")) {
   const redirect = new URLSearchParams(location.search).get("redirect") || "./";
@@ -289,6 +413,7 @@ if (sessionStorage.getItem("user")) {
 // URL 파라미터로 탭 선택
 const tabParam = new URLSearchParams(location.search).get("tab");
 if (tabParam === "register") showTab("register");
+if (tabParam === "changepw") showTab("changepw");
 </script>
 </body>
 </html>
