@@ -436,6 +436,7 @@ async function loadUsers(status, btn) {
             </select>
             <button class="approve-btn" onclick="approveUser('${u.character_name}', 'pending')">승인</button>
           ` : u.status === "active" ? `
+            <button class="approve-btn" onclick="resetPassword('${u.character_name}')">🔑 PW리셋</button>
             <button class="deactivate-btn" onclick="deactivateUser('${u.character_name}')">비활성화</button>
           ` : `
             <button class="approve-btn" onclick="approveUser('${u.character_name}', 'inactive')">재활성화</button>
@@ -487,6 +488,22 @@ async function deactivateUser(name) {
     if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "비활성화 실패"); }
     showToast(`${name} 비활성화 완료`);
     loadUsers("active");
+  } catch (e) { showToast(e.message || "실패", false); }
+}
+
+async function resetPassword(name) {
+  const newPw = prompt(`${name}의 새 비밀번호를 입력하세요 (4자 이상):`);
+  if (!newPw) return;
+  if (newPw.length < 4) { showToast("비밀번호는 4자 이상이어야 합니다", false); return; }
+  const token = sessionStorage.getItem("token");
+  try {
+    const res = await fetch(`${API}/api/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ character_name: name, new_password: newPw }),
+    });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "리셋 실패"); }
+    showToast(`${name} 비밀번호 리셋 완료 → 임시PW: ${newPw}`);
   } catch (e) { showToast(e.message || "실패", false); }
 }
 
