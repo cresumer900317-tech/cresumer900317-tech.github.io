@@ -336,7 +336,7 @@ function authHeaders() {
 
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "download"];
+  const restricted = ["members", "weekly", "rivals", "civil", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "download"];
   if (restricted.includes(page) && !getUser()) {
     const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page;
     location.href = `./login?redirect=./${base}`;
