@@ -3272,6 +3272,47 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
 }
 
+/* 매크로 피드백 댓글 */
+.macro-comment-form { margin-bottom: 20px; }
+.macro-comment-input {
+  width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border);
+  border-radius: 10px; font-size: 0.88rem; font-family: inherit; resize: vertical;
+  background: var(--bg); color: var(--text); transition: border-color 0.2s;
+}
+.macro-comment-input:focus { outline: none; border-color: var(--amber); }
+.macro-comment-form-footer {
+  display: flex; justify-content: space-between; align-items: center; margin-top: 8px;
+}
+.macro-comment-char { font-size: 0.75rem; color: var(--text-faint); }
+.macro-comment-submit {
+  padding: 8px 20px; border: none; border-radius: 8px; font-size: 0.84rem; font-weight: 700;
+  background: var(--amber); color: #fff; cursor: pointer; transition: background 0.2s;
+}
+.macro-comment-submit:hover { background: var(--amber-dark); }
+.macro-comment-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.macro-comment-list { display: flex; flex-direction: column; gap: 12px; }
+.macro-comment-item {
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card-bg, #fff); position: relative;
+}
+.macro-comment-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+}
+.macro-comment-author { font-size: 0.84rem; font-weight: 700; color: var(--text); }
+.macro-comment-guild {
+  font-size: 0.72rem; font-weight: 500; color: var(--amber-dark);
+  background: var(--yellow-bg); padding: 1px 6px; border-radius: 4px; margin-left: 4px;
+}
+.macro-comment-time { font-size: 0.72rem; color: var(--text-faint); }
+.macro-comment-body {
+  font-size: 0.84rem; color: var(--text-soft); line-height: 1.6; word-break: break-word;
+}
+.macro-comment-del {
+  position: absolute; top: 12px; right: 12px; border: none; background: none;
+  font-size: 0.72rem; color: var(--text-faint); cursor: pointer; padding: 2px 6px;
+}
+.macro-comment-del:hover { color: #ef4444; }
+
 @media (max-width: 768px) {
   .macro-hero { padding: 28px 0 24px; }
   .macro-hero-title { font-size: 1.3rem; }

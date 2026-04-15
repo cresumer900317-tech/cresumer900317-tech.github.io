@@ -32,15 +32,15 @@ document.addEventListener("DOMContentLoaded", () => {
           <a href="${DOWNLOAD_URL}" class="macro-download-btn" id="downloadBtn">
             <span class="macro-download-icon">⬇</span>
             <span>
-              <strong>ZakumMacro v2.8</strong>
+              <strong>ZakumMacro ${MACRO_VERSION}</strong>
               <small>Windows 전용 (.zip)</small>
             </span>
           </a>
           <div class="macro-req">
             <h3>요구사항</h3>
             <ul>
-              <li>Windows 10 / 11</li>
-              <li>LDPlayer 9</li>
+              <li>Windows 10 / 11 (64비트)</li>
+              <li>LDPlayer 9 <strong>v9.5.6.0</strong> 권장</li>
               <li>해상도: 960x540 (기본값)</li>
               <li>길드 홈페이지 계정 (승인된 활성 계정)</li>
             </ul>
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="macro-card">
           <h2 class="macro-card-title">사용 방법</h2>
           <ol class="macro-steps">
-            <li>LDPlayer 실행 후 메이플스토리 키우기 접속</li>
+            <li>LDPlayer 9 (v9.5.6.0 권장) 실행 후 메이플스토리 키우기 접속</li>
             <li>LDPlayer 설정에서 <strong>ADB 디버그 활성화</strong>
               <br><span class="macro-hint">설정 > 기타 설정 > ADB 디버그 열기</span></li>
             <li><strong>ZakumMacro.exe</strong> 실행</li>
@@ -203,7 +203,103 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
 
+        <!-- 피드백 댓글 카드 -->
+        <div class="macro-card">
+          <h2 class="macro-card-title">피드백 / 건의사항</h2>
+          <p class="macro-card-desc">매크로 사용 중 불편한 점이나 개선 아이디어를 남겨주세요.</p>
+          <div class="macro-comment-form">
+            <textarea id="commentInput" class="macro-comment-input" placeholder="피드백을 작성해주세요 (최대 500자)" maxlength="500"></textarea>
+            <div class="macro-comment-form-footer">
+              <span id="commentCharCount" class="macro-comment-char">0 / 500</span>
+              <button id="commentSubmitBtn" class="macro-comment-submit">등록</button>
+            </div>
+          </div>
+          <div id="commentList" class="macro-comment-list">
+            <p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">불러오는 중...</p>
+          </div>
+        </div>
+
       </div>
     </div>
   `;
+
+  // ── 댓글 기능 ──
+  const API_BASE = window.API_BASE || "";
+  const token = getToken();
+  const commentInput = document.getElementById("commentInput");
+  const commentCharCount = document.getElementById("commentCharCount");
+  const commentSubmitBtn = document.getElementById("commentSubmitBtn");
+  const commentList = document.getElementById("commentList");
+
+  commentInput.addEventListener("input", () => {
+    commentCharCount.textContent = commentInput.value.length + " / 500";
+  });
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "방금 전";
+    if (m < 60) return m + "분 전";
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + "시간 전";
+    const d = Math.floor(h / 24);
+    if (d < 30) return d + "일 전";
+    return new Date(dateStr).toLocaleDateString("ko-KR");
+  }
+
+  function renderComments(comments) {
+    if (!comments.length) {
+      commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">아직 피드백이 없습니다. 첫 번째로 의견을 남겨보세요!</p>';
+      return;
+    }
+    commentList.innerHTML = comments.map(c => `
+      <div class="macro-comment-item" data-id="${c.id}">
+        <div class="macro-comment-header">
+          <span class="macro-comment-author">${c.author}${c.author_guild ? ' <span class="macro-comment-guild">' + c.author_guild + '</span>' : ''}</span>
+          <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
+        </div>
+        <p class="macro-comment-body">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
+        ${c.author === user.character_name || user.role === "admin" || user.role === "superadmin"
+          ? '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+      </div>
+    `).join("");
+    commentList.querySelectorAll(".macro-comment-del").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("댓글을 삭제하시겠습니까?")) return;
+        await fetch(API_BASE + "/api/macro/comments/" + btn.dataset.id, {
+          method: "DELETE", headers: { "Authorization": "Bearer " + token }
+        });
+        loadComments();
+      });
+    });
+  }
+
+  async function loadComments() {
+    try {
+      const res = await fetch(API_BASE + "/api/macro/comments");
+      const data = await res.json();
+      renderComments(data);
+    } catch { commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;">댓글을 불러올 수 없습니다.</p>'; }
+  }
+
+  commentSubmitBtn.addEventListener("click", async () => {
+    const content = commentInput.value.trim();
+    if (!content) return alert("내용을 입력해주세요");
+    commentSubmitBtn.disabled = true;
+    commentSubmitBtn.textContent = "등록 중...";
+    try {
+      const res = await fetch(API_BASE + "/api/macro/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ content, author: user.character_name, author_guild: user.guild || "" })
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
+      commentInput.value = "";
+      commentCharCount.textContent = "0 / 500";
+      loadComments();
+    } catch (e) { alert(e.message); }
+    finally { commentSubmitBtn.disabled = false; commentSubmitBtn.textContent = "등록"; }
+  });
+
+  loadComments();
 });
