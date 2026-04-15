@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const DOWNLOAD_URL = "./assets/ZakumMacro_v2.8.zip";
-  const MACRO_VERSION = "v2.8";
+  const DOWNLOAD_URL = "./assets/ZakumMacro_v3.0.zip";
+  const MACRO_VERSION = "v3.0";
 
   document.querySelector("main").innerHTML = `
     <section class="macro-hero">
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="macro-hero-icon">🤖</div>
           <h1 class="macro-hero-title">자쿰 인기도 매크로</h1>
           <p class="macro-hero-desc">자쿰 보스레이드를 자동으로 반복하여 인기도를 올려주는 매크로입니다.</p>
-          <span class="macro-version-badge">v2.8</span>
+          <span class="macro-version-badge">v3.0</span>
         </div>
       </div>
     </section>
@@ -143,6 +143,18 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="macro-card">
           <h2 class="macro-card-title">업데이트 내역</h2>
           <div class="macro-changelog">
+            <div class="macro-changelog-item">
+              <div class="macro-changelog-ver">
+                <span class="macro-ver-tag">v3.0</span>
+                <span class="macro-ver-date">2026.04.16</span>
+              </div>
+              <ul>
+                <li>64비트 Windows 호환성 전면 수정 (채팅·클립보드 오류 해결)</li>
+                <li>채팅 입력 WM_CHAR 기반으로 안정화</li>
+                <li>Win32 API 타입 안전성 강화</li>
+                <li>권장 환경: LDPlayer 9 v9.5.6.0</li>
+              </ul>
+            </div>
             <div class="macro-changelog-item">
               <div class="macro-changelog-ver">
                 <span class="macro-ver-tag">v2.8</span>

@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.9</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v3.0</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
               자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
@@ -68,6 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
           <h2 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:16px;">📝 업데이트 내역</h2>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v3.0 (2026-04-16)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li><strong>64비트 Windows 호환성 전면 수정</strong> — HWND/포인터 오버플로우로 채팅·클립보드가 동작하지 않던 문제 해결</li>
+              <li><strong>채팅 입력 안정화</strong> — WM_CHAR 기반으로 변경, 모든 환경에서 한글 채팅 안정 전송</li>
+              <li><strong>Win32 API 타입 안전성 강화</strong> — ctypes argtypes/restype 전수 설정</li>
+              <li><strong>권장 환경</strong> — LDPlayer 9 v9.5.6.0</li>
+            </ul>
+          </div>
 
           <div style="margin-bottom:16px;">
             <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.9 (2026-04-16)</h3>
@@ -133,8 +143,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("downloadBtn").addEventListener("click", () => {
     const msg = document.getElementById("downloadMsg");
     const a = document.createElement("a");
-    a.href = "./assets/ZakumMacro_v2.9.zip";
-    a.download = "ZakumMacro_v2.9.zip";
+    a.href = "./assets/ZakumMacro_v3.0.zip";
+    a.download = "ZakumMacro_v3.0.zip";
     a.click();
     msg.style.color = "var(--green, #16a34a)";
     msg.textContent = "✅ 다운로드가 시작됩니다!";
