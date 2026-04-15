@@ -131,6 +131,100 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
+      ${(() => {
+        if (!user) return `
+          <div class="section-block">
+            <div class="container">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">📊 내 대시보드</div>
+                  <div class="section-sub">로그인하면 내 정보를 한눈에 볼 수 있어요</div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:32px 0;">
+                <a href="./login?redirect=./" style="display:inline-block;padding:10px 28px;background:var(--yellow);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;">로그인하기</a>
+              </div>
+            </div>
+          </div>`;
+
+        const myName = user.character_name;
+        const me = rows.find(r => r.name === myName);
+        const myMonthly = monthlyRows.find(r => r.name === myName);
+
+        if (!me) return `
+          <div class="section-block">
+            <div class="container">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">📊 내 대시보드</div>
+                  <div class="section-sub">캐릭터 데이터를 찾을 수 없습니다</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+        const myPower = Number(me.power || 0);
+        const myServerRank = me.serverRank ? formatNumber(me.serverRank) + "위" : "-";
+        const myFamilyRank = sortedRanking.findIndex(r => r.name === myName) + 1;
+        const myMonthlyDiff = myMonthly ? Number(myMonthly.monthlyDiff || 0) : 0;
+        const myPopularity = formatNumber(Number(me.popularity || 0));
+        const myContrib = contribRows.find(r => r.member_name === myName);
+        const myContribVal = myContrib ? formatNumber(myContrib.contribution) : "-";
+        const cutItem = sortedRanking[29];
+        const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
+        const cutDiff = myPower - cutPower;
+        const isAboveCut = myFamilyRank <= 30;
+
+        return `
+          <div class="section-block">
+            <div class="container">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">📊 내 대시보드</div>
+                  <div class="section-sub">${escapeHtml(myName)}님의 현재 현황</div>
+                </div>
+                <a class="section-link" href="./mypage">회원정보 →</a>
+              </div>
+              <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));">
+                <div class="kpi-card">
+                  <div class="kpi-label">⚔️ 전투력</div>
+                  <div class="kpi-value">${formatCompactPower(myPower)}</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">🌐 서버 순위</div>
+                  <div class="kpi-value dark">${myServerRank}</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">📈 이달 성장</div>
+                  <div class="kpi-value" style="color:${myMonthlyDiff > 0 ? '#059669' : myMonthlyDiff < 0 ? '#dc2626' : 'var(--text-faint)'};">
+                    ${myMonthlyDiff > 0 ? '+' + formatCompactPower(myMonthlyDiff) : myMonthlyDiff < 0 ? '-' + formatCompactPower(Math.abs(myMonthlyDiff)) : '-'}
+                  </div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">👥 패밀리 순위</div>
+                  <div class="kpi-value dark">${myFamilyRank}위 <span style="font-size:0.75rem;color:var(--text-faint);">/ ${rows.length}명</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">❤️ 인기도</div>
+                  <div class="kpi-value" style="color:#e11d48;">${myPopularity}</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">🎖️ 공헌도</div>
+                  <div class="kpi-value dark">${myContribVal}</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">🏆 TOP 30</div>
+                  <div class="kpi-value" style="font-size:1rem;color:${isAboveCut ? '#059669' : '#dc2626'};">
+                    ${isAboveCut
+                      ? '+' + formatCompactPower(cutDiff) + ' 여유'
+                      : cutDiff === 0 ? '기준선' : formatCompactPower(Math.abs(cutDiff)) + ' 부족'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      })()}
+
       <div class="section-block">
         <div class="container">
           <div class="section-head">
@@ -231,100 +325,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       </div>
-
-      ${(() => {
-        if (!user) return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">📊 내 대시보드</div>
-                  <div class="section-sub">로그인하면 내 정보를 한눈에 볼 수 있어요</div>
-                </div>
-              </div>
-              <div style="text-align:center;padding:32px 0;">
-                <a href="./login?redirect=./" style="display:inline-block;padding:10px 28px;background:var(--yellow);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;">로그인하기</a>
-              </div>
-            </div>
-          </div>`;
-
-        const myName = user.character_name;
-        const me = rows.find(r => r.name === myName);
-        const myMonthly = monthlyRows.find(r => r.name === myName);
-
-        if (!me) return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">📊 내 대시보드</div>
-                  <div class="section-sub">캐릭터 데이터를 찾을 수 없습니다</div>
-                </div>
-              </div>
-            </div>
-          </div>`;
-
-        const myPower = Number(me.power || 0);
-        const myServerRank = me.serverRank ? formatNumber(me.serverRank) + "위" : "-";
-        const myFamilyRank = sortedRanking.findIndex(r => r.name === myName) + 1;
-        const myMonthlyDiff = myMonthly ? Number(myMonthly.monthlyDiff || 0) : 0;
-        const myPopularity = formatNumber(Number(me.popularity || 0));
-        const myContrib = contribRows.find(r => r.member_name === myName);
-        const myContribVal = myContrib ? formatNumber(myContrib.contribution) : "-";
-        const cutItem = sortedRanking[29];
-        const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
-        const cutDiff = myPower - cutPower;
-        const isAboveCut = myFamilyRank <= 30;
-
-        return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">📊 내 대시보드</div>
-                  <div class="section-sub">${escapeHtml(myName)}님의 현재 현황</div>
-                </div>
-                <a class="section-link" href="./mypage">회원정보 →</a>
-              </div>
-              <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));">
-                <div class="kpi-card">
-                  <div class="kpi-label">⚔️ 전투력</div>
-                  <div class="kpi-value">${formatCompactPower(myPower)}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">🌐 서버 순위</div>
-                  <div class="kpi-value dark">${myServerRank}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">📈 이달 성장</div>
-                  <div class="kpi-value" style="color:${myMonthlyDiff > 0 ? '#059669' : myMonthlyDiff < 0 ? '#dc2626' : 'var(--text-faint)'};">
-                    ${myMonthlyDiff > 0 ? '+' + formatCompactPower(myMonthlyDiff) : myMonthlyDiff < 0 ? '-' + formatCompactPower(Math.abs(myMonthlyDiff)) : '-'}
-                  </div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">👥 패밀리 순위</div>
-                  <div class="kpi-value dark">${myFamilyRank}위 <span style="font-size:0.75rem;color:var(--text-faint);">/ ${rows.length}명</span></div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">❤️ 인기도</div>
-                  <div class="kpi-value" style="color:#e11d48;">${myPopularity}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">🎖️ 공헌도</div>
-                  <div class="kpi-value dark">${myContribVal}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">🏆 TOP 30</div>
-                  <div class="kpi-value" style="font-size:1rem;color:${isAboveCut ? '#059669' : '#dc2626'};">
-                    ${isAboveCut
-                      ? '+' + formatCompactPower(cutDiff) + ' 여유'
-                      : cutDiff === 0 ? '기준선' : formatCompactPower(Math.abs(cutDiff)) + ' 부족'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>`;
-      })()}
 
       ${(growthTop.length || riseTop.length) ? `
       <div class="section-block">
