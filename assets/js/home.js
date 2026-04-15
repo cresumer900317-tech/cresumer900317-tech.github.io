@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div style="font-size:0.72rem;color:var(--text-faint);margin-top:3px;">💎 고스펙 유저 밀집</div>
             </div>
             <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly'">
-              <div class="kpi-label">이달 누적 성장량</div>
+              <div class="kpi-label">이달 성장량</div>
               <div class="kpi-value">${totalMonthlyGrowth > 0 ? "+" + formatCompactPower(totalMonthlyGrowth) : "-"}</div>
             </div>
             <div class="kpi-card" style="cursor:pointer;" onclick="location.href='./weekly'">

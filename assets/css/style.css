@@ -181,8 +181,8 @@ main { padding: 0 0 48px; }
   border-radius: var(--radius-lg);
   padding: 16px;
 }
-.kpi-label { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 6px; }
-.kpi-value { font-size: 1.3rem; font-weight: 700; color: var(--amber); }
+.kpi-label { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 6px; white-space: nowrap; }
+.kpi-value { font-size: 1.3rem; font-weight: 700; color: var(--amber); white-space: nowrap; }
 .kpi-value.dark { color: var(--text); }
 .hero-badge {
   display: inline-flex;
@@ -244,8 +244,8 @@ main { padding: 0 0 48px; }
   border-radius: var(--radius-lg);
   padding: 16px;
 }
-.kpi-label { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 6px; }
-.kpi-value { font-size: 1.3rem; font-weight: 700; color: var(--amber); }
+.kpi-label { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 6px; white-space: nowrap; }
+.kpi-value { font-size: 1.3rem; font-weight: 700; color: var(--amber); white-space: nowrap; }
 .kpi-value.dark { color: var(--text); }
 
 /* ===== 섹션 공통 ===== */
