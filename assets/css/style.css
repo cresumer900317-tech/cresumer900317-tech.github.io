@@ -238,6 +238,9 @@ main { padding: 0 0 48px; }
   gap: 12px;
   margin-top: 28px;
 }
+.kpi-grid-dashboard {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
 .kpi-card {
   background: var(--white);
   border: 1px solid var(--yellow-border);
@@ -974,7 +977,10 @@ main { padding: 0 0 48px; }
 /* ===== 반응형 ===== */
 @media (max-width: 1024px) {
   .family-board-grid { grid-template-columns: repeat(3, 1fr); }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .kpi-grid-dashboard { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+  .kpi-card { padding: 12px 10px; }
+  .kpi-label { font-size: 0.72rem; margin-bottom: 4px; }
+  .kpi-value { font-size: 1.1rem; }
 }
 @media (max-width: 768px) {
   .nav-menu { display: none; }
@@ -989,7 +995,10 @@ main { padding: 0 0 48px; }
 }
 @media (max-width: 480px) {
   .container { width: calc(100% - 24px); }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .kpi-grid-dashboard { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; margin-top: 16px; }
+  .kpi-card { padding: 10px 8px; }
+  .kpi-label { font-size: 0.68rem; margin-bottom: 3px; }
+  .kpi-value { font-size: 1rem; }
   .family-board-grid { grid-template-columns: repeat(2, 1fr); }
   .rank-chip { width: 44px; height: 44px; font-size: 0.95rem; }
   .character-avatar { width: 80px; height: 80px; }

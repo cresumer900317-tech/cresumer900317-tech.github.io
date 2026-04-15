@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <a class="section-link" href="./mypage">회원정보 →</a>
               </div>
-              <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));">
+              <div class="kpi-grid kpi-grid-dashboard">
                 <div class="kpi-card">
                   <div class="kpi-label">⚔️ 전투력</div>
                   <div class="kpi-value">${formatCompactPower(myPower)}</div>
