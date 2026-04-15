@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     border-radius:var(--radius-md);padding:20px;display:flex;
                     align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
           <div>
-            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.8</p>
+            <p style="font-weight:700;font-size:0.95rem;color:var(--text);">🔥 ZakumMacro v2.9</p>
             <p style="font-size:0.8rem;color:var(--text-soft);margin-top:4px;">
               자쿰 인기도 자동 매크로 · LDPlayer 전용 · 쉬움/보통/어려움/카오스
             </p>
@@ -68,6 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
           <h2 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:16px;">📝 업데이트 내역</h2>
+
+          <div style="margin-bottom:16px;">
+            <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.9 (2026-04-16)</h3>
+            <ul style="padding-left:20px;color:var(--text);font-size:0.84rem;line-height:1.8;margin-top:6px;">
+              <li><strong>채팅 입력 방식 개선</strong> — 일부 환경에서 채팅이 안 써지던 문제 해결 (클립보드+붙여넣기 방식)</li>
+              <li><strong>LD플레이어 창 탐색 강화</strong> — 클래스명/RenderWindow 기반 탐색 추가</li>
+              <li><strong>난이도 선택 버그 수정</strong> — 쉬움/보통 설정해도 카오스로 파티 생성되던 문제 해결</li>
+              <li><strong>보안 인증 감지 완화</strong> — 터치 좌표 랜덤화, 터치 지속시간 추가, 루프 간격 랜덤화</li>
+            </ul>
+          </div>
 
           <div style="margin-bottom:16px;">
             <h3 style="font-size:0.9rem;font-weight:700;color:var(--amber-dark);">v2.8 (2026-04-15)</h3>
@@ -123,8 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("downloadBtn").addEventListener("click", () => {
     const msg = document.getElementById("downloadMsg");
     const a = document.createElement("a");
-    a.href = "./assets/ZakumMacro_v2.8.zip";
-    a.download = "ZakumMacro_v2.8.zip";
+    a.href = "./assets/ZakumMacro_v2.9.zip";
+    a.download = "ZakumMacro_v2.9.zip";
     a.click();
     msg.style.color = "var(--green, #16a34a)";
     msg.textContent = "✅ 다운로드가 시작됩니다!";
