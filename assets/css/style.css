@@ -3026,3 +3026,255 @@ main { padding: 0 0 48px; }
 @media (max-width: 768px) {
   .mobile-auth-header { display: flex; }
 }
+
+/* ===== 매크로 페이지 ===== */
+.macro-hero {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%);
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--yellow-border);
+}
+.macro-hero-inner {
+  text-align: center;
+}
+.macro-hero-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+.macro-hero-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.macro-hero-desc {
+  font-size: 0.92rem;
+  color: var(--text-soft);
+  margin: 0 0 12px;
+}
+.macro-version-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  background: var(--amber);
+  color: white;
+  border-radius: 999px;
+}
+.macro-content {
+  padding: 24px 0 40px;
+}
+.macro-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.macro-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+.macro-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+.macro-card-desc {
+  font-size: 0.88rem;
+  color: var(--text-soft);
+  margin: 0 0 16px;
+}
+.macro-download-card {
+  border: 1.5px solid var(--yellow-border);
+  background: linear-gradient(135deg, #fffbeb 0%, #fff 40%);
+}
+.macro-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--amber);
+  color: white;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+.macro-download-btn:hover {
+  background: var(--amber-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.3);
+}
+.macro-download-icon {
+  font-size: 1.4rem;
+}
+.macro-download-btn strong {
+  display: block;
+  font-size: 1rem;
+}
+.macro-download-btn small {
+  display: block;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.macro-req h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin: 0 0 8px;
+}
+.macro-req ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.macro-req li {
+  font-size: 0.84rem;
+  color: var(--text-soft);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+.macro-req li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--amber);
+  font-weight: 700;
+}
+.macro-steps {
+  padding: 0 0 0 20px;
+  margin: 0;
+}
+.macro-steps li {
+  font-size: 0.88rem;
+  color: var(--text);
+  padding: 6px 0;
+  line-height: 1.6;
+}
+.macro-steps li::marker {
+  color: var(--amber);
+  font-weight: 700;
+}
+.macro-hint {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+.macro-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.macro-feature {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+}
+.macro-feature-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.macro-feature strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.macro-feature p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+.macro-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+.macro-flow-step {
+  padding: 6px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.macro-flow-accent {
+  background: #fef3c7;
+  border-color: var(--yellow-border);
+  color: var(--amber-dark);
+}
+.macro-flow-loop {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: white;
+}
+.macro-flow-arrow {
+  color: var(--text-faint);
+  font-size: 0.82rem;
+}
+.macro-changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.macro-changelog-item {
+  padding-left: 16px;
+  border-left: 3px solid var(--yellow);
+}
+.macro-changelog-ver {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.macro-ver-tag {
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  background: var(--yellow-bg);
+  color: var(--amber-dark);
+  border-radius: 999px;
+  border: 1px solid var(--yellow-border);
+}
+.macro-ver-date {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+.macro-changelog-item ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.macro-changelog-item li {
+  font-size: 0.84rem;
+  color: var(--text-soft);
+  padding: 3px 0;
+  padding-left: 14px;
+  position: relative;
+}
+.macro-changelog-item li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--text-faint);
+}
+
+@media (max-width: 768px) {
+  .macro-hero { padding: 28px 0 24px; }
+  .macro-hero-title { font-size: 1.3rem; }
+  .macro-features { grid-template-columns: 1fr; }
+  .macro-card { padding: 18px; }
+}
