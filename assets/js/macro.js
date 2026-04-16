@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const DOWNLOAD_URL = "./assets/ZakumMacro_v3.0.zip";
-  const MACRO_VERSION = "v3.0";
+  const DOWNLOAD_URL = "./assets/ZakumMacro_v3.1.zip";
+  const MACRO_VERSION = "v3.1";
 
   document.querySelector("main").innerHTML = `
     <section class="macro-hero">
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="macro-hero-icon">🤖</div>
           <h1 class="macro-hero-title">자쿰 인기도 매크로</h1>
           <p class="macro-hero-desc">자쿰 보스레이드를 자동으로 반복하여 인기도를 올려주는 매크로입니다.</p>
-          <span class="macro-version-badge">v3.0</span>
+          <span class="macro-version-badge">v3.1</span>
         </div>
       </div>
     </section>
@@ -143,6 +143,17 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="macro-card">
           <h2 class="macro-card-title">업데이트 내역</h2>
           <div class="macro-changelog">
+            <div class="macro-changelog-item">
+              <div class="macro-changelog-ver">
+                <span class="macro-ver-tag">v3.1</span>
+                <span class="macro-ver-date">2026.04.16</span>
+              </div>
+              <ul>
+                <li>커스텀 이름 앱플레이어 채팅 입력 수정</li>
+                <li>기본 이름이 아닌 앱플레이어(예: 호떡)에서 채팅이 안 써지던 문제 해결</li>
+                <li>창 탐색 시 인스턴스 이름도 키워드로 검색하도록 개선</li>
+              </ul>
+            </div>
             <div class="macro-changelog-item">
               <div class="macro-changelog-ver">
                 <span class="macro-ver-tag">v3.0</span>
