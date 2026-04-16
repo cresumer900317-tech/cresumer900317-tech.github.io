@@ -157,8 +157,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               <textarea id="commentInput" class="macro-comment-input" placeholder="댓글을 작성해주세요 (최대 500자)" maxlength="500"></textarea>
               <div class="macro-comment-form-footer">
                 <span id="commentCharCount" class="macro-comment-char">0 / 500</span>
-                <button id="commentSubmitBtn" class="macro-comment-submit">등록</button>
+                <button id="commentSubmitBtn" class="macro-comment-submit" disabled>등록</button>
               </div>
+              <p id="commentToast" style="font-size:0.8rem;margin-top:6px;min-height:1.2em;transition:opacity 0.3s;"></p>
             </div>
             ` : `<p style="font-size:0.84rem;color:var(--text-faint);margin-bottom:14px;">로그인 후 댓글을 작성할 수 있습니다.</p>`}
             <div id="commentList" class="macro-comment-list">
@@ -240,17 +241,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">아직 댓글이 없습니다. 첫 번째로 댓글을 남겨보세요!</p>';
         return;
       }
+      const isMe = (author) => user && user.character_name === author;
+      const canManage = (author) => user && (isMe(author) || user.role === "admin" || user.role === "superadmin");
+
       commentList.innerHTML = comments.map(c => `
-        <div class="macro-comment-item" data-id="${c.id}">
+        <div class="macro-comment-item${isMe(c.author) ? ' tip-comment-mine' : ''}" data-id="${c.id}">
           <div class="macro-comment-header">
-            <span class="macro-comment-author">${escapeHtml(c.author)}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
+            <span class="macro-comment-author">${escapeHtml(c.author)}${isMe(c.author) ? ' <span class="tip-comment-me-badge">나</span>' : ''}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
             <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
           </div>
-          <p class="macro-comment-body">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
-          ${(user && (c.author === user.character_name || user.role === "admin" || user.role === "superadmin"))
-            ? '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+          <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
+          ${canManage(c.author) ? `
+            <div class="tip-comment-actions">
+              ${isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : ''}
+              <button class="macro-comment-del" data-id="${c.id}">삭제</button>
+            </div>
+          ` : ''}
         </div>
       `).join("");
+
+      // 삭제
       commentList.querySelectorAll(".macro-comment-del").forEach(btn => {
         btn.addEventListener("click", async () => {
           if (!confirm("댓글을 삭제하시겠습니까?")) return;
@@ -258,6 +268,56 @@ document.addEventListener("DOMContentLoaded", async () => {
             method: "DELETE", headers: { "Authorization": "Bearer " + token }
           });
           loadComments();
+        });
+      });
+
+      // 수정
+      commentList.querySelectorAll(".tip-comment-edit-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const cId = btn.dataset.id;
+          const bodyEl = document.getElementById("comment-body-" + cId);
+          const original = btn.dataset.content;
+          const item = bodyEl.closest(".macro-comment-item");
+
+          // 이미 수정 중이면 무시
+          if (item.querySelector(".tip-comment-edit-area")) return;
+
+          bodyEl.style.display = "none";
+          const editArea = document.createElement("div");
+          editArea.className = "tip-comment-edit-area";
+          editArea.innerHTML = `
+            <textarea class="macro-comment-input" style="min-height:60px;margin-bottom:8px;" maxlength="500">${original.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button class="tip-comment-cancel-btn">취소</button>
+              <button class="macro-comment-submit" style="padding:6px 14px;font-size:0.8rem;">저장</button>
+            </div>
+          `;
+          bodyEl.parentNode.insertBefore(editArea, bodyEl.nextSibling);
+
+          const textarea = editArea.querySelector("textarea");
+          const saveBtn = editArea.querySelector(".macro-comment-submit");
+          const cancelBtn = editArea.querySelector(".tip-comment-cancel-btn");
+
+          cancelBtn.addEventListener("click", () => {
+            editArea.remove();
+            bodyEl.style.display = "";
+          });
+
+          saveBtn.addEventListener("click", async () => {
+            const newContent = textarea.value.trim();
+            if (!newContent) return alert("내용을 입력해주세요");
+            saveBtn.disabled = true;
+            saveBtn.textContent = "저장 중...";
+            try {
+              const res = await fetch(`${API_BASE}/api/tips/comments/${cId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ content: newContent })
+              });
+              if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "수정 실패"); }
+              loadComments();
+            } catch(e) { alert(e.message); saveBtn.disabled = false; saveBtn.textContent = "저장"; }
+          });
         });
       });
     }
@@ -274,14 +334,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       const commentInput = document.getElementById("commentInput");
       const commentCharCount = document.getElementById("commentCharCount");
       const commentSubmitBtn = document.getElementById("commentSubmitBtn");
+      const commentToast = document.getElementById("commentToast");
+
+      function updateBtnState() {
+        const hasText = commentInput.value.trim().length > 0;
+        commentSubmitBtn.disabled = !hasText;
+      }
+
+      function showToast(msg, color) {
+        commentToast.textContent = msg;
+        commentToast.style.color = color;
+        commentToast.style.opacity = "1";
+        setTimeout(() => { commentToast.style.opacity = "0"; }, 2500);
+      }
 
       commentInput.addEventListener("input", () => {
         commentCharCount.textContent = commentInput.value.length + " / 500";
+        updateBtnState();
       });
 
       commentSubmitBtn.addEventListener("click", async () => {
         const content = commentInput.value.trim();
-        if (!content) return alert("내용을 입력해주세요");
+        if (!content) return;
         commentSubmitBtn.disabled = true;
         commentSubmitBtn.textContent = "등록 중...";
         try {
@@ -293,9 +367,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
           commentInput.value = "";
           commentCharCount.textContent = "0 / 500";
+          showToast("댓글이 등록되었습니다.", "var(--green, #16a34a)");
           loadComments();
-        } catch (e) { alert(e.message); }
-        finally { commentSubmitBtn.disabled = false; commentSubmitBtn.textContent = "등록"; }
+        } catch (e) { showToast(e.message, "#dc2626"); }
+        finally { commentSubmitBtn.disabled = true; commentSubmitBtn.textContent = "등록"; }
       });
     }
 

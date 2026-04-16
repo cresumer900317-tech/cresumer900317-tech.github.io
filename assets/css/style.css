@@ -3350,6 +3350,57 @@ main { padding: 0 0 48px; }
 }
 .macro-comment-del:hover { color: #ef4444; }
 
+/* 팁 댓글 확장 스타일 */
+.tip-comment-mine {
+  border-color: var(--amber);
+  background: var(--yellow-bg, #fffbeb);
+}
+.tip-comment-me-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--amber);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.tip-comment-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+}
+.tip-comment-actions .macro-comment-del {
+  position: static;
+}
+.tip-comment-edit-btn {
+  border: none;
+  background: none;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.tip-comment-edit-btn:hover { color: var(--amber-dark); }
+.tip-comment-edit-area {
+  margin-top: 8px;
+}
+.tip-comment-cancel-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.tip-comment-cancel-btn:hover {
+  border-color: var(--text-faint);
+}
+
 @media (max-width: 768px) {
   .macro-hero { padding: 28px 0 24px; }
   .macro-hero-title { font-size: 1.3rem; }
