@@ -3367,11 +3367,10 @@ main { padding: 0 0 48px; }
   vertical-align: middle;
 }
 .tip-comment-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .tip-comment-actions .macro-comment-del {
   position: static;

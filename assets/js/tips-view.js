@@ -249,14 +249,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="macro-comment-header">
             <span class="macro-comment-author">${escapeHtml(c.author)}${isMe(c.author) ? ' <span class="tip-comment-me-badge">나</span>' : ''}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
             <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
+            ${canManage(c.author) ? `
+              <div class="tip-comment-actions">
+                ${isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : ''}
+                <button class="macro-comment-del" data-id="${c.id}">삭제</button>
+              </div>
+            ` : ''}
           </div>
           <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
-          ${canManage(c.author) ? `
-            <div class="tip-comment-actions">
-              ${isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : ''}
-              <button class="macro-comment-del" data-id="${c.id}">삭제</button>
-            </div>
-          ` : ''}
         </div>
       `).join("");
 
