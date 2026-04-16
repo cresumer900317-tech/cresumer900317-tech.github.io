@@ -236,29 +236,58 @@ document.addEventListener("DOMContentLoaded", async () => {
       return new Date(dateStr).toLocaleDateString("ko-KR");
     }
 
+    const isMe = (author) => user && user.character_name === author;
+    const canManage = (author) => user && (isMe(author) || user.role === "admin" || user.role === "superadmin");
+
+    function showToast(msg, color) {
+      const t = document.getElementById("commentToast");
+      if (!t) return;
+      t.textContent = msg;
+      t.style.color = color;
+      t.style.opacity = "1";
+      setTimeout(() => { t.style.opacity = "0"; }, 2500);
+    }
+
+    function renderOneComment(c, isReply) {
+      return `
+        <div class="macro-comment-item${isMe(c.author) ? ' tip-comment-mine' : ''}${isReply ? ' tip-comment-reply' : ''}" data-id="${c.id}">
+          ${isReply ? '<span class="tip-reply-indicator">↳</span>' : ''}
+          <div class="tip-comment-content-wrap">
+            <div class="macro-comment-header">
+              <span class="macro-comment-author">${escapeHtml(c.author)}${isMe(c.author) ? ' <span class="tip-comment-me-badge">나</span>' : ''}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
+              <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
+              <div class="tip-comment-actions">
+                ${user && !isReply ? '<button class="tip-comment-reply-btn" data-id="' + c.id + '" data-author="' + escapeHtml(c.author) + '">답글</button>' : ''}
+                ${canManage(c.author) ? (isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : '') + '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+              </div>
+            </div>
+            <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
+          </div>
+        </div>`;
+    }
+
     function renderComments(comments) {
       if (!comments.length) {
         commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">아직 댓글이 없습니다. 첫 번째로 댓글을 남겨보세요!</p>';
         return;
       }
-      const isMe = (author) => user && user.character_name === author;
-      const canManage = (author) => user && (isMe(author) || user.role === "admin" || user.role === "superadmin");
 
-      commentList.innerHTML = comments.map(c => `
-        <div class="macro-comment-item${isMe(c.author) ? ' tip-comment-mine' : ''}" data-id="${c.id}">
-          <div class="macro-comment-header">
-            <span class="macro-comment-author">${escapeHtml(c.author)}${isMe(c.author) ? ' <span class="tip-comment-me-badge">나</span>' : ''}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
-            <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
-            ${canManage(c.author) ? `
-              <div class="tip-comment-actions">
-                ${isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : ''}
-                <button class="macro-comment-del" data-id="${c.id}">삭제</button>
-              </div>
-            ` : ''}
-          </div>
-          <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
-        </div>
-      `).join("");
+      // 부모/자식 분리
+      const parents = comments.filter(c => !c.parent_id);
+      const childMap = {};
+      comments.filter(c => c.parent_id).forEach(c => {
+        if (!childMap[c.parent_id]) childMap[c.parent_id] = [];
+        childMap[c.parent_id].push(c);
+      });
+
+      let html = "";
+      parents.forEach(p => {
+        html += renderOneComment(p, false);
+        if (childMap[p.id]) {
+          childMap[p.id].forEach(r => { html += renderOneComment(r, true); });
+        }
+      });
+      commentList.innerHTML = html;
 
       // 삭제
       commentList.querySelectorAll(".macro-comment-del").forEach(btn => {
@@ -278,8 +307,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           const bodyEl = document.getElementById("comment-body-" + cId);
           const original = btn.dataset.content;
           const item = bodyEl.closest(".macro-comment-item");
-
-          // 이미 수정 중이면 무시
           if (item.querySelector(".tip-comment-edit-area")) return;
 
           bodyEl.style.display = "none";
@@ -294,20 +321,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           `;
           bodyEl.parentNode.insertBefore(editArea, bodyEl.nextSibling);
 
-          const textarea = editArea.querySelector("textarea");
-          const saveBtn = editArea.querySelector(".macro-comment-submit");
-          const cancelBtn = editArea.querySelector(".tip-comment-cancel-btn");
-
-          cancelBtn.addEventListener("click", () => {
+          editArea.querySelector(".tip-comment-cancel-btn").addEventListener("click", () => {
             editArea.remove();
             bodyEl.style.display = "";
           });
 
-          saveBtn.addEventListener("click", async () => {
-            const newContent = textarea.value.trim();
+          editArea.querySelector(".macro-comment-submit").addEventListener("click", async function() {
+            const newContent = editArea.querySelector("textarea").value.trim();
             if (!newContent) return alert("내용을 입력해주세요");
-            saveBtn.disabled = true;
-            saveBtn.textContent = "저장 중...";
+            this.disabled = true;
+            this.textContent = "저장 중...";
             try {
               const res = await fetch(`${API_BASE}/api/tips/comments/${cId}`, {
                 method: "PATCH",
@@ -316,7 +339,75 @@ document.addEventListener("DOMContentLoaded", async () => {
               });
               if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "수정 실패"); }
               loadComments();
-            } catch(e) { alert(e.message); saveBtn.disabled = false; saveBtn.textContent = "저장"; }
+            } catch(e) { alert(e.message); this.disabled = false; this.textContent = "저장"; }
+          });
+        });
+      });
+
+      // 답글
+      commentList.querySelectorAll(".tip-comment-reply-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const parentId = btn.dataset.id;
+          const parentAuthor = btn.dataset.author;
+          const item = btn.closest(".macro-comment-item");
+
+          // 이미 답글 입력창이 열려있으면 닫기
+          const existing = item.parentNode.querySelector('.tip-reply-form[data-parent="' + parentId + '"]');
+          if (existing) { existing.remove(); return; }
+
+          // 다른 열린 답글폼 닫기
+          commentList.querySelectorAll(".tip-reply-form").forEach(f => f.remove());
+
+          const replyForm = document.createElement("div");
+          replyForm.className = "tip-reply-form";
+          replyForm.dataset.parent = parentId;
+          replyForm.innerHTML = `
+            <div class="tip-reply-form-inner">
+              <span class="tip-reply-indicator">↳</span>
+              <div style="flex:1;">
+                <textarea class="macro-comment-input tip-reply-input" placeholder="@${parentAuthor} 에게 답글 (최대 500자)" maxlength="500"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                  <button class="tip-comment-cancel-btn tip-reply-cancel">취소</button>
+                  <button class="macro-comment-submit tip-reply-submit" style="padding:6px 14px;font-size:0.8rem;" disabled>답글 등록</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // 답글들 다음에 삽입 (부모 댓글 + 그 답글들 뒤)
+          let insertAfter = item;
+          let next = item.nextElementSibling;
+          while (next && next.classList.contains("tip-comment-reply")) {
+            insertAfter = next;
+            next = next.nextElementSibling;
+          }
+          insertAfter.after(replyForm);
+
+          const textarea = replyForm.querySelector("textarea");
+          const submitBtn = replyForm.querySelector(".tip-reply-submit");
+
+          textarea.focus();
+          textarea.addEventListener("input", () => {
+            submitBtn.disabled = !textarea.value.trim();
+          });
+
+          replyForm.querySelector(".tip-reply-cancel").addEventListener("click", () => replyForm.remove());
+
+          submitBtn.addEventListener("click", async () => {
+            const content = textarea.value.trim();
+            if (!content) return;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "등록 중...";
+            try {
+              const res = await fetch(`${API_BASE}/api/tips/${postId}/comments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ content, author: user.character_name, author_guild: user.guild || "", parent_id: Number(parentId) })
+              });
+              if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
+              showToast("답글이 등록되었습니다.", "var(--green, #16a34a)");
+              loadComments();
+            } catch(e) { alert(e.message); submitBtn.disabled = false; submitBtn.textContent = "답글 등록"; }
           });
         });
       });
@@ -334,18 +425,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const commentInput = document.getElementById("commentInput");
       const commentCharCount = document.getElementById("commentCharCount");
       const commentSubmitBtn = document.getElementById("commentSubmitBtn");
-      const commentToast = document.getElementById("commentToast");
 
       function updateBtnState() {
-        const hasText = commentInput.value.trim().length > 0;
-        commentSubmitBtn.disabled = !hasText;
-      }
-
-      function showToast(msg, color) {
-        commentToast.textContent = msg;
-        commentToast.style.color = color;
-        commentToast.style.opacity = "1";
-        setTimeout(() => { commentToast.style.opacity = "0"; }, 2500);
+        commentSubmitBtn.disabled = !commentInput.value.trim();
       }
 
       commentInput.addEventListener("input", () => {
