@@ -149,6 +149,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
 
+          <!-- 댓글 -->
+          <div class="board-comments-section" style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
+            <h3 style="font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:14px;">💬 댓글</h3>
+            ${user ? `
+            <div class="macro-comment-form">
+              <textarea id="commentInput" class="macro-comment-input" placeholder="댓글을 작성해주세요 (최대 500자)" maxlength="500"></textarea>
+              <div class="macro-comment-form-footer">
+                <span id="commentCharCount" class="macro-comment-char">0 / 500</span>
+                <button id="commentSubmitBtn" class="macro-comment-submit">등록</button>
+              </div>
+            </div>
+            ` : `<p style="font-size:0.84rem;color:var(--text-faint);margin-bottom:14px;">로그인 후 댓글을 작성할 수 있습니다.</p>`}
+            <div id="commentList" class="macro-comment-list">
+              <p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">불러오는 중...</p>
+            </div>
+          </div>
+
           <!-- 이전/다음 글 -->
           <div class="board-post-nav">
             ${nextPost ? `
@@ -201,6 +218,88 @@ document.addEventListener("DOMContentLoaded", async () => {
         location.href = "./tips";
       });
     }
+
+    // ── 댓글 기능 ──
+    const token = getToken();
+    const commentList = document.getElementById("commentList");
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return "방금 전";
+      if (m < 60) return m + "분 전";
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + "시간 전";
+      const d = Math.floor(h / 24);
+      if (d < 30) return d + "일 전";
+      return new Date(dateStr).toLocaleDateString("ko-KR");
+    }
+
+    function renderComments(comments) {
+      if (!comments.length) {
+        commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">아직 댓글이 없습니다. 첫 번째로 댓글을 남겨보세요!</p>';
+        return;
+      }
+      commentList.innerHTML = comments.map(c => `
+        <div class="macro-comment-item" data-id="${c.id}">
+          <div class="macro-comment-header">
+            <span class="macro-comment-author">${escapeHtml(c.author)}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
+            <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
+          </div>
+          <p class="macro-comment-body">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
+          ${(user && (c.author === user.character_name || user.role === "admin" || user.role === "superadmin"))
+            ? '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+        </div>
+      `).join("");
+      commentList.querySelectorAll(".macro-comment-del").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("댓글을 삭제하시겠습니까?")) return;
+          await fetch(`${API_BASE}/api/tips/comments/${btn.dataset.id}`, {
+            method: "DELETE", headers: { "Authorization": "Bearer " + token }
+          });
+          loadComments();
+        });
+      });
+    }
+
+    async function loadComments() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tips/${postId}/comments`);
+        const data = await res.json();
+        renderComments(data);
+      } catch { commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;">댓글을 불러올 수 없습니다.</p>'; }
+    }
+
+    if (user) {
+      const commentInput = document.getElementById("commentInput");
+      const commentCharCount = document.getElementById("commentCharCount");
+      const commentSubmitBtn = document.getElementById("commentSubmitBtn");
+
+      commentInput.addEventListener("input", () => {
+        commentCharCount.textContent = commentInput.value.length + " / 500";
+      });
+
+      commentSubmitBtn.addEventListener("click", async () => {
+        const content = commentInput.value.trim();
+        if (!content) return alert("내용을 입력해주세요");
+        commentSubmitBtn.disabled = true;
+        commentSubmitBtn.textContent = "등록 중...";
+        try {
+          const res = await fetch(`${API_BASE}/api/tips/${postId}/comments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify({ content, author: user.character_name, author_guild: user.guild || "" })
+          });
+          if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
+          commentInput.value = "";
+          commentCharCount.textContent = "0 / 500";
+          loadComments();
+        } catch (e) { alert(e.message); }
+        finally { commentSubmitBtn.disabled = false; commentSubmitBtn.textContent = "등록"; }
+      });
+    }
+
+    loadComments();
 
   } catch(e) {
     renderError(null, e);
