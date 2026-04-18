@@ -1,14 +1,34 @@
 document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
+  // 스켈레톤 로딩
+  document.querySelector("main").innerHTML = `
+    <div class="page-card">
+      <div class="container">
+        <div class="skeleton skeleton-title" style="margin:28px 0 16px;width:160px;height:28px;"></div>
+        <div class="rk-tab-bar">
+          <div class="skeleton" style="width:80px;height:40px;border-radius:999px;"></div>
+          <div class="skeleton" style="width:80px;height:40px;border-radius:999px;"></div>
+        </div>
+        <div class="rk-hero-wrap" style="padding:24px 0;">
+          <div class="rk-hero-grid">
+            <div class="skeleton" style="height:200px;border-radius:14px;"></div>
+            <div class="skeleton" style="height:240px;border-radius:14px;"></div>
+            <div class="skeleton" style="height:200px;border-radius:14px;"></div>
+          </div>
+        </div>
+        <div class="rk-list">
+          ${Array(8).fill('<div class="skeleton" style="height:72px;border-radius:10px;margin-bottom:6px;"></div>').join("")}
+        </div>
+      </div>
+    </div>
+  `;
+
   try {
     const members = await getRankingData();
     const rows = Array.isArray(members) ? members : [];
 
-    // ── 전투력 정렬 ──
     const sortedPower = [...rows].sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
-
-    // ── 인기도 정렬 (0 또는 null 제외) ──
     const sortedPopularity = [...rows]
       .filter(m => m.popularity != null && Number(m.popularity) > 0)
       .sort((a, b) => Number(b.popularity || 0) - Number(a.popularity || 0));
@@ -16,12 +36,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const CUT = 30;
     let currentTab = "power";
 
-    // 시즌 타이머
-    function getSeasonDaysLeft() {
+    // 배치 기준일 (매달 마지막 수요일 22시)
+    const cutlineDate = (() => {
       const now = new Date();
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      return Math.ceil((lastDay - now) / (1000 * 60 * 60 * 24));
-    }
+      let y = now.getFullYear(), m = now.getMonth();
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const lastDay = new Date(y, m + 1, 0);
+        const dow = lastDay.getDay();
+        const diff = (dow - 3 + 7) % 7;
+        const wed = new Date(y, m, lastDay.getDate() - diff);
+        wed.setHours(22, 0, 0, 0);
+        if (wed > now) return wed;
+        m++;
+        if (m > 11) { m = 0; y++; }
+      }
+      return null;
+    })();
+    const cutlineDDay = cutlineDate
+      ? Math.ceil((cutlineDate - new Date()) / (1000 * 60 * 60 * 24))
+      : null;
+    const cutlineDateStr = cutlineDate
+      ? `${cutlineDate.getMonth()+1}/${cutlineDate.getDate()}(수) 22시`
+      : "";
+    const cutlineDDayText = cutlineDDay === 0 ? "D-Day"
+      : cutlineDDay === 1 ? "D-1"
+      : cutlineDDay !== null ? `D-${cutlineDDay}` : "";
 
     // 컷라인 거리
     function getCutDistance(item, sorted) {
@@ -32,52 +71,49 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function cutDistanceHtml(diff) {
       if (diff === null) return "";
-      if (diff >= 0) return `<span style="font-size:0.72rem;color:#059669;font-weight:600;">+${formatCompactPower(diff)} 여유</span>`;
-      return `<span style="font-size:0.72rem;color:#dc2626;font-weight:600;">${CUT}위까지 -${formatCompactPower(Math.abs(diff))}</span>`;
+      if (diff >= 0) return `<span class="rk-cut-dist rk-cut-dist-safe">+${formatCompactPower(diff)} 여유</span>`;
+      return `<span class="rk-cut-dist rk-cut-dist-gap">${CUT}위까지 ${formatCompactPower(Math.abs(diff))}</span>`;
     }
 
     function getStatus(rank) {
       if (rank <= 25) return "safe";
-      if (rank <= 30) return "danger";
-      if (rank <= 35) return "challenge";
+      if (rank <= 30) return "caution";
+      if (rank <= 35) return "chase";
       return "normal";
     }
 
     function getStatusLabel(rank) {
-      if (rank <= 25) return { text: "안정권", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0" };
-      if (rank <= 30) return { text: "위험", color: "#d97706", bg: "#fffbeb", border: "#fde68a" };
-      if (rank <= 35) return { text: "도전", color: "#dc2626", bg: "#fff5f5", border: "#fca5a5" };
+      if (rank <= 25) return { text: "안정권", cls: "rk-status-safe" };
+      if (rank <= 30) return { text: "접전", cls: "rk-status-caution" };
+      if (rank <= 35) return { text: "추격", cls: "rk-status-chase" };
       return null;
     }
 
-    function powerSplitHtml(item, size = "md") {
+    function powerSplitHtml(item, size) {
       const pt = item.powerText || "";
       const parts = pt.trim().split(/\s+/).filter(Boolean);
+      const cls = size === "lg" ? "rk-power-lg" : "rk-power-md";
       if (parts.length >= 2) {
-        const bigSize = size === "lg" ? "1.3rem" : "1.05rem";
-        const smallSize = size === "lg" ? "1rem" : "0.82rem";
-        return `<span style="font-size:${bigSize};font-weight:900;color:var(--amber);">${escapeHtml(parts[0])}</span><span style="font-size:0.65rem;color:var(--text-faint);margin:0 3px;font-weight:400;">|</span><span style="font-size:${smallSize};font-weight:700;color:var(--amber-dark);">${escapeHtml(parts[1])}</span>`;
+        return `<span class="${cls}-main">${escapeHtml(parts[0])}</span><span class="rk-power-sep">|</span><span class="${cls}-sub">${escapeHtml(parts[1])}</span>`;
       }
-      return `<span style="font-size:1.05rem;font-weight:800;color:var(--amber);">${escapeHtml(getPowerDisplay(item))}</span>`;
+      return `<span class="${cls}-main">${escapeHtml(getPowerDisplay(item))}</span>`;
     }
 
-    // ── 탭 바 ──
+    // 탭 바
     function tabBarHtml(active) {
       return `
         <div class="rk-tab-bar">
-          <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">⚔️ 전투력</button>
-          <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">❤️ 인기도</button>
+          <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">전투력</button>
+          <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">인기도</button>
         </div>
       `;
     }
 
-    // ════════════════════════════════
-    //  전투력 탭
-    // ════════════════════════════════
+    // ── 전투력 포디움 ──
     function renderPowerHero(sorted) {
       if (sorted.length === 0) return "";
       const [first, second, third] = sorted;
-      function heroCard(item, rank, center = false) {
+      function heroCard(item, rank, center) {
         if (!item) return `<div></div>`;
         return `
           <div class="rk-hero-card${center ? " rk-hero-center" : ""}">
@@ -93,9 +129,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `
         <div class="rk-hero-wrap">
           <div class="rk-hero-grid">
-            ${heroCard(second, 2)}
+            ${heroCard(second, 2, false)}
             ${heroCard(first, 1, true)}
-            ${heroCard(third, 3)}
+            ${heroCard(third, 3, false)}
           </div>
         </div>
       `;
@@ -105,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `
         <div class="rk-cutline-divider">
           <div class="rk-cutline-line"></div>
-          <div class="rk-cutline-badge">🏆 승격 컷라인 · TOP ${CUT}</div>
+          <div class="rk-cutline-badge">TOP ${CUT} 배치 라인</div>
           <div class="rk-cutline-line"></div>
         </div>
       `;
@@ -116,21 +152,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       const isCut = rank === CUT;
       const isJustBelow = rank === CUT + 1;
       const st = getStatus(rank);
-      const cutDiff = (st === "danger" || st === "challenge") ? getCutDistance(item, allSorted) : null;
+      const cutDiff = (st === "caution" || st === "chase") ? getCutDistance(item, allSorted) : null;
 
       let cardClass = "rk-compact-card";
       if (rank <= 3) cardClass += " rk-top3-card";
       if (isCut) cardClass += " rk-cut-card";
-      if (st === "danger") cardClass += " rk-danger-card";
-      if (st === "challenge") cardClass += " rk-challenge-card";
+      if (st === "caution") cardClass += " rk-danger-card";
+      if (st === "chase") cardClass += " rk-challenge-card";
 
       return `
-        ${isJustBelow ? `<div class="rk-below-line"><span>── ${CUT}위 밖 ──</span></div>` : ""}
+        ${isJustBelow ? `<div class="rk-below-line"><span>── 31위부터 ──</span></div>` : ""}
         <div class="${cardClass}" data-character-row="${escapeHtml(String(item.name || "").toLowerCase())}">
           <div class="rk-c-rank">
             ${rank <= 3
-              ? `<span style="font-size:1.6rem;">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
-              : `<span class="rk-c-num ${st === "danger" ? "rk-num-danger" : st === "challenge" ? "rk-num-challenge" : ""}">${rank}</span>`
+              ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
+              : `<span class="rk-c-num ${st === "caution" ? "rk-num-danger" : st === "chase" ? "rk-num-challenge" : ""}">${rank}</span>`
             }
           </div>
           <div class="rk-c-avatar">${characterAvatarHtml(item)}</div>
@@ -142,23 +178,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
           <div class="rk-c-right">
-            <div class="rk-c-power">${powerSplitHtml(item)}</div>
+            <div class="rk-c-power">${powerSplitHtml(item, "md")}</div>
             <div class="rk-c-server">${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</div>
-            ${status ? `<div class="rk-c-status" style="color:${status.color};background:${status.bg};border-color:${status.border};">${status.text}</div>` : ""}
-            ${cutDiff !== null ? `<div style="margin-top:2px;">${cutDistanceHtml(cutDiff)}</div>` : ""}
+            ${status ? `<div class="rk-c-status ${status.cls}">${status.text}</div>` : ""}
+            ${cutDiff !== null ? `<div class="rk-cut-dist-wrap">${cutDistanceHtml(cutDiff)}</div>` : ""}
           </div>
           ${isCut ? `<div class="rk-cut-marker">TOP ${CUT}</div>` : ""}
         </div>
       `;
     }
 
-    // ════════════════════════════════
-    //  인기도 탭: 포디움 (전투력과 동일 구조)
-    // ════════════════════════════════
+    // ── 인기도 포디움 ──
     function renderPopularityPodium(sorted) {
       if (sorted.length === 0) return "";
       const [first, second, third] = sorted;
-      function popHeroCard(item, rank, center = false) {
+      function popHeroCard(item, rank, center) {
         if (!item) return `<div></div>`;
         const pop = formatNumber(Number(item.popularity || 0));
         return `
@@ -167,7 +201,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
             <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
             <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
-            <div class="rk-hero-power" style="color:#e11d48;">❤️ ${pop}</div>
+            <div class="rk-hero-power rk-hero-power-pop">${pop}</div>
             ${item.popServerRank
               ? `<div class="rk-hero-server">서버 인기도 ${formatNumber(item.popServerRank)}위</div>`
               : item.serverRank
@@ -179,26 +213,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `
         <div class="rk-hero-wrap">
           <div class="rk-hero-grid">
-            ${popHeroCard(second, 2)}
+            ${popHeroCard(second, 2, false)}
             ${popHeroCard(first, 1, true)}
-            ${popHeroCard(third, 3)}
+            ${popHeroCard(third, 3, false)}
           </div>
         </div>
       `;
     }
 
-    // ── 인기도 4위 이하 리스트 카드 ──
     function renderPopularityCard(item, rank) {
       const pop = formatNumber(Number(item.popularity || 0));
-      let numColor, numWeight;
-      if (rank <= 10) { numColor = "#d97706"; numWeight = "800"; }
-      else if (rank <= 20) { numColor = "#059669"; numWeight = "700"; }
-      else { numColor = "var(--text-soft)"; numWeight = "700"; }
+      let numCls = "rk-c-num";
+      if (rank <= 10) numCls += " rk-num-pop-top10";
+      else if (rank <= 20) numCls += " rk-num-pop-top20";
 
       return `
         <div class="rk-compact-card" data-pop-row="${escapeHtml(String(item.name || "").toLowerCase())}">
           <div class="rk-c-rank">
-            <span class="rk-c-num" style="color:${numColor};font-weight:${numWeight};">${rank}</span>
+            <span class="${numCls}">${rank}</span>
           </div>
           <div class="rk-c-avatar">${characterAvatarHtml(item)}</div>
           <div class="rk-c-info">
@@ -209,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
           <div class="rk-c-right">
-            <div style="font-size:1.05rem;font-weight:900;color:#e11d48;white-space:nowrap;">❤️ ${pop}</div>
+            <div class="rk-c-pop">${pop}</div>
             <div class="rk-c-server">${
               item.popServerRank
                 ? "서버 인기도 " + formatNumber(item.popServerRank) + "위"
@@ -222,18 +254,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // ════════════════════════════════
-    //  탭별 컨텐츠 조립
-    // ════════════════════════════════
+    // ── 탭별 콘텐츠 ──
     function renderPowerContent() {
       const heroHtml = renderPowerHero(sortedPower);
       const top3Html = sortedPower.slice(0, 3).map((item, i) => renderPowerCard(item, i + 1, sortedPower)).join("");
       const restHtml = sortedPower.slice(3).map((item, i) => renderPowerCard(item, i + 4, sortedPower)).join("");
       return `
         <div id="powerContent">
-          <p style="font-size:0.85rem;color:var(--text-soft);margin:12px 0 0;">전투력 기준 · ${formatNumber(sortedPower.length)}명 · TOP ${CUT} 친구들 길드 승격</p>
+          <div class="rk-meta">전투력 기준 · ${formatNumber(sortedPower.length)}명</div>
           ${heroHtml}
-          <div class="toolbar-card" style="margin-top:20px;">
+          <div class="toolbar-card rk-toolbar">
             <label class="search-field">
               <span>🔎</span>
               <input id="rankingSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
@@ -251,21 +281,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderPopularityContent() {
       if (sortedPopularity.length === 0) {
-        return `<div style="padding:40px 0;">${createEmptyBox("인기도 데이터가 없습니다.")}</div>`;
+        return `<div class="rk-empty-wrap">${createEmptyBox("인기도 데이터가 없습니다.")}</div>`;
       }
       const podiumHtml = renderPopularityPodium(sortedPopularity);
       const restHtml = sortedPopularity.slice(3).map((item, i) => renderPopularityCard(item, i + 4)).join("");
       return `
         <div id="popularityContent">
-          <p style="font-size:0.85rem;color:var(--text-soft);margin:12px 0 0;">인기도 기준 · ${formatNumber(sortedPopularity.length)}명 · Scania 11 서버</p>
+          <div class="rk-meta">인기도 기준 · ${formatNumber(sortedPopularity.length)}명</div>
           ${podiumHtml}
           ${restHtml ? `
-            <div class="rk-cutline-divider" style="margin:24px 0 14px;">
+            <div class="rk-cutline-divider rk-cutline-divider-pop">
               <div class="rk-cutline-line"></div>
               <div class="rk-cutline-badge">4위 이하</div>
               <div class="rk-cutline-line"></div>
             </div>
-            <div class="toolbar-card">
+            <div class="toolbar-card rk-toolbar">
               <label class="search-field">
                 <span>🔎</span>
                 <input id="popSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
@@ -278,27 +308,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
-    // ════════════════════════════════
-    //  페이지 렌더 + 이벤트 바인딩
-    // ════════════════════════════════
+    // ── 페이지 렌더 ──
     function renderPage(tab) {
       const content = tab === "power" ? renderPowerContent() : renderPopularityContent();
       document.querySelector("main").innerHTML = `
         <div class="page-card">
           <div class="container">
-            <div style="padding:28px 0 8px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-                <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0;">🏆 통합 랭킹</h1>
-                <div style="display:flex;align-items:center;gap:6px;background:var(--yellow-bg);border:1px solid var(--yellow-border);border-radius:999px;padding:4px 14px;">
-                  <span style="font-size:0.78rem;">📅</span>
-                  <span style="font-size:0.78rem;font-weight:700;color:var(--amber-dark);">시즌 종료까지 ${getSeasonDaysLeft()}일</span>
-                </div>
+            <div class="rk-page-header">
+              <h1 class="rk-page-title">통합 랭킹</h1>
+              <div class="rk-dday-chip ${cutlineDDay !== null && cutlineDDay <= 3 ? 'rk-dday-urgent' : ''}">
+                <span class="rk-dday-label">배치 기준일</span>
+                <span class="rk-dday-date">${cutlineDateStr}</span>
+                <span class="rk-dday-badge">${cutlineDDayText}</span>
               </div>
             </div>
             ${tabBarHtml(tab)}
             ${content}
           </div>
         </div>
+        <footer class="site-footer">
+          <div class="container footer-inner">
+            <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
+            <div class="footer-links">
+              <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
+            </div>
+            <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+          </div>
+        </footer>
       `;
 
       // 탭 전환
@@ -309,12 +345,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       });
 
-      // 전투력 검색
       if (tab === "power") {
         bindCardSearch("rankingSearchInput", "rankingResetButton", "rankingCardList", "data-character-row");
       }
-
-      // 인기도 검색
       if (tab === "popularity") {
         bindCardSearch("popSearchInput", "popResetButton", "popCardList", "data-pop-row");
       }

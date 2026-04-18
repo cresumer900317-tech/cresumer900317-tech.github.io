@@ -1714,9 +1714,74 @@ main { padding: 0 0 48px; }
   border: 1px solid;
   margin-top: 2px;
 }
+.rk-status-safe { color: #059669; background: #ecfdf5; border-color: #a7f3d0; }
+.rk-status-caution { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+.rk-status-chase { color: #6366f1; background: #eef2ff; border-color: #c7d2fe; }
+
+/* 인라인 스타일 제거용 클래스 */
+.rk-c-medal { font-size: 1.6rem; }
+.rk-power-lg-main { font-size: 1.3rem; font-weight: 900; color: var(--amber); }
+.rk-power-lg-sub { font-size: 1rem; font-weight: 700; color: var(--amber-dark); }
+.rk-power-md-main { font-size: 1.05rem; font-weight: 900; color: var(--amber); }
+.rk-power-md-sub { font-size: 0.82rem; font-weight: 700; color: var(--amber-dark); }
+.rk-power-sep { font-size: 0.65rem; color: var(--text-faint); margin: 0 3px; font-weight: 400; }
+.rk-c-pop { font-size: 1.05rem; font-weight: 900; color: #e11d48; white-space: nowrap; }
+.rk-num-pop-top10 { color: #d97706 !important; font-weight: 800 !important; }
+.rk-num-pop-top20 { color: #059669 !important; font-weight: 700 !important; }
+.rk-hero-power-pop { color: #e11d48 !important; }
+.rk-cut-dist { font-size: 0.72rem; font-weight: 600; }
+.rk-cut-dist-safe { color: #059669; }
+.rk-cut-dist-gap { color: #9ca3af; }
+.rk-cut-dist-wrap { margin-top: 2px; }
+.rk-meta { font-size: 0.85rem; color: var(--text-soft); margin: 12px 0 0; }
+.rk-toolbar { margin-top: 20px; }
+.rk-empty-wrap { padding: 40px 0; }
+.rk-cutline-divider-pop { margin: 24px 0 14px; }
+
+/* 페이지 헤더 */
+.rk-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 28px 0 8px;
+}
+.rk-page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+.rk-dday-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+.rk-dday-label { font-size: 0.75rem; color: var(--text-soft); }
+.rk-dday-date { font-size: 0.82rem; font-weight: 700; color: var(--amber-darker); }
+.rk-dday-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--amber-dark);
+  background: var(--yellow-pale);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.rk-dday-urgent .rk-dday-badge {
+  background: #fef2f2;
+  color: #dc2626;
+}
 
 /* 반응형 */
 @media (max-width: 600px) {
+  .rk-page-header { flex-direction: column; align-items: flex-start; }
+  .rk-page-title { font-size: 1.2rem; }
+  .rk-dday-chip { font-size: 0.72rem; padding: 4px 12px; }
   .rk-hero-grid { grid-template-columns: 1fr 1.2fr 1fr; gap: 6px; }
   .rk-hero-avatar-wrap { width: 56px; height: 56px; }
   .rk-hero-center .rk-hero-avatar-wrap { width: 68px; height: 68px; }
