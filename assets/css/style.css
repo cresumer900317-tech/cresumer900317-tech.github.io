@@ -1731,10 +1731,29 @@ main { padding: 0 0 48px; }
 .rk-power-md-main { font-size: 1.05rem; font-weight: 900; color: var(--amber); }
 .rk-power-md-sub { font-size: 0.82rem; font-weight: 700; color: var(--amber-dark); }
 .rk-power-sep { font-size: 0.65rem; color: var(--text-faint); margin: 0 3px; font-weight: 400; }
-.rk-c-pop { font-size: 1.05rem; font-weight: 900; color: #e11d48; white-space: nowrap; }
+.rk-c-pop {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #e11d48;
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.rk-c-pop-unit {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #f472b6;
+}
 .rk-num-pop-top10 { color: #d97706 !important; font-weight: 800 !important; }
 .rk-num-pop-top20 { color: #059669 !important; font-weight: 700 !important; }
 .rk-hero-power-pop { color: #e11d48 !important; }
+.rk-pop-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #f472b6;
+  margin-right: 2px;
+}
 .rk-cut-dist { font-size: 0.72rem; font-weight: 600; }
 .rk-cut-dist-safe { color: #059669; }
 .rk-cut-dist-gap { color: #9ca3af; }
@@ -1808,6 +1827,8 @@ main { padding: 0 0 48px; }
 
   /* 인기도 */
   .rk-c-pop { font-size: 0.88rem; }
+  .rk-c-pop-unit { font-size: 0.58rem; }
+  .rk-pop-label { font-size: 0.58rem; }
   /* 포디움 모바일 */
   .rk-hero-grid { grid-template-columns: 1fr 1.2fr 1fr; gap: 6px; }
   .rk-hero-avatar-wrap { width: 56px; height: 56px; }

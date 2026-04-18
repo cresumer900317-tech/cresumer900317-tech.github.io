@@ -201,7 +201,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
             <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
             <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
-            <div class="rk-hero-power rk-hero-power-pop">${pop}</div>
+            <div class="rk-hero-power rk-hero-power-pop"><span class="rk-pop-label">인기도</span> ${pop}</div>
             ${item.popServerRank
               ? `<div class="rk-hero-server">서버 인기도 ${formatNumber(item.popServerRank)}위</div>`
               : item.serverRank
@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
           <div class="rk-c-right">
-            <div class="rk-c-pop">${pop}</div>
+            <div class="rk-c-pop">${pop}<span class="rk-c-pop-unit">인기도</span></div>
             <div class="rk-c-server">${
               item.popServerRank
                 ? "서버 인기도 " + formatNumber(item.popServerRank) + "위"
@@ -292,11 +292,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="rk-meta">인기도 기준 · ${formatNumber(sortedPopularity.length)}명</div>
           ${podiumHtml}
           ${restHtml ? `
-            <div class="rk-cutline-divider rk-cutline-divider-pop">
-              <div class="rk-cutline-line"></div>
-              <div class="rk-cutline-badge">4위 이하</div>
-              <div class="rk-cutline-line"></div>
-            </div>
             <div class="toolbar-card rk-toolbar">
               <label class="search-field">
                 <span>🔎</span>
