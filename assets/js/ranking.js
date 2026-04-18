@@ -273,6 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <input id="rankingSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
             </label>
             <button id="rankingResetButton" class="ghost-btn" type="button">초기화</button>
+            <button class="ghost-btn rk-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP ↑</button>
           </div>
           <div class="rk-list" id="rankingCardList">
             ${listHtml || createEmptyBox("랭킹 데이터가 없습니다.")}
@@ -298,6 +299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <input id="popSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
               </label>
               <button id="popResetButton" class="ghost-btn" type="button">초기화</button>
+            <button class="ghost-btn rk-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP ↑</button>
             </div>
             <div class="rk-list" id="popCardList">${allHtml}</div>
           ` : ""}

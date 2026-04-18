@@ -1767,6 +1767,15 @@ main { padding: 0 0 48px; }
 .rk-cut-dist-wrap { margin-top: 2px; }
 .rk-meta { font-size: 0.85rem; color: var(--text-soft); margin: 12px 0 0; }
 .rk-toolbar { margin-top: 20px; }
+.rk-top-btn {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--amber) !important;
+  border-color: var(--yellow-border) !important;
+}
+.rk-top-btn:hover {
+  background: var(--yellow-bg) !important;
+}
 .rk-toolbar-sticky {
   position: sticky;
   top: 60px;
