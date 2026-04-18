@@ -658,7 +658,23 @@ main { padding: 0 0 48px; }
   object-fit: cover;
   object-position: center 20%;
   transform: scale(3.2);
-  transform-origin: center center;
+  transform-origin: center 30%;
+}
+
+/* 크기별 확대율 조정 */
+.rk-hero-avatar-wrap .character-avatar img {
+  transform: scale(2.8);
+  transform-origin: center 28%;
+}
+.rk-c-avatar .character-avatar img,
+.mb-avatar .character-avatar img,
+.rv2-member-avatar .character-avatar img {
+  transform: scale(2.2);
+  transform-origin: center 25%;
+}
+.mini-summary-card .character-avatar img {
+  transform: scale(2.2);
+  transform-origin: center 25%;
 }
 .character-avatar.no-image {
   display: flex;
