@@ -2893,6 +2893,22 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
 }
 
+/* ===== D-Day 뱃지 ===== */
+.section-dday, .kpi-dday {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
 /* ===== KPI 유틸리티 ===== */
 .kpi-sub {
   font-size: 0.82rem;

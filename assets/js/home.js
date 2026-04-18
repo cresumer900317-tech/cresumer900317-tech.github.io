@@ -47,6 +47,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     const top500Count = rows.filter((r) => Number(r.serverRank || 0) > 0 && Number(r.serverRank) <= 500).length;
     const top500Rate = memberCount > 0 ? ((top500Count / memberCount) * 100).toFixed(1) : "0.0";
 
+    // 길드 배치 기준일: 매달 마지막 수요일 22시
+    const cutlineDate = (() => {
+      const now = new Date();
+      let y = now.getFullYear(), m = now.getMonth();
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const lastDay = new Date(y, m + 1, 0);
+        const dow = lastDay.getDay();
+        const diff = (dow - 3 + 7) % 7;
+        const wed = new Date(y, m, lastDay.getDate() - diff);
+        wed.setHours(22, 0, 0, 0);
+        if (wed > now) return wed;
+        m++;
+        if (m > 11) { m = 0; y++; }
+      }
+      return null;
+    })();
+    const cutlineDDay = cutlineDate
+      ? Math.ceil((cutlineDate - new Date()) / (1000 * 60 * 60 * 24))
+      : null;
+    const cutlineDateStr = cutlineDate
+      ? `${cutlineDate.getMonth()+1}/${cutlineDate.getDate()}(수) 22시`
+      : "";
+    const cutlineDDayText = cutlineDDay === 0 ? "D-Day"
+      : cutlineDDay === 1 ? "D-1"
+      : cutlineDDay !== null ? `D-${cutlineDDay}` : "";
+
     const guildDesc = {
       "친구들": "TOP30 경쟁 메인 길드",
       "친구둘": "내부 리그 강자",
@@ -213,11 +239,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="kpi-value dark">${myContribVal}</div>
                 </div>
                 <div class="kpi-card">
-                  <div class="kpi-label">TOP 30</div>
-                  <div class="kpi-value ${isAboveCut ? 'kpi-value-up' : 'kpi-value-down'}">
+                  <div class="kpi-label">TOP 30 ${cutlineDDayText ? `<span class="kpi-dday">${cutlineDDayText}</span>` : ''}</div>
+                  <div class="kpi-value ${isAboveCut ? 'kpi-value-up' : 'kpi-value-neutral'}">
                     ${isAboveCut
                       ? '+' + formatCompactPower(cutDiff) + ' 여유'
-                      : cutDiff === 0 ? '기준선' : formatCompactPower(Math.abs(cutDiff)) + ' 부족'}
+                      : cutDiff === 0 ? '30위' : formatCompactPower(Math.abs(cutDiff)) + ' 목표'}
                   </div>
                 </div>
               </div>
@@ -267,8 +293,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">TOP 30 컷라인</div>
-              <div class="section-sub">패밀리 내 26위~35위 실시간 경쟁 현황</div>
+              <div class="section-title">TOP 30 길드 배치 현황 ${cutlineDDayText ? `<span class="section-dday">${cutlineDDayText}</span>` : ''}</div>
+              <div class="section-sub">26위~35위 순위 흐름 · 기준일 ${cutlineDateStr}</div>
             </div>
             <a class="section-link" href="./ranking">전체 랭킹 →</a>
           </div>
@@ -304,7 +330,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 return `
-                  ${isCut ? `<div class="cl-cutline-bar"><span>TOP 30 기준선</span></div>` : ""}
+                  ${isCut ? `<div class="cl-cutline-bar"><span>TOP 30 배치 라인</span></div>` : ""}
                   <div class="cl-row ${statusClass}${isCut ? " cl-cut-row" : ""}">
                     <span class="cl-rank">${rank}</span>
                     <span class="cl-name">${escapeHtml(item.name || "-")}</span>
@@ -313,7 +339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="cl-trend">${trendHtml}</span>
                     <span class="cl-dist">${distHtml}</span>
                   </div>
-                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 컷라인 이하 ──</span></div>` : ""}
+                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 30위 아래 ──</span></div>` : ""}
                 `;
               }).join("");
             })()}
