@@ -876,6 +876,8 @@ main { padding: 0 0 48px; }
   .cutline-date-bar { flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 14px; }
   .cutline-date-value { font-size: 0.95rem; }
   .cutline-dday { font-size: 0.95rem; padding: 4px 12px; }
+  .cutline-timer-wrap { flex-wrap: wrap; gap: 8px; }
+  .cutline-countdown { font-size: 0.82rem; }
   .kpi-card { padding: 10px 8px; }
   .kpi-label { font-size: 0.68rem; margin-bottom: 3px; }
   .kpi-value { font-size: 1rem; }
@@ -2141,6 +2143,20 @@ main { padding: 0 0 48px; }
 @keyframes pulse-urgent {
   0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.15); }
   50% { box-shadow: 0 0 0 6px rgba(220,38,38,0.05); }
+}
+
+.cutline-timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cutline-countdown {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--amber-darker);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .cl-cutline-bar {

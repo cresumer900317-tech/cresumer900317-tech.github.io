@@ -303,7 +303,10 @@ document.addEventListener("DOMContentLoaded", async () => {
               <span class="cutline-date-label">다음 배치 기준일</span>
               <span class="cutline-date-value">${cutlineDateStr}</span>
             </div>
-            <span class="cutline-dday ${cutlineDDay !== null && cutlineDDay <= 3 ? 'cutline-dday-urgent' : ''}">${cutlineDDayText}</span>
+            <div class="cutline-timer-wrap">
+              <span class="cutline-dday ${cutlineDDay !== null && cutlineDDay <= 3 ? 'cutline-dday-urgent' : ''}">${cutlineDDayText}</span>
+              <span class="cutline-countdown" id="cutlineCountdown"></span>
+            </div>
           </div>
           <div class="cutline-log">
             ${(() => {
@@ -490,6 +493,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     function closeModal() {
       document.getElementById("guildModal").style.display = "none";
       document.body.style.overflow = "";
+    }
+
+    // 실시간 카운트다운
+    if (cutlineDate) {
+      const countdownEl = document.getElementById("cutlineCountdown");
+      function updateCountdown() {
+        const now = new Date();
+        const diff = cutlineDate - now;
+        if (diff <= 0) {
+          countdownEl.textContent = "배치 진행 중";
+          return;
+        }
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        const pad = (n) => String(n).padStart(2, "0");
+        countdownEl.textContent = `${d}일 ${pad(h)}:${pad(m)}:${pad(s)}`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
     }
 
   } catch (error) {
