@@ -663,18 +663,18 @@ main { padding: 0 0 48px; }
 
 /* 크기별 확대율 조정 */
 .rk-hero-avatar-wrap .character-avatar img {
-  transform: scale(2.4);
-  transform-origin: center 35%;
+  transform: scale(2.2);
+  transform-origin: center 45%;
 }
 .rk-c-avatar .character-avatar img,
 .mb-avatar .character-avatar img,
 .rv2-member-avatar .character-avatar img {
-  transform: scale(1.6);
-  transform-origin: center 30%;
+  transform: scale(2.4);
+  transform-origin: center 40%;
 }
 .mini-summary-card .character-avatar img {
-  transform: scale(1.6);
-  transform-origin: center 30%;
+  transform: scale(2.4);
+  transform-origin: center 40%;
 }
 .character-avatar.no-image {
   display: flex;
