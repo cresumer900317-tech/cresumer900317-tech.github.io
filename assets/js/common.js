@@ -126,6 +126,7 @@ function renderShell() {
     ${navLink("./civil", "civil", "내전", page)}
     ${navLink("./notice", "notice", "공지", page)}
     ${navLink("./tips", "tips", "팁", page)}
+    ${navLink("./free", "free", "자유", page)}
     ${navLink("./download", "download", "매크로", page)}
   `;
 
@@ -336,9 +337,9 @@ function authHeaders() {
 
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["members", "weekly", "rivals", "civil", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "download"];
+  const restricted = ["members", "weekly", "rivals", "civil", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "free", "free-view", "free-write", "download"];
   if (restricted.includes(page) && !getUser()) {
-    const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page;
+    const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page.startsWith("free") ? "free" : page;
     location.href = `./login?redirect=./${base}`;
     return false;
   }
