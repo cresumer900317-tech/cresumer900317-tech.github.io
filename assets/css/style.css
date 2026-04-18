@@ -664,7 +664,7 @@ main { padding: 0 0 48px; }
 /* 크기별 확대율 조정 */
 .rk-hero-avatar-wrap .character-avatar img {
   transform: scale(2.64);
-  transform-origin: center 45%;
+  transform-origin: center 50%;
 }
 .rk-c-avatar .character-avatar img,
 .mb-avatar .character-avatar img,
