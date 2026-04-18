@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div id="powerContent">
           <div class="rk-meta">전투력 기준 · ${formatNumber(sortedPower.length)}명</div>
           ${heroHtml}
-          <div class="toolbar-card rk-toolbar">
+          <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
             <label class="search-field">
               <span>🔎</span>
               <input id="rankingSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
@@ -286,20 +286,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         return `<div class="rk-empty-wrap">${createEmptyBox("인기도 데이터가 없습니다.")}</div>`;
       }
       const podiumHtml = renderPopularityPodium(sortedPopularity);
-      const restHtml = sortedPopularity.slice(3).map((item, i) => renderPopularityCard(item, i + 4)).join("");
+      const allHtml = sortedPopularity.map((item, i) => renderPopularityCard(item, i + 1)).join("");
       return `
         <div id="popularityContent">
           <div class="rk-meta">인기도 기준 · ${formatNumber(sortedPopularity.length)}명</div>
           ${podiumHtml}
-          ${restHtml ? `
-            <div class="toolbar-card rk-toolbar">
+          ${allHtml ? `
+            <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
               <label class="search-field">
                 <span>🔎</span>
                 <input id="popSearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
               </label>
               <button id="popResetButton" class="ghost-btn" type="button">초기화</button>
             </div>
-            <div class="rk-list" id="popCardList">${restHtml}</div>
+            <div class="rk-list" id="popCardList">${allHtml}</div>
           ` : ""}
         </div>
       `;
