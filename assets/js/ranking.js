@@ -5,20 +5,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.querySelector("main").innerHTML = `
     <div class="page-card">
       <div class="container">
-        <div class="skeleton skeleton-title" style="margin:28px 0 16px;width:160px;height:28px;"></div>
+        <div class="skeleton skeleton-rk-title"></div>
         <div class="rk-tab-bar">
-          <div class="skeleton" style="width:80px;height:40px;border-radius:999px;"></div>
-          <div class="skeleton" style="width:80px;height:40px;border-radius:999px;"></div>
+          <div class="skeleton skeleton-rk-tab"></div>
+          <div class="skeleton skeleton-rk-tab"></div>
         </div>
-        <div class="rk-hero-wrap" style="padding:24px 0;">
+        <div class="rk-hero-wrap skeleton-rk-hero-wrap">
           <div class="rk-hero-grid">
-            <div class="skeleton" style="height:200px;border-radius:14px;"></div>
-            <div class="skeleton" style="height:240px;border-radius:14px;"></div>
-            <div class="skeleton" style="height:200px;border-radius:14px;"></div>
+            <div class="skeleton skeleton-rk-podium"></div>
+            <div class="skeleton skeleton-rk-podium-center"></div>
+            <div class="skeleton skeleton-rk-podium"></div>
           </div>
         </div>
         <div class="rk-list">
-          ${Array(8).fill('<div class="skeleton" style="height:72px;border-radius:10px;margin-bottom:6px;"></div>').join("")}
+          ${Array(8).fill('<div class="skeleton skeleton-rk-card"></div>').join("")}
         </div>
       </div>
     </div>
@@ -257,8 +257,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── 탭별 콘텐츠 ──
     function renderPowerContent() {
       const heroHtml = renderPowerHero(sortedPower);
-      const top3Html = sortedPower.slice(0, 3).map((item, i) => renderPowerCard(item, i + 1, sortedPower)).join("");
-      const restHtml = sortedPower.slice(3).map((item, i) => renderPowerCard(item, i + 4, sortedPower)).join("");
+      const listHtml = sortedPower.map((item, i) => {
+        const rank = i + 1;
+        let html = renderPowerCard(item, rank, sortedPower);
+        if (rank === CUT) html += cutlineDivider();
+        return html;
+      }).join("");
       return `
         <div id="powerContent">
           <div class="rk-meta">전투력 기준 · ${formatNumber(sortedPower.length)}명</div>
@@ -271,9 +275,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <button id="rankingResetButton" class="ghost-btn" type="button">초기화</button>
           </div>
           <div class="rk-list" id="rankingCardList">
-            ${top3Html}
-            ${cutlineDivider()}
-            ${restHtml || createEmptyBox("랭킹 데이터가 없습니다.")}
+            ${listHtml || createEmptyBox("랭킹 데이터가 없습니다.")}
           </div>
         </div>
       `;

@@ -942,6 +942,12 @@ main { padding: 0 0 48px; }
 .skeleton-section-title { width: 140px; height: 20px; margin-bottom: 16px; }
 .skeleton-label { width: 60px; height: 14px; margin-bottom: 8px; }
 .skeleton-value { width: 90px; height: 24px; }
+.skeleton-rk-title { width: 160px; height: 28px; margin: 28px 0 16px; }
+.skeleton-rk-tab { width: 80px; height: 40px; border-radius: 999px; }
+.skeleton-rk-hero-wrap { padding: 24px 0; }
+.skeleton-rk-podium { height: 200px; border-radius: var(--radius-lg); }
+.skeleton-rk-podium-center { height: 240px; border-radius: var(--radius-lg); }
+.skeleton-rk-card { height: 72px; border-radius: var(--radius-md); margin-bottom: 6px; }
 
 /* ===== 푸터 ===== */
 .site-footer {
@@ -1646,10 +1652,10 @@ main { padding: 0 0 48px; }
 }
 .rk-danger-card .rk-c-power span:first-child { color: var(--amber-dark) !important; font-size: 1.15rem !important; }
 .rk-challenge-card {
-  border-color: #fca5a5 !important;
-  background: #fff5f5;
+  border-color: #c7d2fe !important;
+  background: #eef2ff;
 }
-.rk-challenge-card .rk-c-power span:first-child { color: #b45309 !important; font-size: 1.15rem !important; }
+.rk-challenge-card .rk-c-power span:first-child { color: #4f46e5 !important; font-size: 1.15rem !important; }
 
 /* 카드 내부 요소 */
 .rk-c-rank {
@@ -1663,7 +1669,7 @@ main { padding: 0 0 48px; }
   color: var(--text-soft);
 }
 .rk-num-danger { color: var(--amber-dark) !important; }
-.rk-num-challenge { color: #dc2626 !important; }
+.rk-num-challenge { color: #6366f1 !important; }
 
 .rk-c-avatar {
   width: 44px;
