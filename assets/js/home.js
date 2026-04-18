@@ -94,6 +94,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     })();
 
     document.querySelector("main").innerHTML = `
+      ${user ? `
+      <div class="home-hero home-hero-slim">
+        <div class="container hero-inner">
+          <div class="hero-slim-row">
+            <div>
+              <div class="hero-badge">
+                <span class="hero-dot"></span>
+                메이플키우기 · 스카니아 11서버
+              </div>
+              <h1 class="hero-title-slim">반갑습니다, <span class="accent">${escapeHtml(user.character_name)}</span>님</h1>
+            </div>
+            <div class="hero-slim-stats">
+              <span class="hero-slim-stat">${formatNumber(memberCount)}명 활동 중</span>
+              <span class="hero-slim-divider">·</span>
+              <span class="hero-slim-stat">${cutlineDDayText} 남음</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : `
       <div class="home-hero">
         <div class="container hero-inner">
           <div class="hero-badge">
@@ -109,6 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       </div>
+      `}
 
       <div class="live-bar">
         <div class="container live-bar-inner">
@@ -165,8 +186,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="section-sub">로그인하면 내 정보를 한눈에 볼 수 있어요</div>
                 </div>
               </div>
-              <div class="dashboard-login-prompt">
-                <a href="./login?redirect=./" class="cta-btn">로그인하기</a>
+              <div class="dashboard-preview-wrap">
+                <div class="kpi-grid kpi-grid-dashboard dashboard-blur">
+                  <div class="kpi-card"><div class="kpi-label">전투력</div><div class="kpi-value">2조 3,400억</div></div>
+                  <div class="kpi-card"><div class="kpi-label">서버 순위</div><div class="kpi-value dark">128위</div></div>
+                  <div class="kpi-card"><div class="kpi-label">이달 성장</div><div class="kpi-value kpi-value-up">+1,200억</div></div>
+                  <div class="kpi-card"><div class="kpi-label">패밀리 순위</div><div class="kpi-value dark">15위</div></div>
+                  <div class="kpi-card"><div class="kpi-label">인기도</div><div class="kpi-value kpi-value-pink">3,200</div></div>
+                  <div class="kpi-card"><div class="kpi-label">공헌도</div><div class="kpi-value dark">5,400</div></div>
+                  <div class="kpi-card"><div class="kpi-label">TOP 30</div><div class="kpi-value kpi-value-up">+800억 여유</div></div>
+                </div>
+                <div class="dashboard-login-overlay">
+                  <p class="dashboard-login-text">로그인하면 내 전투력, 순위, 성장 현황을<br>한눈에 확인할 수 있어요</p>
+                  <a href="./login?redirect=./" class="cta-btn">로그인하기</a>
+                  <a href="./login?tab=register" class="dashboard-register-link">아직 계정이 없으신가요?</a>
+                </div>
               </div>
             </div>
           </div>`;
@@ -289,7 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      <div class="section-block">
+      <div class="section-block section-cutline">
         <div class="container">
           <div class="section-head">
             <div>
