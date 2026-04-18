@@ -234,6 +234,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isAboveCut = myFamilyRank <= 30;
 
         const monthlyColor = myMonthlyDiff > 0 ? 'up' : myMonthlyDiff < 0 ? 'down' : 'neutral';
+        const rankPercent = rows.length > 0 ? myFamilyRank / rows.length : 1;
+        const rankTier = myFamilyRank === 1 ? 'rank-tier-1st'
+          : rankPercent <= 0.1 ? 'rank-tier-top10'
+          : rankPercent <= 0.3 ? 'rank-tier-top30'
+          : rankPercent <= 0.5 ? 'rank-tier-top50'
+          : 'rank-tier-rest';
 
         return `
           <div class="section-block">
@@ -262,7 +268,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div class="kpi-card">
                   <div class="kpi-label">패밀리 순위</div>
-                  <div class="kpi-value dark">${myFamilyRank}위 <span class="kpi-sub">/ ${rows.length}명</span></div>
+                  <div class="kpi-value ${rankTier}">${myFamilyRank}위 <span class="kpi-sub">/ ${rows.length}명</span></div>
                 </div>
                 <div class="kpi-card">
                   <div class="kpi-label">인기도</div>
