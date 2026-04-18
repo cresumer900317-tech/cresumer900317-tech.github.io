@@ -2238,9 +2238,9 @@ main { padding: 0 0 48px; }
 .cutline-countdown {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--text);
-  background: var(--white);
-  border: 1px solid var(--border);
+  color: #c2410c;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
   border-radius: var(--radius-md);
   padding: 6px 14px;
   font-variant-numeric: tabular-nums;
