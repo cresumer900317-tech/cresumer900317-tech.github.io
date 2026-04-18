@@ -1782,12 +1782,40 @@ main { padding: 0 0 48px; }
   .rk-page-header { flex-direction: column; align-items: flex-start; }
   .rk-page-title { font-size: 1.2rem; }
   .rk-dday-chip { font-size: 0.72rem; padding: 4px 12px; }
+
+  /* 카드 레이아웃 모바일 최적화 */
+  .rk-compact-card { gap: 8px; padding: 10px 10px; }
+  .rk-c-rank { width: 28px; }
+  .rk-c-num { font-size: 0.92rem; }
+  .rk-c-medal { font-size: 1.3rem; }
+  .rk-c-name { font-size: 0.88rem; }
+
+  /* 전투력 줄바꿈 허용 + 사이즈 축소 */
+  .rk-c-power { white-space: normal; }
+  .rk-power-md-main { font-size: 0.88rem; }
+  .rk-power-md-sub { font-size: 0.72rem; }
+  .rk-power-sep { display: none; }
+  .rk-c-right { gap: 1px; max-width: 45%; }
+  .rk-c-server { font-size: 0.65rem; }
+  .rk-c-status { font-size: 0.62rem; padding: 1px 5px; }
+  .rk-cut-dist { font-size: 0.65rem; }
+
+  /* 인기도 */
+  .rk-c-pop { font-size: 0.88rem; }
+  /* 포디움 모바일 */
   .rk-hero-grid { grid-template-columns: 1fr 1.2fr 1fr; gap: 6px; }
   .rk-hero-avatar-wrap { width: 56px; height: 56px; }
   .rk-hero-center .rk-hero-avatar-wrap { width: 68px; height: 68px; }
   .rk-hero-name { font-size: 0.82rem; }
+  .rk-hero-power { font-size: 0.78rem; }
+  .rk-power-lg-main { font-size: 0.92rem; }
+  .rk-power-lg-sub { font-size: 0.72rem; }
   .rk-c-avatar { width: 36px; height: 36px; }
   .rk-c-avatar .character-avatar { width: 36px; height: 36px; }
+
+  /* 컷라인 마커 */
+  .rk-cut-card { padding-right: 26px !important; }
+  .rk-cut-marker { width: 18px; font-size: 0.52rem; }
 }
 
 /* ===== 길드 디렉토리 (members) ===== */
