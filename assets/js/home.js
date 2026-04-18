@@ -293,10 +293,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">TOP 30 길드 배치 현황 ${cutlineDDayText ? `<span class="section-dday">${cutlineDDayText}</span>` : ''}</div>
-              <div class="section-sub">26위~35위 순위 흐름 · 기준일 ${cutlineDateStr}</div>
+              <div class="section-title">TOP 30 길드 배치 현황</div>
+              <div class="section-sub">26위~35위 순위 흐름</div>
             </div>
             <a class="section-link" href="./ranking">전체 랭킹 →</a>
+          </div>
+          <div class="cutline-date-bar">
+            <div class="cutline-date-left">
+              <span class="cutline-date-label">다음 배치 기준일</span>
+              <span class="cutline-date-value">${cutlineDateStr}</span>
+            </div>
+            <span class="cutline-dday ${cutlineDDay !== null && cutlineDDay <= 3 ? 'cutline-dday-urgent' : ''}">${cutlineDDayText}</span>
           </div>
           <div class="cutline-log">
             ${(() => {
@@ -339,7 +346,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="cl-trend">${trendHtml}</span>
                     <span class="cl-dist">${distHtml}</span>
                   </div>
-                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 30위 아래 ──</span></div>` : ""}
+                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 31위부터 ──</span></div>` : ""}
                 `;
               }).join("");
             })()}

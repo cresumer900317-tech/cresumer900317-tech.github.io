@@ -873,6 +873,9 @@ main { padding: 0 0 48px; }
   .kpi-grid, .kpi-grid-overview, .kpi-grid-dashboard { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; margin-top: 16px; }
   .live-bar-inner { flex-direction: column; align-items: flex-start; gap: 4px; }
   .live-bar-update { font-size: 0.72rem; }
+  .cutline-date-bar { flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 14px; }
+  .cutline-date-value { font-size: 0.95rem; }
+  .cutline-dday { font-size: 0.95rem; padding: 4px 12px; }
   .kpi-card { padding: 10px 8px; }
   .kpi-label { font-size: 0.68rem; margin-bottom: 3px; }
   .kpi-value { font-size: 1rem; }
@@ -2093,14 +2096,81 @@ main { padding: 0 0 48px; }
   background: var(--yellow-bg) !important;
   box-shadow: 0 2px 8px rgba(245,158,11,0.15);
 }
+/* 기준일 강조 바 */
+.cutline-date-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+.cutline-date-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cutline-date-label {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+.cutline-date-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--amber-darker);
+}
+.cutline-dday {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--amber-dark);
+  background: var(--yellow-pale);
+  border: 1.5px solid var(--yellow-border);
+  border-radius: var(--radius-md);
+  padding: 6px 16px;
+  letter-spacing: 0.03em;
+}
+.cutline-dday-urgent {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+  animation: pulse-urgent 2s infinite;
+}
+@keyframes pulse-urgent {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(220,38,38,0.05); }
+}
+
 .cl-cutline-bar {
   text-align: center;
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  padding: 4px 0;
-  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--amber-dark);
+  font-weight: 700;
+  padding: 6px 0;
+  position: relative;
 }
-.cl-below-bar { color: var(--text-soft) !important; }
+.cl-cutline-bar::before,
+.cl-cutline-bar::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 1.5px;
+  background: var(--yellow-border);
+  width: calc(50% - 80px);
+}
+.cl-cutline-bar::before { left: 0; }
+.cl-cutline-bar::after { right: 0; }
+.cl-below-bar {
+  color: var(--text-faint) !important;
+  font-weight: 500;
+  font-size: 0.72rem;
+}
+.cl-below-bar::before,
+.cl-below-bar::after {
+  background: var(--border-light);
+}
 .cl-rank {
   font-size: 0.88rem;
   font-weight: 800;
@@ -2893,20 +2963,19 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
 }
 
-/* ===== D-Day 뱃지 ===== */
-.section-dday, .kpi-dday {
+/* ===== D-Day 뱃지 (KPI 라벨 내) ===== */
+.kpi-dday {
   display: inline-flex;
   align-items: center;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: #fef3c7;
   color: #b45309;
   border: 1px solid #fde68a;
-  margin-left: 6px;
+  margin-left: 4px;
   vertical-align: middle;
-  letter-spacing: 0.02em;
 }
 
 /* ===== KPI 유틸리티 ===== */
