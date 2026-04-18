@@ -1688,11 +1688,11 @@ main { padding: 0 0 48px; }
 .rk-num-challenge { color: #6366f1 !important; }
 
 .rk-c-avatar {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
 }
-.rk-c-avatar .character-avatar { width: 44px; height: 44px; }
+.rk-c-avatar .character-avatar { width: 56px; height: 56px; }
 
 .rk-c-info { flex: 1; min-width: 0; }
 .rk-c-name {
@@ -1853,8 +1853,8 @@ main { padding: 0 0 48px; }
   .rk-hero-power { font-size: 0.78rem; }
   .rk-power-lg-main { font-size: 0.92rem; }
   .rk-power-lg-sub { font-size: 0.72rem; }
-  .rk-c-avatar { width: 36px; height: 36px; }
-  .rk-c-avatar .character-avatar { width: 36px; height: 36px; }
+  .rk-c-avatar { width: 48px; height: 48px; }
+  .rk-c-avatar .character-avatar { width: 48px; height: 48px; }
 
   /* 컷라인 마커 */
   .rk-cut-card { padding-right: 26px !important; }
