@@ -669,12 +669,12 @@ main { padding: 0 0 48px; }
 .rk-c-avatar .character-avatar img,
 .mb-avatar .character-avatar img,
 .rv2-member-avatar .character-avatar img {
-  transform: scale(2.4);
-  transform-origin: center 40%;
+  transform: scale(2.6);
+  transform-origin: center 50%;
 }
 .mini-summary-card .character-avatar img {
-  transform: scale(2.4);
-  transform-origin: center 40%;
+  transform: scale(2.6);
+  transform-origin: center 50%;
 }
 .character-avatar.no-image {
   display: flex;
@@ -1557,8 +1557,8 @@ main { padding: 0 0 48px; }
 }
 .rk-hero-medal { font-size: 2rem; line-height: 1; }
 .rk-hero-center .rk-hero-medal { font-size: 2.6rem; }
-.rk-hero-avatar-wrap { width: 72px; height: 72px; }
-.rk-hero-center .rk-hero-avatar-wrap { width: 88px; height: 88px; }
+.rk-hero-avatar-wrap { width: 108px; height: 108px; }
+.rk-hero-center .rk-hero-avatar-wrap { width: 132px; height: 132px; }
 .rk-hero-avatar-wrap .character-avatar { width: 100%; height: 100%; }
 .rk-hero-name {
   font-size: 0.95rem;
@@ -1847,8 +1847,8 @@ main { padding: 0 0 48px; }
   .rk-pop-label { font-size: 0.58rem; }
   /* 포디움 모바일 */
   .rk-hero-grid { grid-template-columns: 1fr 1.2fr 1fr; gap: 6px; }
-  .rk-hero-avatar-wrap { width: 56px; height: 56px; }
-  .rk-hero-center .rk-hero-avatar-wrap { width: 68px; height: 68px; }
+  .rk-hero-avatar-wrap { width: 80px; height: 80px; }
+  .rk-hero-center .rk-hero-avatar-wrap { width: 100px; height: 100px; }
   .rk-hero-name { font-size: 0.82rem; }
   .rk-hero-power { font-size: 0.78rem; }
   .rk-power-lg-main { font-size: 0.92rem; }
