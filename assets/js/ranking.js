@@ -227,10 +227,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (rank <= 10) numCls += " rk-num-pop-top10";
       else if (rank <= 20) numCls += " rk-num-pop-top20";
 
+      let cardCls = "rk-compact-card";
+      if (rank <= 3) cardCls += " rk-top3-card";
+
       return `
-        <div class="rk-compact-card" data-pop-row="${escapeHtml(String(item.name || "").toLowerCase())}">
+        <div class="${cardCls}" data-pop-row="${escapeHtml(String(item.name || "").toLowerCase())}">
           <div class="rk-c-rank">
-            <span class="${numCls}">${rank}</span>
+            ${rank <= 3
+              ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
+              : `<span class="${numCls}">${rank}</span>`
+            }
           </div>
           <div class="rk-c-avatar">${characterAvatarHtml(item)}</div>
           <div class="rk-c-info">
@@ -341,6 +347,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         btn.addEventListener("click", () => {
           currentTab = btn.dataset.tab;
           renderPage(currentTab);
+          window.scrollTo({ top: 0, behavior: "smooth" });
         });
       });
 
