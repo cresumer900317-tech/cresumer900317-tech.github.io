@@ -1,6 +1,40 @@
 document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
+  // 스켈레톤 로딩 표시
+  document.querySelector("main").innerHTML = `
+    <div class="home-hero home-hero-slim" style="padding:28px 0 24px;">
+      <div class="container hero-inner">
+        <div class="skeleton skeleton-badge"></div>
+        <div class="skeleton skeleton-title"></div>
+      </div>
+    </div>
+    <div class="section-block">
+      <div class="container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="kpi-grid kpi-grid-overview">
+          ${Array(5).fill('<div class="kpi-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div></div>').join("")}
+        </div>
+      </div>
+    </div>
+    <div class="section-block">
+      <div class="container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="kpi-grid kpi-grid-dashboard">
+          ${Array(7).fill('<div class="kpi-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div></div>').join("")}
+        </div>
+      </div>
+    </div>
+    <div class="section-block">
+      <div class="container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="family-board-grid">
+          ${Array(5).fill('<div class="guild-board-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div><div class="skeleton skeleton-label" style="margin-top:8px;"></div></div>').join("")}
+        </div>
+      </div>
+    </div>
+  `;
+
   try {
     const user = getUser();
     const contribMonth = new Date().toISOString().slice(0, 7);
