@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             메이플키우기 · 스카니아 11서버
           </div>
           <h1 class="hero-title">함께 성장하는<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">내 활동 스타일에 맞는 길드로 자동 배정돼요</p>
+          <p class="hero-desc">내 전투력에 맞는 길드로 자동 배정돼요</p>
           <p class="hero-member-count">현재 <strong>${formatNumber(memberCount)}명</strong>이 함께하고 있어요</p>
           <div class="hero-cta-row">
             <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">길드 가입 문의</a>
