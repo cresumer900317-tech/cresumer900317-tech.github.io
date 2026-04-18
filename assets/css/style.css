@@ -926,6 +926,45 @@ main { padding: 0 0 48px; }
 }
 .error-box { background: #fff5f5; color: #b42318; border-color: #fca5a5; }
 
+/* ===== 푸터 ===== */
+.site-footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 32px 0;
+  margin-top: 0;
+}
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.footer-brand {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.footer-links {
+  display: flex;
+  gap: 16px;
+}
+.footer-link {
+  font-size: 0.82rem;
+  color: var(--amber);
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.footer-link:hover {
+  color: var(--amber-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-copy {
+  font-size: 0.72rem;
+  color: var(--text-hint);
+}
+
 /* ===== 반응형 ===== */
 @media (max-width: 1024px) {
   .home-hero { padding: 40px 0 36px; }

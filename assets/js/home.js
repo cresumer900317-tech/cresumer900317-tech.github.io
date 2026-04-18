@@ -445,6 +445,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
       ` : ""}
 
+      <footer class="site-footer">
+        <div class="container footer-inner">
+          <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
+          <div class="footer-links">
+            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
+          </div>
+          <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+        </div>
+      </footer>
+
       <div id="guildModal" class="modal-backdrop" style="display:none;">
         <div class="modal-box">
           <div class="modal-header">
