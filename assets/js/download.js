@@ -294,13 +294,34 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   `;
 
-  document.getElementById("downloadBtn").addEventListener("click", () => {
+  document.getElementById("downloadBtn").addEventListener("click", async () => {
     const msg = document.getElementById("downloadMsg");
-    const a = document.createElement("a");
-    a.href = "./assets/${ZIP_NAME}";
-    a.download = "${ZIP_NAME}";
-    a.click();
-    msg.style.color = "var(--green, #16a34a)";
-    msg.textContent = "✅ 다운로드가 시작됩니다!";
+    const btn = document.getElementById("downloadBtn");
+    btn.disabled = true;
+    btn.textContent = "다운로드 중...";
+    msg.textContent = "";
+    try {
+      const res = await fetch(API_BASE + "/api/macro/download", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "다운로드 실패");
+      }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = ZIP_NAME;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      msg.style.color = "var(--green, #16a34a)";
+      msg.textContent = "✅ 다운로드가 시작됩니다!";
+    } catch (e) {
+      msg.style.color = "#dc2626";
+      msg.textContent = "❌ " + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "⬇️ 다운로드";
+    }
   });
 });

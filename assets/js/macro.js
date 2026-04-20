@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const DOWNLOAD_URL = "./assets/ZakumMacro_v3.1.zip";
   const MACRO_VERSION = "v3.1";
+  const ZIP_NAME = "ZakumMacro_" + MACRO_VERSION + ".zip";
 
   document.querySelector("main").innerHTML = `
     <section class="macro-hero">
@@ -29,13 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="macro-card macro-download-card">
           <h2 class="macro-card-title">다운로드</h2>
           <p class="macro-card-desc">길드원 전용 매크로입니다. 로그인 후 사용 가능합니다.</p>
-          <a href="${DOWNLOAD_URL}" class="macro-download-btn" id="downloadBtn">
+          <button class="macro-download-btn" id="downloadBtn">
             <span class="macro-download-icon">⬇</span>
             <span>
               <strong>ZakumMacro ${MACRO_VERSION}</strong>
               <small>Windows 전용 (.zip)</small>
             </span>
-          </a>
+          </button>
+          <p id="downloadMsg" style="font-size:0.8rem;margin-top:8px;text-align:center;"></p>
           <div class="macro-req">
             <h3>요구사항</h3>
             <ul>
@@ -323,9 +324,41 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   `;
 
-  // ── 댓글 기능 ──
+  // ── 다운로드 기능 ──
   const API_BASE = window.API_BASE || "";
   const token = getToken();
+
+  document.getElementById("downloadBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("downloadMsg");
+    const btn = document.getElementById("downloadBtn");
+    btn.disabled = true;
+    msg.textContent = "다운로드 준비 중...";
+    msg.style.color = "var(--text-soft)";
+    try {
+      const res = await fetch(API_BASE + "/api/macro/download", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "다운로드 실패");
+      }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = ZIP_NAME;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      msg.style.color = "var(--green, #16a34a)";
+      msg.textContent = "✅ 다운로드가 시작됩니다!";
+    } catch (e) {
+      msg.style.color = "#dc2626";
+      msg.textContent = "❌ " + e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── 댓글 기능 ──
   const commentInput = document.getElementById("commentInput");
   const commentCharCount = document.getElementById("commentCharCount");
   const commentSubmitBtn = document.getElementById("commentSubmitBtn");
