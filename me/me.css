@@ -19,6 +19,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; }
 body {
   background: linear-gradient(180deg, #0b1426 0%, #0f172a 100%);
@@ -325,6 +326,7 @@ input, button, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
   z-index: 50; padding: 20px;
 }
+.modal-backdrop[hidden] { display: none; }
 .modal {
   background: var(--panel);
   border: 1px solid var(--border);
