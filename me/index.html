@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>내 업무</title>
+  <meta name="description" content="개인 업무 통합 관리 페이지" />
+  <link rel="stylesheet" href="./me.css?v=1" />
+</head>
+<body>
+  <!-- 로그인 안 됐을 때 -->
+  <div id="loginGate" class="login-gate" hidden>
+    <div class="login-card">
+      <h1>내 업무</h1>
+      <p>로그인이 필요합니다.</p>
+      <a class="login-btn" href="../login?redirect=./me/">로그인하러 가기</a>
+    </div>
+  </div>
+
+  <!-- 메인 앱 -->
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="brand-icon">✓</span>
+          <span class="brand-text">내 업무</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="view-toggle" role="tablist">
+            <button class="view-btn is-active" data-view="list" role="tab">리스트</button>
+            <button class="view-btn" data-view="kanban" role="tab">칸반</button>
+          </div>
+          <button class="icon-btn" id="manageCategoriesBtn" title="카테고리 관리">⚙</button>
+          <div class="user-chip" id="userChip"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="filter-bar">
+      <div class="filter-inner">
+        <div class="category-chips" id="categoryChips"></div>
+        <div class="filter-side">
+          <input type="search" id="searchInput" placeholder="검색..." />
+          <select id="sortSelect">
+            <option value="created_desc">최근 추가순</option>
+            <option value="due_asc">마감일 가까운순</option>
+            <option value="priority">우선순위 높은순</option>
+            <option value="title">제목순</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <main class="app-main">
+      <!-- 리스트 뷰 -->
+      <section class="view-list" id="viewList">
+        <div class="list-stack" id="listStack"></div>
+      </section>
+
+      <!-- 칸반 뷰 -->
+      <section class="view-kanban" id="viewKanban" hidden>
+        <div class="kanban-board">
+          <div class="kanban-col" data-status="todo">
+            <header class="kanban-col-header">
+              <span class="col-title">할 일</span>
+              <span class="col-count" data-count="todo">0</span>
+            </header>
+            <div class="kanban-list" data-drop="todo"></div>
+          </div>
+          <div class="kanban-col" data-status="in_progress">
+            <header class="kanban-col-header">
+              <span class="col-title">진행 중</span>
+              <span class="col-count" data-count="in_progress">0</span>
+            </header>
+            <div class="kanban-list" data-drop="in_progress"></div>
+          </div>
+          <div class="kanban-col" data-status="waiting">
+            <header class="kanban-col-header">
+              <span class="col-title">대기</span>
+              <span class="col-count" data-count="waiting">0</span>
+            </header>
+            <div class="kanban-list" data-drop="waiting"></div>
+          </div>
+          <div class="kanban-col" data-status="done">
+            <header class="kanban-col-header">
+              <span class="col-title">완료</span>
+              <span class="col-count" data-count="done">0</span>
+            </header>
+            <div class="kanban-list" data-drop="done"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <button class="fab" id="newTaskBtn" title="새 업무 추가">＋</button>
+
+    <!-- 업무 작성/편집 모달 -->
+    <div class="modal-backdrop" id="taskModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h2 id="taskModalTitle">새 업무</h2>
+          <button class="modal-close" data-close="task">✕</button>
+        </header>
+        <form id="taskForm" class="modal-body">
+          <input type="hidden" id="taskId" />
+          <label class="field">
+            <span>제목</span>
+            <input type="text" id="taskTitle" required maxlength="200" placeholder="할 일 제목" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>카테고리</span>
+              <select id="taskCategory">
+                <option value="">(없음)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>상태</span>
+              <select id="taskStatus">
+                <option value="todo">할 일</option>
+                <option value="in_progress">진행 중</option>
+                <option value="waiting">대기</option>
+                <option value="done">완료</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>우선순위</span>
+              <select id="taskPriority">
+                <option value="high">높음</option>
+                <option value="medium" selected>보통</option>
+                <option value="low">낮음</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>마감일</span>
+              <input type="date" id="taskDueDate" />
+            </label>
+          </div>
+          <label class="field">
+            <span>태그 (쉼표로 구분)</span>
+            <input type="text" id="taskTags" placeholder="예: Q2-OKR, 우선과제" />
+          </label>
+          <label class="field">
+            <span>메모</span>
+            <textarea id="taskNotes" rows="4" placeholder="상세 내용, 링크, 메모..."></textarea>
+          </label>
+          <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="deleteTaskBtn" hidden>삭제</button>
+            <div class="modal-foot-right">
+              <button type="button" class="btn btn-outline" data-close="task">취소</button>
+              <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <!-- 카테고리 관리 모달 -->
+    <div class="modal-backdrop" id="categoryModal" hidden>
+      <div class="modal modal-sm" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h2>카테고리 관리</h2>
+          <button class="modal-close" data-close="category">✕</button>
+        </header>
+        <div class="modal-body">
+          <ul class="category-list" id="categoryList"></ul>
+          <form id="categoryAddForm" class="category-add">
+            <input type="text" id="newCategoryName" placeholder="새 카테고리 이름" maxlength="30" required />
+            <input type="color" id="newCategoryColor" value="#6366f1" />
+            <button type="submit" class="btn btn-primary">추가</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+  </div>
+
+  <script src="../assets/js/common.js?v=28"></script>
+  <script src="./me.js?v=1"></script>
+</body>
+</html>
