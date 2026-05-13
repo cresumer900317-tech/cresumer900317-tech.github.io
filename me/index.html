@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>내 업무</title>
   <meta name="description" content="개인 업무 통합 관리 페이지" />
-  <link rel="stylesheet" href="./me.css?v=2" />
+  <link rel="stylesheet" href="./me.css?v=3" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -25,74 +25,250 @@
           <span class="brand-icon">✓</span>
           <span class="brand-text">내 업무</span>
         </div>
+        <nav class="nav-tabs" id="navTabs" role="tablist">
+          <button class="nav-tab is-active" data-tab="dashboard" role="tab">대시보드</button>
+          <button class="nav-tab" data-tab="inbox" role="tab">받은 메모</button>
+          <button class="nav-tab" data-tab="tasks" role="tab">할 일</button>
+          <button class="nav-tab" data-tab="projects" role="tab">프로젝트</button>
+          <button class="nav-tab" data-tab="calendar" role="tab">달력</button>
+          <button class="nav-tab" data-tab="gantt" role="tab">간트</button>
+          <button class="nav-tab" data-tab="daily" role="tab">하루 로그</button>
+        </nav>
         <div class="topbar-actions">
-          <div class="view-toggle" role="tablist">
-            <button class="view-btn is-active" data-view="list" role="tab">리스트</button>
-            <button class="view-btn" data-view="kanban" role="tab">칸반</button>
-          </div>
           <button class="icon-btn" id="manageCategoriesBtn" title="카테고리 관리">⚙</button>
           <div class="user-chip" id="userChip"></div>
         </div>
       </div>
     </header>
 
-    <section class="filter-bar">
-      <div class="filter-inner">
-        <div class="category-chips" id="categoryChips"></div>
-        <div class="filter-side">
-          <input type="search" id="searchInput" placeholder="검색..." />
-          <select id="sortSelect">
-            <option value="created_desc">최근 추가순</option>
-            <option value="due_asc">마감일 가까운순</option>
-            <option value="priority">우선순위 높은순</option>
-            <option value="title">제목순</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
     <main class="app-main">
-      <!-- 리스트 뷰 -->
-      <section class="view-list" id="viewList">
-        <div class="list-stack" id="listStack"></div>
-      </section>
 
-      <!-- 칸반 뷰 -->
-      <section class="view-kanban" id="viewKanban" hidden>
-        <div class="kanban-board">
-          <div class="kanban-col" data-status="todo">
-            <header class="kanban-col-header">
-              <span class="col-title">할 일</span>
-              <span class="col-count" data-count="todo">0</span>
-            </header>
-            <div class="kanban-list" data-drop="todo"></div>
+      <!-- ═══════════════════════ 1) 대시보드 ═══════════════════════ -->
+      <section class="page" id="pageDashboard">
+        <div class="quick-capture">
+          <form id="quickCaptureForm" class="quick-capture-form">
+            <input
+              type="text"
+              id="quickCaptureInput"
+              placeholder="무엇을 기억할까요? (Enter 로 저장)"
+              maxlength="500"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn btn-primary">저장</button>
+          </form>
+          <div class="quick-capture-hint">받은 메모(Inbox)에 쌓이고 나중에 정리할 수 있어요.</div>
+        </div>
+
+        <div class="widget-grid">
+          <!-- 오늘 -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>오늘 해야 할 일</h3>
+              <span class="widget-count" id="dashTodayCount">0</span>
+            </div>
+            <div class="widget-body" id="dashToday"></div>
           </div>
-          <div class="kanban-col" data-status="in_progress">
-            <header class="kanban-col-header">
-              <span class="col-title">진행 중</span>
-              <span class="col-count" data-count="in_progress">0</span>
-            </header>
-            <div class="kanban-list" data-drop="in_progress"></div>
+
+          <!-- 마감 임박 -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>마감 임박 (D-3 이내)</h3>
+              <span class="widget-count" id="dashUpcomingCount">0</span>
+            </div>
+            <div class="widget-body" id="dashUpcoming"></div>
           </div>
-          <div class="kanban-col" data-status="waiting">
-            <header class="kanban-col-header">
-              <span class="col-title">대기</span>
-              <span class="col-count" data-count="waiting">0</span>
-            </header>
-            <div class="kanban-list" data-drop="waiting"></div>
+
+          <!-- 이번 주 -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>이번 주 일정 (7일)</h3>
+              <span class="widget-count" id="dashWeekCount">0</span>
+            </div>
+            <div class="widget-body" id="dashWeek"></div>
           </div>
-          <div class="kanban-col" data-status="done">
-            <header class="kanban-col-header">
-              <span class="col-title">완료</span>
-              <span class="col-count" data-count="done">0</span>
-            </header>
-            <div class="kanban-list" data-drop="done"></div>
+
+          <!-- 진행 중 프로젝트 -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>진행 중 프로젝트</h3>
+              <span class="widget-count" id="dashProjectsCount">0</span>
+            </div>
+            <div class="widget-body" id="dashProjects"></div>
+          </div>
+
+          <!-- Inbox 미처리 -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>받은 메모 미처리</h3>
+              <span class="widget-count" id="dashInboxCount">0</span>
+            </div>
+            <div class="widget-body" id="dashInbox"></div>
+          </div>
+
+          <!-- 최근 Daily Log -->
+          <div class="widget">
+            <div class="widget-head">
+              <h3>최근 하루 로그</h3>
+            </div>
+            <div class="widget-body" id="dashLogs"></div>
           </div>
         </div>
       </section>
+
+      <!-- ═══════════════════════ 2) Inbox ══════════════════════════ -->
+      <section class="page" id="pageInbox" hidden>
+        <div class="quick-capture">
+          <form id="inboxAddForm" class="quick-capture-form">
+            <input
+              type="text"
+              id="inboxAddInput"
+              placeholder="떠오른 생각, 할 일, 아이디어 — 일단 적어두세요"
+              maxlength="2000"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn btn-primary">담기</button>
+          </form>
+        </div>
+
+        <div class="inbox-tabs">
+          <button class="inbox-tab is-active" data-inbox-tab="active">미처리</button>
+          <button class="inbox-tab" data-inbox-tab="processed">처리됨</button>
+        </div>
+
+        <div class="inbox-list" id="inboxList"></div>
+      </section>
+
+      <!-- ═══════════════════════ 3) Tasks ══════════════════════════ -->
+      <section class="page" id="pageTasks" hidden>
+        <div class="task-toolbar">
+          <div class="view-toggle" role="tablist">
+            <button class="view-btn is-active" data-view="list" role="tab">리스트</button>
+            <button class="view-btn" data-view="kanban" role="tab">칸반</button>
+          </div>
+          <div class="task-toolbar-side">
+            <input type="search" id="searchInput" placeholder="검색..." />
+            <select id="sortSelect">
+              <option value="created_desc">최근 추가순</option>
+              <option value="due_asc">마감일 가까운순</option>
+              <option value="priority">우선순위 높은순</option>
+              <option value="title">제목순</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-bar-inline">
+          <div class="category-chips" id="categoryChips"></div>
+        </div>
+
+        <!-- 리스트 뷰 -->
+        <section class="view-list" id="viewList">
+          <div class="list-stack" id="listStack"></div>
+        </section>
+
+        <!-- 칸반 뷰 -->
+        <section class="view-kanban" id="viewKanban" hidden>
+          <div class="kanban-board">
+            <div class="kanban-col" data-status="todo">
+              <header class="kanban-col-header">
+                <span class="col-title">할 일</span>
+                <span class="col-count" data-count="todo">0</span>
+              </header>
+              <div class="kanban-list" data-drop="todo"></div>
+            </div>
+            <div class="kanban-col" data-status="in_progress">
+              <header class="kanban-col-header">
+                <span class="col-title">진행 중</span>
+                <span class="col-count" data-count="in_progress">0</span>
+              </header>
+              <div class="kanban-list" data-drop="in_progress"></div>
+            </div>
+            <div class="kanban-col" data-status="waiting">
+              <header class="kanban-col-header">
+                <span class="col-title">대기</span>
+                <span class="col-count" data-count="waiting">0</span>
+              </header>
+              <div class="kanban-list" data-drop="waiting"></div>
+            </div>
+            <div class="kanban-col" data-status="done">
+              <header class="kanban-col-header">
+                <span class="col-title">완료</span>
+                <span class="col-count" data-count="done">0</span>
+              </header>
+              <div class="kanban-list" data-drop="done"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ═══════════════════════ 4) Projects ═══════════════════════ -->
+      <section class="page" id="pageProjects" hidden>
+        <div class="page-header">
+          <h2>프로젝트</h2>
+          <button class="btn btn-primary" id="newProjectBtn">＋ 새 프로젝트</button>
+        </div>
+        <div class="project-grid" id="projectGrid"></div>
+      </section>
+
+      <!-- ═══════════════════════ 5) Calendar ═══════════════════════ -->
+      <section class="page" id="pageCalendar" hidden>
+        <div class="cal-header">
+          <button class="icon-btn" id="calPrevBtn">‹</button>
+          <h2 id="calMonthLabel">2026년 5월</h2>
+          <button class="icon-btn" id="calNextBtn">›</button>
+          <button class="btn btn-outline" id="calTodayBtn">오늘</button>
+        </div>
+        <div class="cal-grid-head">
+          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </section>
+
+      <!-- ═══════════════════════ 6) Gantt (365일) ══════════════════ -->
+      <section class="page" id="pageGantt" hidden>
+        <div class="page-header">
+          <h2>간트차트 — 365일 일단위</h2>
+          <div class="gantt-controls">
+            <button class="btn btn-outline" id="ganttJumpToday">오늘로</button>
+            <select id="ganttZoom">
+              <option value="20">상세 (1일=20px)</option>
+              <option value="32" selected>기본 (1일=32px)</option>
+              <option value="48">크게 (1일=48px)</option>
+            </select>
+          </div>
+        </div>
+        <div class="gantt-wrap" id="ganttWrap"></div>
+        <div class="gantt-legend">
+          프로젝트 막대 = start_date ~ end_date · 빨간 세로선 = 오늘
+        </div>
+      </section>
+
+      <!-- ═══════════════════════ 7) Daily Log ══════════════════════ -->
+      <section class="page" id="pageDaily" hidden>
+        <div class="page-header">
+          <h2>하루 로그</h2>
+          <input type="date" id="dailyDateInput" class="daily-date" />
+        </div>
+        <div class="daily-edit">
+          <textarea
+            id="dailyContent"
+            placeholder="오늘 뭐 했나요? 떠오르는 대로 적어두세요."
+            rows="14"
+          ></textarea>
+          <div class="daily-meta">
+            <span id="dailySaveStatus" class="daily-save-status">변경사항 없음</span>
+            <button class="btn btn-primary" id="dailySaveBtn">저장</button>
+          </div>
+        </div>
+        <div class="daily-recent">
+          <h3>최근 로그</h3>
+          <input type="search" id="dailySearchInput" class="daily-search" placeholder="로그 내용 검색..." />
+          <div class="daily-list" id="dailyList"></div>
+        </div>
+      </section>
+
     </main>
 
-    <button class="fab" id="newTaskBtn" title="새 업무 추가">＋</button>
+    <button class="fab" id="newTaskBtn" title="새 업무 추가" hidden>＋</button>
 
     <!-- 업무 작성/편집 모달 -->
     <div class="modal-backdrop" id="taskModal" hidden>
@@ -115,6 +291,14 @@
               </select>
             </label>
             <label class="field">
+              <span>프로젝트</span>
+              <select id="taskProject">
+                <option value="">(없음)</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
               <span>상태</span>
               <select id="taskStatus">
                 <option value="todo">할 일</option>
@@ -123,8 +307,6 @@
                 <option value="done">완료</option>
               </select>
             </label>
-          </div>
-          <div class="field-row">
             <label class="field">
               <span>우선순위</span>
               <select id="taskPriority">
@@ -133,11 +315,11 @@
                 <option value="low">낮음</option>
               </select>
             </label>
-            <label class="field">
-              <span>마감일</span>
-              <input type="date" id="taskDueDate" />
-            </label>
           </div>
+          <label class="field">
+            <span>마감일</span>
+            <input type="date" id="taskDueDate" />
+          </label>
           <label class="field">
             <span>태그 (쉼표로 구분)</span>
             <input type="text" id="taskTags" placeholder="예: Q2-OKR, 우선과제" />
@@ -175,10 +357,122 @@
       </div>
     </div>
 
+    <!-- 프로젝트 작성/편집 모달 -->
+    <div class="modal-backdrop" id="projectModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h2 id="projectModalTitle">새 프로젝트</h2>
+          <button class="modal-close" data-close="project">✕</button>
+        </header>
+        <form id="projectForm" class="modal-body">
+          <input type="hidden" id="projectId" />
+          <label class="field">
+            <span>이름</span>
+            <input type="text" id="projectName" required maxlength="100" placeholder="예: 결혼 준비, 신혼집, 쿠팡 Q3 OKR" />
+          </label>
+          <label class="field">
+            <span>설명</span>
+            <textarea id="projectDescription" rows="2" placeholder="한 줄 설명"></textarea>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>상태</span>
+              <select id="projectStatus">
+                <option value="active">진행 중</option>
+                <option value="paused">일시정지</option>
+                <option value="done">완료</option>
+                <option value="dropped">중단</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>색상</span>
+              <input type="color" id="projectColor" value="#6366f1" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>시작일</span>
+              <input type="date" id="projectStartDate" />
+            </label>
+            <label class="field">
+              <span>종료일</span>
+              <input type="date" id="projectEndDate" />
+            </label>
+          </div>
+          <label class="field">
+            <span>진행률 (%, 비워두면 Tasks 완료율 자동)</span>
+            <input type="number" id="projectProgress" min="0" max="100" placeholder="자동 계산" />
+          </label>
+          <label class="field">
+            <span>메모</span>
+            <textarea id="projectNotes" rows="3" placeholder="자세한 내용, 체크리스트, 링크..."></textarea>
+          </label>
+          <footer class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="deleteProjectBtn" hidden>삭제</button>
+            <div class="modal-foot-right">
+              <button type="button" class="btn btn-outline" data-close="project">취소</button>
+              <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <!-- Inbox → Task 승격 모달 -->
+    <div class="modal-backdrop" id="promoteModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h2>받은 메모 → 할 일로</h2>
+          <button class="modal-close" data-close="promote">✕</button>
+        </header>
+        <form id="promoteForm" class="modal-body">
+          <input type="hidden" id="promoteInboxId" />
+          <label class="field">
+            <span>제목</span>
+            <input type="text" id="promoteTitle" required maxlength="200" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>카테고리</span>
+              <select id="promoteCategory">
+                <option value="">(없음)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>프로젝트</span>
+              <select id="promoteProject">
+                <option value="">(없음)</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>우선순위</span>
+              <select id="promotePriority">
+                <option value="high">높음</option>
+                <option value="medium" selected>보통</option>
+                <option value="low">낮음</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>마감일</span>
+              <input type="date" id="promoteDueDate" />
+            </label>
+          </div>
+          <footer class="modal-foot">
+            <div class="modal-foot-right">
+              <button type="button" class="btn btn-outline" data-close="promote">취소</button>
+              <button type="submit" class="btn btn-primary">할 일로 만들기</button>
+            </div>
+          </footer>
+        </form>
+      </div>
+    </div>
+
     <div id="toast" class="toast" hidden></div>
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=1"></script>
+  <script src="./me.js?v=2"></script>
 </body>
 </html>

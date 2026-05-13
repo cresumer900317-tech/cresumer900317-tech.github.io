@@ -1,14 +1,35 @@
-// 개인 업무 관리 페이지
+// 개인 업무 통합 관리 페이지 (/me)
 // API_BASE 는 ../assets/js/common.js 에서 정의됨
 
 const STATE = {
-  tasks: [],
-  categories: [],
-  view: "list",
-  filterCategory: null, // null = 전체, "__none__" = 카테고리 없음
+  tab: "dashboard",          // dashboard | inbox | tasks | projects | calendar | gantt | daily
+  view: "list",              // tasks 안의 list | kanban
+  inboxFilter: "active",     // active | processed
+  filterCategory: null,
   search: "",
   sort: "created_desc",
-  editingId: null,
+
+  tasks: [],
+  categories: [],
+  projects: [],
+  inbox: [],
+  dailyLogs: [],
+
+  editingTaskId: null,
+  editingProjectId: null,
+  promotingInboxId: null,
+
+  // Calendar
+  calCursor: null,           // Date — 표시 중인 달 (1일 기준)
+
+  // Gantt
+  ganttCellW: 32,            // 1일 픽셀
+
+  // Daily Log
+  dailyDate: null,           // YYYY-MM-DD
+  dailyDirty: false,
+  dailySaving: false,
+  dailySearch: "",
 };
 
 const STATUS_LABEL = {
@@ -17,10 +38,14 @@ const STATUS_LABEL = {
   waiting: "대기",
   done: "완료",
 };
-
 const PRIORITY_LABEL = { high: "높음", medium: "보통", low: "낮음" };
 const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
-
+const PROJECT_STATUS_LABEL = {
+  active: "진행 중",
+  paused: "일시정지",
+  done: "완료",
+  dropped: "중단",
+};
 const COLOR_FALLBACK = "#6366f1";
 
 // ── 부팅 ──────────────────────────────────────────────────
@@ -32,16 +57,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   document.getElementById("app").hidden = false;
   document.getElementById("userChip").textContent = user.character_name;
+
+  STATE.calCursor = startOfMonth(new Date());
+  STATE.dailyDate = todayStr();
+
   bindEvents();
   refreshAll();
 });
 
 // ── 통신 ──────────────────────────────────────────────────
 async function api(method, path, body) {
-  const opts = {
-    method,
-    headers: authHeaders(),
-  };
+  const opts = { method, headers: authHeaders() };
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`${API_BASE}${path}`, opts);
   if (res.status === 401) {
@@ -59,29 +85,412 @@ async function api(method, path, body) {
 
 async function refreshAll() {
   try {
-    const [cats, tasks] = await Promise.all([
-      api("GET", "/api/me/categories"),
-      api("GET", "/api/me/tasks"),
-    ]);
-    STATE.categories = cats;
-    STATE.tasks = tasks;
+    const dash = await api("GET", "/api/me/dashboard");
+    STATE.tasks = dash.tasks || [];
+    STATE.categories = dash.categories || [];
+    STATE.projects = dash.projects || [];
+    STATE.inbox = dash.inbox || [];
+    STATE.dailyLogs = dash.daily_logs || [];
     renderAll();
   } catch (e) {
     showToast(e.message, true);
   }
 }
 
-// ── 렌더 ──────────────────────────────────────────────────
-function renderAll() {
-  renderCategoryChips();
-  renderCategoryOptions();
-  if (STATE.view === "list") renderList();
-  else renderKanban();
+async function refreshTasksOnly() {
+  try {
+    STATE.tasks = await api("GET", "/api/me/tasks");
+    if (STATE.tab === "projects") refreshProjectsOnly();
+    renderAll();
+  } catch (e) { showToast(e.message, true); }
 }
 
-function getCategoryColor(name) {
-  const c = STATE.categories.find(c => c.name === name);
-  return c?.color || COLOR_FALLBACK;
+async function refreshProjectsOnly() {
+  try {
+    STATE.projects = await api("GET", "/api/me/projects");
+    renderAll();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function refreshInboxOnly() {
+  try {
+    const list = await api(
+      "GET",
+      `/api/me/inbox?processed=${STATE.inboxFilter === "processed"}`
+    );
+    STATE.inbox = list;
+    renderAll();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function refreshDailyLogsList() {
+  try {
+    const today = new Date();
+    const start = new Date(today.getTime() - 90 * 24 * 3600 * 1000);
+    STATE.dailyLogs = await api(
+      "GET",
+      `/api/me/daily-logs?start=${dateOnly(start)}&end=${dateOnly(today)}&limit=120`
+    );
+    renderDailyList();
+  } catch (e) { showToast(e.message, true); }
+}
+
+// ── 탭 전환 ──────────────────────────────────────────────
+function setTab(name) {
+  STATE.tab = name;
+  document.querySelectorAll(".nav-tab").forEach(b => {
+    b.classList.toggle("is-active", b.dataset.tab === name);
+  });
+  document.querySelectorAll(".page").forEach(p => p.hidden = true);
+  const map = {
+    dashboard: "pageDashboard",
+    inbox: "pageInbox",
+    tasks: "pageTasks",
+    projects: "pageProjects",
+    calendar: "pageCalendar",
+    gantt: "pageGantt",
+    daily: "pageDaily",
+  };
+  const page = document.getElementById(map[name]);
+  if (page) page.hidden = false;
+
+  // FAB 는 tasks 탭에서만 보이게
+  document.getElementById("newTaskBtn").hidden = name !== "tasks";
+
+  // 탭별 진입 시 렌더
+  if (name === "dashboard") {
+    // Inbox 위젯이 항상 미처리만 보여주도록 강제 동기화
+    if (STATE.inboxFilter !== "active") {
+      STATE.inboxFilter = "active";
+      refreshInboxOnly().then(renderDashboard);
+    } else {
+      renderDashboard();
+    }
+  }
+  else if (name === "inbox") renderInbox();
+  else if (name === "tasks") renderTasks();
+  else if (name === "projects") {
+    renderProjects();
+    refreshProjectsOnly();
+  }
+  else if (name === "calendar") renderCalendar();
+  else if (name === "gantt") renderGantt();
+  else if (name === "daily") {
+    renderDailyEditor();
+    refreshDailyLogsList();
+  }
+
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+// ── 전체 렌더 ───────────────────────────────────────────
+function renderAll() {
+  renderCategoryOptions();
+  renderProjectOptions();
+  if (STATE.tab === "dashboard") renderDashboard();
+  else if (STATE.tab === "inbox") renderInbox();
+  else if (STATE.tab === "tasks") renderTasks();
+  else if (STATE.tab === "projects") renderProjects();
+  else if (STATE.tab === "calendar") renderCalendar();
+  else if (STATE.tab === "gantt") renderGantt();
+  else if (STATE.tab === "daily") renderDailyEditor();
+}
+
+// ════════════════════════════════════════════════════════
+// 1) DASHBOARD
+// ════════════════════════════════════════════════════════
+function renderDashboard() {
+  const today = startOfDay(new Date());
+  const todayMs = today.getTime();
+  const day = 24 * 3600 * 1000;
+
+  const tasksOpen = STATE.tasks.filter(t => t.status !== "done");
+
+  const tasksToday = tasksOpen.filter(t => {
+    if (!t.due_date) return false;
+    const d = new Date(t.due_date + "T00:00:00").getTime();
+    return d <= todayMs; // 오늘 + overdue
+  });
+
+  const tasksUpcoming = tasksOpen
+    .filter(t => {
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date + "T00:00:00").getTime();
+      const diff = Math.round((d - todayMs) / day);
+      return diff > 0 && diff <= 3;
+    });
+
+  const tasksWeek = tasksOpen
+    .filter(t => {
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date + "T00:00:00").getTime();
+      const diff = Math.round((d - todayMs) / day);
+      return diff >= 0 && diff <= 7;
+    })
+    .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""));
+
+  const projectsActive = STATE.projects.filter(p => p.status === "active");
+
+  fillWidget(
+    "dashToday", "dashTodayCount", tasksToday.length,
+    tasksToday.map(t => dashTaskRow(t, "오늘 할 일이 없습니다 🌿"))
+  );
+  fillWidget(
+    "dashUpcoming", "dashUpcomingCount", tasksUpcoming.length,
+    tasksUpcoming.map(t => dashTaskRow(t, "곧 마감되는 일이 없습니다."))
+  );
+  fillWidget(
+    "dashWeek", "dashWeekCount", tasksWeek.length,
+    tasksWeek.map(t => dashTaskRow(t, "이번 주 일정이 없습니다."))
+  );
+  fillWidget(
+    "dashProjects", "dashProjectsCount", projectsActive.length,
+    projectsActive.map(p => dashProjectRow(p)),
+    "진행 중인 프로젝트가 없습니다."
+  );
+  fillWidget(
+    "dashInbox", "dashInboxCount", STATE.inbox.length,
+    STATE.inbox.slice(0, 8).map(i => dashInboxRow(i)),
+    "받은 메모가 비어있어요."
+  );
+  fillWidget(
+    "dashLogs", null, null,
+    STATE.dailyLogs.slice(0, 5).map(l => dashLogRow(l)),
+    "아직 작성한 로그가 없어요."
+  );
+
+  // Dashboard click 핸들러
+  document.querySelectorAll("#dashToday .dash-item, #dashUpcoming .dash-item, #dashWeek .dash-item")
+    .forEach(el => el.addEventListener("click", () => {
+      setTab("tasks");
+      setTimeout(() => openTaskModal(Number(el.dataset.id)), 50);
+    }));
+  document.querySelectorAll("#dashProjects .dash-project")
+    .forEach(el => el.addEventListener("click", () => {
+      setTab("projects");
+      setTimeout(() => openProjectModal(Number(el.dataset.id)), 50);
+    }));
+  document.querySelectorAll("#dashInbox .dash-inbox-item")
+    .forEach(el => el.addEventListener("click", () => setTab("inbox")));
+  document.querySelectorAll("#dashLogs .dash-log")
+    .forEach(el => el.addEventListener("click", () => {
+      STATE.dailyDate = el.dataset.date;
+      setTab("daily");
+    }));
+}
+
+function fillWidget(bodyId, countId, count, items, emptyMsg) {
+  const body = document.getElementById(bodyId);
+  if (countId) {
+    const c = document.getElementById(countId);
+    if (c) c.textContent = count ?? items.length;
+  }
+  if (!items.length) {
+    body.innerHTML = `<div class="widget-empty">${emptyMsg || "비어있어요."}</div>`;
+  } else {
+    body.innerHTML = items.join("");
+  }
+}
+
+function dashTaskRow(t) {
+  const cat = STATE.categories.find(c => c.name === t.category);
+  const dot = cat ? `<span class="di-cat-dot" style="background:${escapeAttr(cat.color)}"></span>` : "";
+  const due = dueDisplay(t.due_date);
+  const dueClass = due.urgency ? `is-${due.urgency}` : "";
+  return `<div class="dash-item" data-id="${t.id}">
+    ${dot}
+    <span class="di-title">${escapeHtml(t.title)}</span>
+    <span class="di-due ${dueClass}">${due.label}</span>
+  </div>`;
+}
+
+function dashProjectRow(p) {
+  const pct = (p.progress_pct ?? 0) > 0 ? p.progress_pct : (p.computed_progress ?? 0);
+  return `<div class="dash-project" data-id="${p.id}">
+    <div class="dp-name">
+      <span class="dp-color-dot" style="background:${escapeAttr(p.color || COLOR_FALLBACK)}"></span>
+      ${escapeHtml(p.name)}
+    </div>
+    <div class="dp-bar">
+      <div class="dp-fill" style="width:${pct}%;background:${escapeAttr(p.color || COLOR_FALLBACK)}"></div>
+    </div>
+    <div class="dp-meta">
+      <span>${pct}%</span>
+      <span>${p.done_count ?? 0} / ${p.task_count ?? 0} 완료</span>
+    </div>
+  </div>`;
+}
+
+function dashInboxRow(i) {
+  const ago = relativeTime(i.created_at);
+  return `<div class="dash-inbox-item" data-id="${i.id}">
+    <span class="dii-text">${escapeHtml(i.content)}</span>
+    <span class="dii-time">${ago}</span>
+  </div>`;
+}
+
+function dashLogRow(l) {
+  const date = formatDateLong(l.log_date);
+  return `<div class="dash-log" data-date="${escapeAttr(l.log_date)}">
+    <div class="dl-date">${date}</div>
+    <div class="dl-preview">${escapeHtml(l.content || "(빈 로그)")}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// 2) INBOX
+// ════════════════════════════════════════════════════════
+function renderInbox() {
+  document.querySelectorAll(".inbox-tab").forEach(b => {
+    b.classList.toggle("is-active", b.dataset.inboxTab === STATE.inboxFilter);
+  });
+  const list = document.getElementById("inboxList");
+  if (!STATE.inbox.length) {
+    list.innerHTML = `<div class="widget-empty">${
+      STATE.inboxFilter === "active"
+        ? "받은 메모가 비어있어요. 위 입력창에 떠오르는 대로 적어두세요."
+        : "처리된 메모가 없습니다."
+    }</div>`;
+    return;
+  }
+  list.innerHTML = STATE.inbox.map(i => inboxItemHtml(i)).join("");
+  list.querySelectorAll("[data-action='delete']").forEach(btn => {
+    btn.addEventListener("click", () => deleteInbox(Number(btn.dataset.id)));
+  });
+  list.querySelectorAll("[data-action='processed']").forEach(btn => {
+    btn.addEventListener("click", () => toggleInboxProcessed(Number(btn.dataset.id), true));
+  });
+  list.querySelectorAll("[data-action='unprocess']").forEach(btn => {
+    btn.addEventListener("click", () => toggleInboxProcessed(Number(btn.dataset.id), false));
+  });
+  list.querySelectorAll("[data-action='promote']").forEach(btn => {
+    btn.addEventListener("click", () => openPromoteModal(Number(btn.dataset.id)));
+  });
+}
+
+function inboxItemHtml(i) {
+  const ago = relativeTime(i.created_at);
+  const processed = i.processed
+    ? `<small>처리됨 · ${relativeTime(i.processed_at) || ""}</small>`
+    : `<small>${ago}</small>`;
+  const actions = i.processed
+    ? `
+      <button class="ii-btn" data-action="unprocess" data-id="${i.id}">되돌리기</button>
+      <button class="ii-btn is-danger" data-action="delete" data-id="${i.id}">삭제</button>
+    `
+    : `
+      <button class="ii-btn is-primary" data-action="promote" data-id="${i.id}">할 일로</button>
+      <button class="ii-btn" data-action="processed" data-id="${i.id}">처리됨</button>
+      <button class="ii-btn is-danger" data-action="delete" data-id="${i.id}">삭제</button>
+    `;
+  return `
+    <div class="inbox-item ${i.processed ? "is-processed" : ""}">
+      <div>
+        <div class="ii-content">${escapeHtml(i.content)}</div>
+        ${processed}
+      </div>
+      <div class="ii-actions">${actions}</div>
+    </div>
+  `;
+}
+
+async function addInbox(content) {
+  if (!content.trim()) return;
+  try {
+    const created = await api("POST", "/api/me/inbox", { content: content.trim() });
+    STATE.inbox.unshift(created);
+    if (STATE.tab === "dashboard") renderDashboard();
+    else if (STATE.tab === "inbox" && STATE.inboxFilter === "active") renderInbox();
+    showToast("담아뒀어요");
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function deleteInbox(id) {
+  if (!confirm("이 메모를 삭제할까요?")) return;
+  try {
+    await api("DELETE", `/api/me/inbox/${id}`);
+    STATE.inbox = STATE.inbox.filter(i => i.id !== id);
+    renderAll();
+    showToast("삭제됨");
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function toggleInboxProcessed(id, processed) {
+  try {
+    const updated = await api("PATCH", `/api/me/inbox/${id}`, { processed });
+    if (STATE.tab === "inbox") {
+      // 현재 필터에 안 맞으면 리스트에서 제거
+      const matchesFilter = (STATE.inboxFilter === "processed") === !!processed;
+      if (matchesFilter) {
+        const idx = STATE.inbox.findIndex(i => i.id === id);
+        if (idx >= 0) STATE.inbox[idx] = updated;
+      } else {
+        STATE.inbox = STATE.inbox.filter(i => i.id !== id);
+      }
+    } else {
+      STATE.inbox = STATE.inbox.filter(i => i.id !== id);
+    }
+    renderAll();
+  } catch (e) { showToast(e.message, true); }
+}
+
+// ── Promote 모달 ─────────────────────────────────────────
+function openPromoteModal(inboxId) {
+  const item = STATE.inbox.find(i => i.id === inboxId);
+  if (!item) return;
+  STATE.promotingInboxId = inboxId;
+  document.getElementById("promoteInboxId").value = inboxId;
+  document.getElementById("promoteTitle").value = item.content.slice(0, 200);
+  document.getElementById("promoteCategory").value = "";
+  document.getElementById("promoteProject").value = "";
+  document.getElementById("promotePriority").value = "medium";
+  document.getElementById("promoteDueDate").value = "";
+  // 카테고리/프로젝트 옵션 채우기
+  fillSelectOptions(
+    "promoteCategory", "(없음)",
+    STATE.categories.map(c => ({ value: c.name, label: c.name }))
+  );
+  fillSelectOptions(
+    "promoteProject", "(없음)",
+    STATE.projects.map(p => ({ value: String(p.id), label: p.name }))
+  );
+  document.getElementById("promoteModal").hidden = false;
+  setTimeout(() => document.getElementById("promoteTitle").focus(), 0);
+}
+
+function closePromoteModal() {
+  document.getElementById("promoteModal").hidden = true;
+  STATE.promotingInboxId = null;
+}
+
+async function submitPromote() {
+  const id = STATE.promotingInboxId;
+  if (!id) return;
+  const payload = {
+    title: document.getElementById("promoteTitle").value.trim(),
+    category: document.getElementById("promoteCategory").value || null,
+    project_id: parseIntOrNull(document.getElementById("promoteProject").value),
+    priority: document.getElementById("promotePriority").value,
+    due_date: document.getElementById("promoteDueDate").value || null,
+  };
+  if (!payload.title) return;
+  try {
+    const result = await api("POST", `/api/me/inbox/${id}/promote`, payload);
+    if (result.task) STATE.tasks.unshift(result.task);
+    STATE.inbox = STATE.inbox.filter(i => i.id !== id);
+    closePromoteModal();
+    renderAll();
+    showToast("할 일로 옮겼어요");
+  } catch (e) { showToast(e.message, true); }
+}
+
+// ════════════════════════════════════════════════════════
+// 3) TASKS (기존 리스트/칸반)
+// ════════════════════════════════════════════════════════
+function renderTasks() {
+  renderCategoryChips();
+  if (STATE.view === "list") renderList();
+  else renderKanban();
 }
 
 function renderCategoryChips() {
@@ -108,17 +517,42 @@ function renderCategoryChips() {
     btn.addEventListener("click", () => {
       const raw = btn.getAttribute("data-cat");
       STATE.filterCategory = raw === "" ? null : raw;
-      renderAll();
+      renderTasks();
     });
   });
 }
 
 function renderCategoryOptions() {
-  const sel = document.getElementById("taskCategory");
-  const current = sel.value;
-  sel.innerHTML = `<option value="">(없음)</option>` +
-    STATE.categories.map(c => `<option value="${escapeAttr(c.name)}">${escapeHtml(c.name)}</option>`).join("");
-  if (current) sel.value = current;
+  ["taskCategory", "promoteCategory"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    fillSelectOptions(
+      id, "(없음)",
+      STATE.categories.map(c => ({ value: c.name, label: c.name }))
+    );
+    if (current) sel.value = current;
+  });
+}
+
+function renderProjectOptions() {
+  ["taskProject", "promoteProject"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    fillSelectOptions(
+      id, "(없음)",
+      STATE.projects.map(p => ({ value: String(p.id), label: p.name }))
+    );
+    if (current) sel.value = current;
+  });
+}
+
+function fillSelectOptions(selectId, noneLabel, items) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = `<option value="">${escapeHtml(noneLabel)}</option>` +
+    items.map(it => `<option value="${escapeAttr(it.value)}">${escapeHtml(it.label)}</option>`).join("");
 }
 
 function filteredTasks() {
@@ -191,6 +625,11 @@ function renderList() {
       } catch (e) { showToast(e.message, true); }
     });
   });
+}
+
+function getCategoryColor(name) {
+  const c = STATE.categories.find(c => c.name === name);
+  return c?.color || COLOR_FALLBACK;
 }
 
 function listRowHtml(t) {
@@ -298,14 +737,15 @@ function bindKanbanDnD() {
   });
 }
 
-// ── 모달 ──────────────────────────────────────────────────
+// ── Task 모달 ────────────────────────────────────────────
 function openTaskModal(taskId) {
-  STATE.editingId = taskId || null;
+  STATE.editingTaskId = taskId || null;
   const t = taskId ? STATE.tasks.find(x => x.id === taskId) : null;
-  document.getElementById("taskModalTitle").textContent = t ? "업무 편집" : "새 업무";
+  document.getElementById("taskModalTitle").textContent = t ? "할 일 편집" : "새 할 일";
   document.getElementById("taskId").value = t?.id || "";
   document.getElementById("taskTitle").value = t?.title || "";
   document.getElementById("taskCategory").value = t?.category || "";
+  document.getElementById("taskProject").value = t?.project_id ? String(t.project_id) : "";
   document.getElementById("taskStatus").value = t?.status || "todo";
   document.getElementById("taskPriority").value = t?.priority || "medium";
   document.getElementById("taskDueDate").value = t?.due_date || "";
@@ -318,9 +758,393 @@ function openTaskModal(taskId) {
 
 function closeTaskModal() {
   document.getElementById("taskModal").hidden = true;
-  STATE.editingId = null;
+  STATE.editingTaskId = null;
 }
 
+// ════════════════════════════════════════════════════════
+// 4) PROJECTS
+// ════════════════════════════════════════════════════════
+function renderProjects() {
+  const grid = document.getElementById("projectGrid");
+  if (!STATE.projects.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📁</div>
+      <div>아직 프로젝트가 없습니다. 우측 상단 "＋ 새 프로젝트"로 시작해보세요.</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = STATE.projects.map(p => projectCardHtml(p)).join("");
+  grid.querySelectorAll(".project-card").forEach(card => {
+    card.addEventListener("click", () => openProjectModal(Number(card.dataset.id)));
+  });
+}
+
+function projectCardHtml(p) {
+  const pct = (p.progress_pct ?? 0) > 0 ? p.progress_pct : (p.computed_progress ?? 0);
+  const dateRange = p.start_date || p.end_date
+    ? `${p.start_date || "?"} ~ ${p.end_date || "?"}`
+    : "기간 미설정";
+  return `
+    <div class="project-card" data-id="${p.id}" style="--proj-color:${escapeAttr(p.color || COLOR_FALLBACK)}">
+      <div class="pc-head">
+        <div class="pc-name">${escapeHtml(p.name)}</div>
+        <span class="pc-status s-${p.status}">${PROJECT_STATUS_LABEL[p.status] || p.status}</span>
+      </div>
+      ${p.description ? `<div class="pc-desc">${escapeHtml(p.description)}</div>` : ""}
+      <div class="pc-bar"><div class="pc-fill" style="width:${pct}%"></div></div>
+      <div class="pc-meta">
+        <span>${pct}% · ${p.done_count ?? 0}/${p.task_count ?? 0}</span>
+        <span>${dateRange}</span>
+      </div>
+    </div>
+  `;
+}
+
+function openProjectModal(projectId) {
+  STATE.editingProjectId = projectId || null;
+  const p = projectId ? STATE.projects.find(x => x.id === projectId) : null;
+  document.getElementById("projectModalTitle").textContent = p ? "프로젝트 편집" : "새 프로젝트";
+  document.getElementById("projectId").value = p?.id || "";
+  document.getElementById("projectName").value = p?.name || "";
+  document.getElementById("projectDescription").value = p?.description || "";
+  document.getElementById("projectStatus").value = p?.status || "active";
+  document.getElementById("projectColor").value = p?.color || "#6366f1";
+  document.getElementById("projectStartDate").value = p?.start_date || "";
+  document.getElementById("projectEndDate").value = p?.end_date || "";
+  document.getElementById("projectProgress").value = p?.progress_pct || "";
+  document.getElementById("projectNotes").value = p?.notes || "";
+  document.getElementById("deleteProjectBtn").hidden = !p;
+  document.getElementById("projectModal").hidden = false;
+  setTimeout(() => document.getElementById("projectName").focus(), 0);
+}
+
+function closeProjectModal() {
+  document.getElementById("projectModal").hidden = true;
+  STATE.editingProjectId = null;
+}
+
+// ════════════════════════════════════════════════════════
+// 5) CALENDAR (월간)
+// ════════════════════════════════════════════════════════
+function renderCalendar() {
+  if (!STATE.calCursor) STATE.calCursor = startOfMonth(new Date());
+  const cur = STATE.calCursor;
+  document.getElementById("calMonthLabel").textContent =
+    `${cur.getFullYear()}년 ${cur.getMonth() + 1}월`;
+
+  const grid = document.getElementById("calGrid");
+  const firstDay = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  const startWeekDay = firstDay.getDay();
+  const start = new Date(firstDay);
+  start.setDate(1 - startWeekDay);
+
+  const today = startOfDay(new Date());
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const isOther = d.getMonth() !== cur.getMonth();
+    const isToday = d.getTime() === today.getTime();
+    const dateStr = dateOnly(d);
+    const events = collectCalendarEvents(dateStr);
+    const evHtml = events.slice(0, 4).map(e =>
+      `<div class="cal-event ${e.cls}" title="${escapeAttr(e.title)}">${escapeHtml(e.title)}</div>`
+    ).join("");
+    const more = events.length > 4
+      ? `<div class="cal-event" style="opacity:0.7;">+${events.length - 4}</div>` : "";
+    cells.push(`
+      <div class="cal-cell ${isOther ? "is-other-month" : ""} ${isToday ? "is-today" : ""}"
+           data-date="${dateStr}">
+        <div class="cal-day">${d.getDate()}</div>
+        <div class="cal-events">${evHtml}${more}</div>
+      </div>
+    `);
+  }
+  grid.innerHTML = cells.join("");
+  grid.querySelectorAll(".cal-cell").forEach(cell => {
+    cell.addEventListener("click", () => {
+      // 클릭 → daily 탭으로 + 해당 날짜
+      STATE.dailyDate = cell.dataset.date;
+      setTab("daily");
+    });
+  });
+}
+
+function collectCalendarEvents(dateStr) {
+  const events = [];
+  STATE.tasks.forEach(t => {
+    if (t.due_date === dateStr) {
+      events.push({ title: `📋 ${t.title}`, cls: "is-task" });
+    }
+  });
+  STATE.projects.forEach(p => {
+    if (p.start_date === dateStr) {
+      events.push({ title: `▶ ${p.name} 시작`, cls: "is-project-start" });
+    }
+    if (p.end_date === dateStr) {
+      events.push({ title: `⏹ ${p.name} 종료`, cls: "is-project-end" });
+    }
+  });
+  return events;
+}
+
+// ════════════════════════════════════════════════════════
+// 6) GANTT (365일 일단위)
+// ════════════════════════════════════════════════════════
+function renderGantt() {
+  const wrap = document.getElementById("ganttWrap");
+  const cellW = STATE.ganttCellW;
+  const labelW = 200;
+  const today = startOfDay(new Date());
+
+  // 365일 윈도우: 30일 전 ~ 335일 후 (총 365일, 오늘 위치는 31번째)
+  const windowStart = new Date(today);
+  windowStart.setDate(today.getDate() - 30);
+  const totalDays = 365;
+
+  // 행: 진행 중·일시정지·완료 모든 프로젝트 (start/end 있는 것만)
+  const projects = STATE.projects.filter(p => p.start_date || p.end_date);
+
+  if (!projects.length) {
+    wrap.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div>간트차트에 표시할 프로젝트가 없습니다.<br>
+      프로젝트의 시작일/종료일을 설정해주세요.</div>
+    </div>`;
+    return;
+  }
+
+  // grid-template-columns 동적 설정
+  const tableCols = `${labelW}px repeat(${totalDays}, ${cellW}px)`;
+
+  // 월 라벨 행 (sticky top, 22px)
+  let monthRowHtml = `<div class="gantt-month-corner"></div>`;
+  let prevMonth = -1;
+  let monthSpanStart = 0;
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(windowStart);
+    d.setDate(windowStart.getDate() + i);
+    if (d.getMonth() !== prevMonth) {
+      if (prevMonth !== -1) {
+        const span = i - monthSpanStart;
+        const dStart = new Date(windowStart);
+        dStart.setDate(windowStart.getDate() + monthSpanStart);
+        monthRowHtml += `<div class="gantt-month-label" style="grid-column: span ${span};">
+          ${dStart.getFullYear()}년 ${dStart.getMonth() + 1}월
+        </div>`;
+      }
+      prevMonth = d.getMonth();
+      monthSpanStart = i;
+    }
+  }
+  // 마지막 월
+  const span = totalDays - monthSpanStart;
+  const dStart = new Date(windowStart);
+  dStart.setDate(windowStart.getDate() + monthSpanStart);
+  monthRowHtml += `<div class="gantt-month-label" style="grid-column: span ${span};">
+    ${dStart.getFullYear()}년 ${dStart.getMonth() + 1}월
+  </div>`;
+
+  // 일 헤더 행
+  let headerRowHtml = `<div class="gantt-header-corner">프로젝트</div>`;
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(windowStart);
+    d.setDate(windowStart.getDate() + i);
+    const isToday = d.getTime() === today.getTime();
+    const wd = d.getDay();
+    const cls = [
+      isToday ? "is-today" : "",
+      (wd === 0 || wd === 6) ? "is-weekend" : "",
+      wd === 0 ? "is-sunday" : "",
+      wd === 6 ? "is-saturday" : "",
+    ].join(" ");
+    headerRowHtml += `
+      <div class="gantt-header-day ${cls}">
+        <div class="ghd-day">${d.getDate()}</div>
+        <div>${["일","월","화","수","목","금","토"][wd]}</div>
+      </div>
+    `;
+  }
+
+  // 프로젝트 행들
+  let bodyHtml = "";
+  projects.forEach(p => {
+    bodyHtml += `<div class="gantt-row-label">
+      <span class="grl-color" style="background:${escapeAttr(p.color || COLOR_FALLBACK)}"></span>
+      ${escapeHtml(p.name)}
+    </div>`;
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(windowStart);
+      d.setDate(windowStart.getDate() + i);
+      const wd = d.getDay();
+      const cls = [
+        (wd === 0 || wd === 6) ? "is-weekend" : "",
+        d.getDate() === 1 ? "is-month-start" : "",
+      ].join(" ");
+      bodyHtml += `<div class="gantt-cell ${cls}"></div>`;
+    }
+  });
+
+  wrap.innerHTML = `
+    <div class="gantt-table" style="grid-template-columns: ${tableCols};">
+      ${monthRowHtml}
+      ${headerRowHtml}
+      ${bodyHtml}
+    </div>
+  `;
+
+  // 막대 + 오늘 세로선 — DOM 위에 absolute 로 그리기
+  const table = wrap.querySelector(".gantt-table");
+  const headerHeight = 22 + 44; // month row + day row
+  const rowH = 44;
+
+  projects.forEach((p, rowIdx) => {
+    if (!p.start_date || !p.end_date) {
+      // start 만 또는 end 만 있으면 점 하나
+      const single = p.start_date || p.end_date;
+      const idx = dayIndexFromStart(windowStart, single, totalDays);
+      if (idx < 0) return;
+      const x = labelW + idx * cellW;
+      const y = headerHeight + rowIdx * rowH;
+      const bar = document.createElement("div");
+      bar.className = "gantt-bar";
+      bar.style.left = `${x + 2}px`;
+      bar.style.width = `${cellW - 4}px`;
+      bar.style.top = `${y + 8}px`;
+      bar.style.height = `${rowH - 16}px`;
+      bar.style.background = p.color || COLOR_FALLBACK;
+      bar.textContent = p.name;
+      bar.addEventListener("click", () => openProjectModal(p.id));
+      table.appendChild(bar);
+      return;
+    }
+    const startIdx = dayIndexFromStart(windowStart, p.start_date, totalDays);
+    const endIdx = dayIndexFromStart(windowStart, p.end_date, totalDays);
+    // 윈도우 밖 처리
+    const visibleStart = Math.max(0, startIdx);
+    const visibleEnd = Math.min(totalDays - 1, endIdx);
+    if (visibleEnd < 0 || visibleStart > totalDays - 1 || visibleStart > visibleEnd) return;
+    const x = labelW + visibleStart * cellW;
+    const w = (visibleEnd - visibleStart + 1) * cellW;
+    const y = headerHeight + rowIdx * rowH;
+    const bar = document.createElement("div");
+    bar.className = `gantt-bar ${p.status === "done" ? "is-done" : ""}`;
+    bar.style.left = `${x + 2}px`;
+    bar.style.width = `${w - 4}px`;
+    bar.style.top = `${y + 8}px`;
+    bar.style.height = `${rowH - 16}px`;
+    bar.style.background = p.color || COLOR_FALLBACK;
+    bar.textContent = p.name;
+    bar.title = `${p.name} (${p.start_date} ~ ${p.end_date})`;
+    bar.addEventListener("click", () => openProjectModal(p.id));
+    table.appendChild(bar);
+  });
+
+  // 오늘 세로선
+  const todayIdx = dayIndexFromStart(windowStart, dateOnly(today), totalDays);
+  if (todayIdx >= 0 && todayIdx < totalDays) {
+    const todayLine = document.createElement("div");
+    todayLine.className = "gantt-today-line";
+    todayLine.style.left = `${labelW + todayIdx * cellW + cellW / 2}px`;
+    todayLine.style.height = `${headerHeight + projects.length * rowH - 22}px`;
+    table.appendChild(todayLine);
+  }
+
+  // 오늘 위치로 자동 스크롤 (1회만)
+  if (todayIdx >= 0) {
+    const targetLeft = labelW + todayIdx * cellW - wrap.clientWidth / 2 + cellW / 2;
+    wrap.scrollLeft = Math.max(0, targetLeft);
+  }
+}
+
+function dayIndexFromStart(windowStart, dateStr, totalDays) {
+  if (!dateStr) return -1;
+  const d = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((d - windowStart) / (24 * 3600 * 1000));
+  return diff;
+}
+
+// ════════════════════════════════════════════════════════
+// 7) DAILY LOG
+// ════════════════════════════════════════════════════════
+async function renderDailyEditor() {
+  document.getElementById("dailyDateInput").value = STATE.dailyDate;
+  // 해당 날짜 로그 로드
+  try {
+    const log = await api("GET", `/api/me/daily-logs/${STATE.dailyDate}`);
+    document.getElementById("dailyContent").value = log.content || "";
+    STATE.dailyDirty = false;
+    setDailyStatus("saved", "저장됨");
+  } catch (e) {
+    if (e.message && !e.message.includes("404")) showToast(e.message, true);
+    document.getElementById("dailyContent").value = "";
+    STATE.dailyDirty = false;
+    setDailyStatus("", "변경사항 없음");
+  }
+  renderDailyList();
+}
+
+function renderDailyList() {
+  const list = document.getElementById("dailyList");
+  const q = STATE.dailySearch.toLowerCase();
+  const filtered = q
+    ? STATE.dailyLogs.filter(l => (l.content || "").toLowerCase().includes(q))
+    : STATE.dailyLogs;
+  if (!filtered.length) {
+    list.innerHTML = `<div class="widget-empty">${
+      q ? "검색 결과가 없습니다." : "최근 로그가 없습니다."
+    }</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(l => `
+    <div class="daily-list-item" data-date="${escapeAttr(l.log_date)}">
+      <div class="dli-date">${formatDateLong(l.log_date)}</div>
+      <div class="dli-preview">${escapeHtml(l.content || "(빈 로그)")}</div>
+    </div>
+  `).join("");
+  list.querySelectorAll(".daily-list-item").forEach(el => {
+    el.addEventListener("click", () => {
+      STATE.dailyDate = el.dataset.date;
+      renderDailyEditor();
+    });
+  });
+}
+
+function setDailyStatus(cls, text) {
+  const el = document.getElementById("dailySaveStatus");
+  el.classList.remove("is-dirty", "is-saved");
+  if (cls) el.classList.add(`is-${cls}`);
+  el.textContent = text;
+}
+
+async function saveDailyLog() {
+  if (STATE.dailySaving) return;
+  STATE.dailySaving = true;
+  setDailyStatus("dirty", "저장 중...");
+  try {
+    const content = document.getElementById("dailyContent").value;
+    await api("PUT", "/api/me/daily-logs", {
+      log_date: STATE.dailyDate,
+      content,
+    });
+    STATE.dailyDirty = false;
+    setDailyStatus("saved", "저장됨");
+    // 로컬 캐시 업데이트
+    const idx = STATE.dailyLogs.findIndex(l => l.log_date === STATE.dailyDate);
+    if (idx >= 0) STATE.dailyLogs[idx].content = content;
+    else STATE.dailyLogs.unshift({ log_date: STATE.dailyDate, content });
+    renderDailyList();
+  } catch (e) {
+    showToast(e.message, true);
+    setDailyStatus("dirty", "저장 실패 — 재시도하세요");
+  } finally {
+    STATE.dailySaving = false;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// 카테고리 관리 모달 (기존)
+// ════════════════════════════════════════════════════════
 function openCategoryModal() {
   renderCategoryList();
   document.getElementById("categoryModal").hidden = false;
@@ -381,33 +1205,171 @@ function renderCategoryList() {
   });
 }
 
-// ── 이벤트 바인딩 ──────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// 이벤트 바인딩
+// ════════════════════════════════════════════════════════
 function bindEvents() {
+  // 큰 네비
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.addEventListener("click", () => setTab(btn.dataset.tab));
+  });
+
+  // Tasks 안의 list/kanban 토글
   document.querySelectorAll(".view-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       STATE.view = btn.dataset.view;
-      renderAll();
+      renderTasks();
     });
   });
 
   document.getElementById("searchInput").addEventListener("input", e => {
     STATE.search = e.target.value;
-    renderAll();
+    renderTasks();
   });
   document.getElementById("sortSelect").addEventListener("change", e => {
     STATE.sort = e.target.value;
-    renderAll();
+    renderTasks();
   });
 
+  // FAB / 카테고리 관리
   document.getElementById("newTaskBtn").addEventListener("click", () => openTaskModal(null));
   document.getElementById("manageCategoriesBtn").addEventListener("click", openCategoryModal);
 
+  // ── Quick capture (Dashboard) ─────────────────────────
+  document.getElementById("quickCaptureForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const input = document.getElementById("quickCaptureInput");
+    const val = input.value;
+    input.value = "";
+    addInbox(val);
+  });
+
+  // ── Inbox 입력 ────────────────────────────────────────
+  document.getElementById("inboxAddForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const input = document.getElementById("inboxAddInput");
+    const val = input.value;
+    input.value = "";
+    addInbox(val);
+  });
+  document.querySelectorAll(".inbox-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      STATE.inboxFilter = btn.dataset.inboxTab;
+      refreshInboxOnly();
+    });
+  });
+
+  // ── Project ───────────────────────────────────────────
+  document.getElementById("newProjectBtn").addEventListener("click", () => openProjectModal(null));
+
+  document.getElementById("projectForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const id = STATE.editingProjectId;
+    const progressVal = document.getElementById("projectProgress").value;
+    const payload = {
+      name: document.getElementById("projectName").value.trim(),
+      description: document.getElementById("projectDescription").value,
+      status: document.getElementById("projectStatus").value,
+      color: document.getElementById("projectColor").value,
+      start_date: document.getElementById("projectStartDate").value || null,
+      end_date: document.getElementById("projectEndDate").value || null,
+      progress_pct: progressVal === "" ? 0 : Number(progressVal),
+      notes: document.getElementById("projectNotes").value,
+    };
+    try {
+      if (id) {
+        const updated = await api("PATCH", `/api/me/projects/${id}`, payload);
+        const idx = STATE.projects.findIndex(p => p.id === id);
+        if (idx >= 0) STATE.projects[idx] = updated;
+      } else {
+        const created = await api("POST", "/api/me/projects", payload);
+        STATE.projects.unshift(created);
+      }
+      closeProjectModal();
+      renderAll();
+      showToast(id ? "수정 완료" : "프로젝트 생성");
+    } catch (e) { showToast(e.message, true); }
+  });
+
+  document.getElementById("deleteProjectBtn").addEventListener("click", async () => {
+    const id = STATE.editingProjectId;
+    if (!id) return;
+    if (!confirm("이 프로젝트를 삭제할까요?\n연결된 Tasks 는 유지되지만 프로젝트 연결은 풀립니다.")) return;
+    try {
+      await api("DELETE", `/api/me/projects/${id}`);
+      STATE.projects = STATE.projects.filter(p => p.id !== id);
+      // 로컬에서 task.project_id 도 해제
+      STATE.tasks.forEach(t => { if (t.project_id === id) t.project_id = null; });
+      closeProjectModal();
+      renderAll();
+      showToast("프로젝트 삭제됨");
+    } catch (e) { showToast(e.message, true); }
+  });
+
+  // ── Promote 모달 ──────────────────────────────────────
+  document.getElementById("promoteForm").addEventListener("submit", e => {
+    e.preventDefault();
+    submitPromote();
+  });
+
+  // ── Calendar ──────────────────────────────────────────
+  document.getElementById("calPrevBtn").addEventListener("click", () => {
+    STATE.calCursor = new Date(STATE.calCursor.getFullYear(), STATE.calCursor.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  document.getElementById("calNextBtn").addEventListener("click", () => {
+    STATE.calCursor = new Date(STATE.calCursor.getFullYear(), STATE.calCursor.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  document.getElementById("calTodayBtn").addEventListener("click", () => {
+    STATE.calCursor = startOfMonth(new Date());
+    renderCalendar();
+  });
+
+  // ── Gantt ─────────────────────────────────────────────
+  document.getElementById("ganttZoom").addEventListener("change", e => {
+    STATE.ganttCellW = Number(e.target.value);
+    renderGantt();
+  });
+  document.getElementById("ganttJumpToday").addEventListener("click", renderGantt);
+
+  // ── Daily Log ─────────────────────────────────────────
+  document.getElementById("dailyDateInput").addEventListener("change", e => {
+    STATE.dailyDate = e.target.value;
+    renderDailyEditor();
+  });
+  const dailyContent = document.getElementById("dailyContent");
+  dailyContent.addEventListener("input", () => {
+    STATE.dailyDirty = true;
+    setDailyStatus("dirty", "변경사항 있음 — Ctrl/⌘+S 또는 저장 버튼");
+  });
+  // Ctrl/Cmd + S
+  dailyContent.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      saveDailyLog();
+    }
+  });
+  // 자동 저장 (blur 시)
+  dailyContent.addEventListener("blur", () => {
+    if (STATE.dailyDirty) saveDailyLog();
+  });
+  document.getElementById("dailySaveBtn").addEventListener("click", saveDailyLog);
+  document.getElementById("dailySearchInput").addEventListener("input", e => {
+    STATE.dailySearch = e.target.value;
+    renderDailyList();
+  });
+
+  // ── 모달 닫기/배경 클릭 ───────────────────────────────
   document.querySelectorAll("[data-close]").forEach(btn => {
     btn.addEventListener("click", () => {
-      if (btn.dataset.close === "task") closeTaskModal();
-      else if (btn.dataset.close === "category") closeCategoryModal();
+      const target = btn.dataset.close;
+      if (target === "task") closeTaskModal();
+      else if (target === "category") closeCategoryModal();
+      else if (target === "project") closeProjectModal();
+      else if (target === "promote") closePromoteModal();
     });
   });
   document.querySelectorAll(".modal-backdrop").forEach(bd => {
@@ -416,12 +1378,14 @@ function bindEvents() {
     });
   });
 
+  // ── Task 모달 ─────────────────────────────────────────
   document.getElementById("taskForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const id = STATE.editingId;
+    const id = STATE.editingTaskId;
     const payload = {
       title: document.getElementById("taskTitle").value.trim(),
       category: document.getElementById("taskCategory").value || null,
+      project_id: parseIntOrNull(document.getElementById("taskProject").value),
       status: document.getElementById("taskStatus").value,
       priority: document.getElementById("taskPriority").value,
       due_date: document.getElementById("taskDueDate").value || null,
@@ -439,24 +1403,28 @@ function bindEvents() {
         STATE.tasks.unshift(created);
       }
       closeTaskModal();
+      // 프로젝트 진행률 갱신
+      refreshProjectsOnly();
       renderAll();
       showToast(id ? "수정 완료" : "추가 완료");
     } catch (err) { showToast(err.message, true); }
   });
 
   document.getElementById("deleteTaskBtn").addEventListener("click", async () => {
-    const id = STATE.editingId;
+    const id = STATE.editingTaskId;
     if (!id) return;
     if (!confirm("이 업무를 삭제할까요?")) return;
     try {
       await api("DELETE", `/api/me/tasks/${id}`);
       STATE.tasks = STATE.tasks.filter(t => t.id !== id);
       closeTaskModal();
+      refreshProjectsOnly();
       renderAll();
       showToast("삭제됨");
     } catch (err) { showToast(err.message, true); }
   });
 
+  // ── 카테고리 추가 ─────────────────────────────────────
   document.getElementById("categoryAddForm").addEventListener("submit", async e => {
     e.preventDefault();
     const name = document.getElementById("newCategoryName").value.trim();
@@ -474,7 +1442,9 @@ function bindEvents() {
   });
 }
 
-// ── 유틸 ──────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// 유틸
+// ════════════════════════════════════════════════════════
 function escapeAttr(s) { return String(s ?? "").replace(/"/g, "&quot;"); }
 function hexToBg(hex) {
   if (!hex || hex[0] !== "#" || hex.length !== 7) return "rgba(99,102,241,0.15)";
@@ -482,6 +1452,43 @@ function hexToBg(hex) {
   const g = parseInt(hex.slice(3,5), 16);
   const b = parseInt(hex.slice(5,7), 16);
   return `rgba(${r},${g},${b},0.15)`;
+}
+function parseIntOrNull(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+function startOfDay(d) {
+  const x = new Date(d); x.setHours(0,0,0,0); return x;
+}
+function startOfMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function dateOnly(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function todayStr() { return dateOnly(new Date()); }
+function formatDateLong(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const wd = ["일","월","화","수","목","금","토"][d.getDay()];
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${wd})`;
+}
+function relativeTime(iso) {
+  if (!iso) return "";
+  const t = new Date(iso).getTime();
+  const diff = Date.now() - t;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return "방금";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}분 전`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}시간 전`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}일 전`;
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 let toastTimer;
