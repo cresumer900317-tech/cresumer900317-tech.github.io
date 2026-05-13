@@ -407,6 +407,163 @@ async function addInbox(content) {
   } catch (e) { showToast(e.message, true); }
 }
 
+// 자연어 파싱: "내일 오후 3시 회의" → {type:"task", title:"회의 (15:00)", due_date:"2026-05-15"}
+// 날짜/시간 표현이 없으면 {type:"memo"} 반환 → 기존 Inbox 흐름.
+function parseNL(rawText) {
+  const text = (rawText || "").trim();
+  if (!text) return null;
+
+  let working = " " + text + " ";
+  let dueDate = null;
+  let timeStr = null;
+  let matched = false;
+
+  const now = new Date();
+  const startOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+  // 1) 절대 날짜: M월 D일
+  let m = working.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+  if (m) {
+    let y = now.getFullYear();
+    const candidate = new Date(y, +m[1] - 1, +m[2]);
+    if (candidate < startOfDay(now)) y++;
+    dueDate = new Date(y, +m[1] - 1, +m[2]);
+    working = working.replace(m[0], " ");
+    matched = true;
+  } else if ((m = working.match(/(?:^|\s)(\d{1,2})\/(\d{1,2})(?=\s|$)/))) {
+    let y = now.getFullYear();
+    const candidate = new Date(y, +m[1] - 1, +m[2]);
+    if (candidate < startOfDay(now)) y++;
+    dueDate = new Date(y, +m[1] - 1, +m[2]);
+    working = working.replace(m[0], " ");
+    matched = true;
+  }
+
+  // 2) 상대 날짜
+  if (!dueDate) {
+    const rel = [
+      [/오늘/, 0], [/내일/, 1], [/모레/, 2], [/글피/, 3]
+    ];
+    for (const [re, n] of rel) {
+      if (re.test(working)) {
+        dueDate = addDays(startOfDay(now), n);
+        working = working.replace(re, " ");
+        matched = true;
+        break;
+      }
+    }
+  }
+
+  // 3) N일/N주 후|뒤
+  if (!dueDate) {
+    if ((m = working.match(/(\d+)\s*일\s*(?:후|뒤)/))) {
+      dueDate = addDays(startOfDay(now), +m[1]);
+      working = working.replace(m[0], " ");
+      matched = true;
+    } else if ((m = working.match(/(\d+)\s*주\s*(?:후|뒤)/))) {
+      dueDate = addDays(startOfDay(now), +m[1] * 7);
+      working = working.replace(m[0], " ");
+      matched = true;
+    }
+  }
+
+  // 4) (다음주|이번주)? + 요일
+  const dowMap = { "일":0, "월":1, "화":2, "수":3, "목":4, "금":5, "토":6 };
+  if (!dueDate) {
+    if ((m = working.match(/(다음주|담주|이번주|금주)\s*([일월화수목금토])요일?/))) {
+      const todayDow = now.getDay();
+      let diff = dowMap[m[2]] - todayDow;
+      if (m[1] === "다음주" || m[1] === "담주") {
+        if (diff <= 0) diff += 7;
+        diff += 7;
+      } else {
+        if (diff < 0) diff += 7;
+      }
+      dueDate = addDays(startOfDay(now), diff);
+      working = working.replace(m[0], " ");
+      matched = true;
+    } else if ((m = working.match(/([일월화수목금토])요일/))) {
+      const todayDow = now.getDay();
+      let diff = dowMap[m[1]] - todayDow;
+      if (diff <= 0) diff += 7;
+      dueDate = addDays(startOfDay(now), diff);
+      working = working.replace(m[0], " ");
+      matched = true;
+    }
+  }
+
+  // 5) 시간: 오전/오후 N시 (M분)? / HH:MM
+  let m2 = working.match(/(오전|오후|아침|저녁|밤)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분)?/);
+  if (m2) {
+    let hr = +m2[2];
+    const min = m2[3] ? +m2[3] : 0;
+    if (/오후|저녁|밤/.test(m2[1] || "") && hr < 12) hr += 12;
+    if (/오전|아침/.test(m2[1] || "") && hr === 12) hr = 0;
+    if (hr <= 23 && min <= 59) {
+      timeStr = `${String(hr).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
+      working = working.replace(m2[0], " ");
+      matched = true;
+    }
+  } else if ((m2 = working.match(/(?:^|\s)(\d{1,2}):(\d{2})(?=\s|$)/))) {
+    const hr = +m2[1], min = +m2[2];
+    if (hr <= 23 && min <= 59) {
+      timeStr = `${String(hr).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
+      working = working.replace(m2[0], " ");
+      matched = true;
+    }
+  }
+
+  let title = working.replace(/\s+/g, " ").trim();
+
+  // 날짜는 있고 제목이 비었으면 → 의미 없는 task → memo 로 폴백
+  if (dueDate && !title) return { type: "memo" };
+
+  if (dueDate) {
+    const displayTitle = timeStr ? `${title} (${timeStr})` : title;
+    return {
+      type: "task",
+      title: displayTitle,
+      due_date: dateOnly(dueDate),
+      time: timeStr,
+      preview: `${formatDateLong(dateOnly(dueDate))}${timeStr ? ` ${timeStr}` : ""} · ${title}`
+    };
+  }
+
+  // 시간만 있는 경우 → 오늘 일정으로 해석
+  if (timeStr && title) {
+    return {
+      type: "task",
+      title: `${title} (${timeStr})`,
+      due_date: dateOnly(startOfDay(now)),
+      time: timeStr,
+      preview: `오늘 ${timeStr} · ${title}`
+    };
+  }
+
+  return { type: "memo" };
+}
+
+async function addTaskFromNL(parsed) {
+  const payload = {
+    title: parsed.title,
+    due_date: parsed.due_date,
+    status: "todo",
+    priority: "normal",
+    category: null,
+    project_id: null,
+    tags: [],
+    notes: "",
+  };
+  try {
+    const created = await api("POST", "/api/me/tasks", payload);
+    STATE.tasks.unshift(created);
+    if (STATE.tab === "dashboard") renderDashboard();
+    else if (STATE.tab === "tasks") renderTasks();
+    showToast(`할 일 추가 · ${parsed.preview}`);
+  } catch (e) { showToast(e.message, true); }
+}
+
 async function deleteInbox(id) {
   if (!confirm("이 메모를 삭제할까요?")) return;
   try {
@@ -1329,12 +1486,38 @@ function bindEvents() {
   document.getElementById("manageCategoriesBtn").addEventListener("click", openCategoryModal);
 
   // ── Quick capture (Dashboard) ─────────────────────────
+  const qcInput = document.getElementById("quickCaptureInput");
+  const qcPreview = document.getElementById("quickCapturePreview");
+
+  function refreshQcPreview() {
+    if (!qcPreview) return;
+    const val = qcInput.value;
+    const parsed = parseNL(val);
+    if (parsed && parsed.type === "task") {
+      qcPreview.hidden = false;
+      qcPreview.textContent = `→ 할 일로 인식: ${parsed.preview}`;
+      qcPreview.classList.add("is-task");
+    } else if (val.trim()) {
+      qcPreview.hidden = false;
+      qcPreview.textContent = "→ 메모(Inbox)로 저장됩니다";
+      qcPreview.classList.remove("is-task");
+    } else {
+      qcPreview.hidden = true;
+    }
+  }
+  qcInput.addEventListener("input", refreshQcPreview);
+
   document.getElementById("quickCaptureForm").addEventListener("submit", e => {
     e.preventDefault();
-    const input = document.getElementById("quickCaptureInput");
-    const val = input.value;
-    input.value = "";
-    addInbox(val);
+    const val = qcInput.value;
+    qcInput.value = "";
+    refreshQcPreview();
+    const parsed = parseNL(val);
+    if (parsed && parsed.type === "task") {
+      addTaskFromNL(parsed);
+    } else {
+      addInbox(val);
+    }
   });
 
   // ── Inbox 입력 ────────────────────────────────────────
