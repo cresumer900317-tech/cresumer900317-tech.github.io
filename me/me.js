@@ -306,10 +306,12 @@ function dashTaskRow(t) {
 
 function dashProjectRow(p) {
   const pct = (p.progress_pct ?? 0) > 0 ? p.progress_pct : (p.computed_progress ?? 0);
+  const dd = dDayInfo(p.end_date);
   return `<div class="dash-project" data-id="${p.id}">
     <div class="dp-name">
       <span class="dp-color-dot" style="background:${escapeAttr(p.color || COLOR_FALLBACK)}"></span>
       ${escapeHtml(p.name)}
+      ${dd ? `<span class="pc-dday pc-dday-sm ${dd.urgency}">${dd.label}</span>` : ""}
     </div>
     <div class="dp-bar">
       <div class="dp-fill" style="width:${pct}%;background:${escapeAttr(p.color || COLOR_FALLBACK)}"></div>
@@ -637,8 +639,10 @@ function listRowHtml(t) {
   const catColor = cat ? getCategoryColor(cat) : "#475569";
   const due = dueDisplay(t.due_date);
   const dueClass = due.urgency ? `is-${due.urgency}` : "";
+  const rowUrgency = t.status !== "done" && due.urgency ? `is-urgent-${due.urgency}` : "";
+  const prioHigh = t.priority === "high" && t.status !== "done" ? "is-prio-high" : "";
   return `
-    <div class="list-row ${t.status === "done" ? "is-done" : ""}" data-id="${t.id}">
+    <div class="list-row ${t.status === "done" ? "is-done" : ""} ${rowUrgency} ${prioHigh}" data-id="${t.id}">
       <button class="row-check ${t.status === "done" ? "is-checked" : ""}">✓</button>
       <div class="row-main">
         <div class="row-title">${escapeHtml(t.title)}</div>
@@ -648,10 +652,16 @@ function listRowHtml(t) {
         </div>
       </div>
       ${cat ? `<span class="row-category" style="background:${hexToBg(catColor)};color:${catColor}">${escapeHtml(cat)}</span>` : `<span></span>`}
-      <span class="row-priority priority-${t.priority}">${PRIORITY_LABEL[t.priority]}</span>
+      <span class="row-priority priority-${t.priority}">${priorityIcon(t.priority)}${PRIORITY_LABEL[t.priority]}</span>
       <span class="row-due ${dueClass}">${due.label}</span>
     </div>
   `;
+}
+
+function priorityIcon(p) {
+  if (p === "high") return `<span class="prio-icon">🔥</span>`;
+  if (p === "medium") return `<span class="prio-icon">●</span>`;
+  return `<span class="prio-icon">○</span>`;
 }
 
 function dueDisplay(dateStr) {
@@ -689,12 +699,14 @@ function kanbanCardHtml(t) {
   const cat = t.category;
   const catColor = cat ? getCategoryColor(cat) : null;
   const due = dueDisplay(t.due_date);
+  const cardUrgency = t.status !== "done" && due.urgency ? `is-urgent-${due.urgency}` : "";
+  const prioHigh = t.priority === "high" && t.status !== "done" ? "is-prio-high" : "";
   return `
-    <div class="kanban-card" draggable="true" data-id="${t.id}">
+    <div class="kanban-card ${cardUrgency} ${prioHigh}" draggable="true" data-id="${t.id}">
       <div class="card-title">${escapeHtml(t.title)}</div>
       <div class="card-meta">
         ${cat ? `<span class="row-category" style="background:${hexToBg(catColor)};color:${catColor}">${escapeHtml(cat)}</span>` : ""}
-        <span class="row-priority priority-${t.priority}">${PRIORITY_LABEL[t.priority]}</span>
+        <span class="row-priority priority-${t.priority}">${priorityIcon(t.priority)}${PRIORITY_LABEL[t.priority]}</span>
         ${t.due_date ? `<span class="row-due ${due.urgency ? `is-${due.urgency}` : ""}">${due.label}</span>` : ""}
       </div>
     </div>
@@ -781,23 +793,102 @@ function renderProjects() {
 
 function projectCardHtml(p) {
   const pct = (p.progress_pct ?? 0) > 0 ? p.progress_pct : (p.computed_progress ?? 0);
+  const dd = dDayInfo(p.end_date);
+  const projTasks = STATE.tasks.filter(t => t.project_id === p.id);
+  const openTasks = projTasks.filter(t => t.status !== "done");
+  const nextAction = pickNextAction(openTasks);
+  const recentTask = pickRecent(projTasks);
+  const tags = collectTopTags(projTasks, 3);
   const dateRange = p.start_date || p.end_date
     ? `${p.start_date || "?"} ~ ${p.end_date || "?"}`
     : "기간 미설정";
+
+  const ddayHtml = dd
+    ? `<span class="pc-dday ${dd.urgency}">${dd.label}</span>`
+    : "";
+
+  const nextActionHtml = nextAction
+    ? `<div class="pc-next-action">
+         <span class="pc-next-label">다음 액션</span>
+         <span class="pc-next-title">${escapeHtml(nextAction.title)}</span>
+         ${nextAction.due_date
+           ? `<span class="pc-next-due ${dueDisplay(nextAction.due_date).urgency ? `is-${dueDisplay(nextAction.due_date).urgency}` : ""}">${dueDisplay(nextAction.due_date).label}</span>`
+           : ""}
+       </div>`
+    : openTasks.length === 0 && projTasks.length > 0
+      ? `<div class="pc-next-action is-empty">모든 할 일 완료 🎉</div>`
+      : `<div class="pc-next-action is-empty">아직 연결된 할 일이 없습니다</div>`;
+
+  const tagsHtml = tags.length
+    ? `<div class="pc-tags">${tags.map(t => `<span class="pc-tag">#${escapeHtml(t)}</span>`).join("")}</div>`
+    : "";
+
+  const recentHtml = recentTask
+    ? `<span class="pc-recent" title="${escapeAttr(recentTask.title)}">최근 · ${relativeTime(recentTask.updated_at || recentTask.created_at)}</span>`
+    : "";
+
   return `
     <div class="project-card" data-id="${p.id}" style="--proj-color:${escapeAttr(p.color || COLOR_FALLBACK)}">
       <div class="pc-head">
         <div class="pc-name">${escapeHtml(p.name)}</div>
+        ${ddayHtml}
         <span class="pc-status s-${p.status}">${PROJECT_STATUS_LABEL[p.status] || p.status}</span>
       </div>
       ${p.description ? `<div class="pc-desc">${escapeHtml(p.description)}</div>` : ""}
+      ${nextActionHtml}
       <div class="pc-bar"><div class="pc-fill" style="width:${pct}%"></div></div>
       <div class="pc-meta">
-        <span>${pct}% · ${p.done_count ?? 0}/${p.task_count ?? 0}</span>
-        <span>${dateRange}</span>
+        <span class="pc-progress"><strong>${pct}%</strong> · ${p.done_count ?? 0}/${p.task_count ?? 0} 완료</span>
+        <span class="pc-range">${dateRange}</span>
       </div>
+      ${tags.length || recentTask ? `<div class="pc-foot">${tagsHtml}${recentHtml}</div>` : ""}
     </div>
   `;
+}
+
+function dDayInfo(endDateStr) {
+  if (!endDateStr) return null;
+  const today = startOfDay(new Date());
+  const d = new Date(endDateStr + "T00:00:00");
+  const diff = Math.round((d - today) / (24 * 3600 * 1000));
+  let label, urgency = "";
+  if (diff === 0) { label = "D-DAY"; urgency = "is-today"; }
+  else if (diff > 0) {
+    label = `D-${diff}`;
+    if (diff <= 7) urgency = "is-soon";
+  }
+  else { label = `D+${-diff}`; urgency = "is-overdue"; }
+  return { label, urgency };
+}
+
+function pickNextAction(openTasks) {
+  if (!openTasks.length) return null;
+  const sorted = openTasks.slice().sort((a, b) => {
+    const aDue = a.due_date || "9999-12-31";
+    const bDue = b.due_date || "9999-12-31";
+    if (aDue !== bDue) return aDue.localeCompare(bDue);
+    return (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
+  });
+  return sorted[0];
+}
+
+function pickRecent(tasks) {
+  if (!tasks.length) return null;
+  return tasks.slice().sort((a, b) =>
+    (b.updated_at || b.created_at || "").localeCompare(a.updated_at || a.created_at || "")
+  )[0];
+}
+
+function collectTopTags(tasks, max) {
+  const counts = new Map();
+  tasks.forEach(t => (t.tags || []).forEach(tag => {
+    if (!tag) return;
+    counts.set(tag, (counts.get(tag) || 0) + 1);
+  }));
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, max)
+    .map(([tag]) => tag);
 }
 
 function openProjectModal(projectId) {
