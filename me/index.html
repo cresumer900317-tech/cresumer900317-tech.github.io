@@ -57,6 +57,19 @@
 
       <!-- ═══════════════════════ 1) 대시보드 ═══════════════════════ -->
       <section class="page" id="pageDashboard">
+        <!-- 🌅 오늘의 브리핑 (Phase 7) -->
+        <div class="briefing" id="briefing" hidden>
+          <div class="briefing-head">
+            <h3 class="briefing-title">🌅 오늘의 브리핑 <span class="ai-badge">AI</span></h3>
+            <div class="briefing-actions">
+              <span class="briefing-meta" id="briefingMeta"></span>
+              <button class="briefing-refresh" id="briefingRefreshBtn" title="다시 분석">↻</button>
+            </div>
+          </div>
+          <p class="briefing-text" id="briefingText"></p>
+          <div class="briefing-cards" id="briefingCards"></div>
+        </div>
+
         <div class="quick-capture">
           <form id="quickCaptureForm" class="quick-capture-form">
             <input

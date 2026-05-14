@@ -40,6 +40,10 @@ const STATE = {
   dailyDirty: false,
   dailySaving: false,
   dailySearch: "",
+
+  // Phase 7a: Briefing
+  briefing: null,            // {today, text, numbers, ai_enabled, cached, generated_at}
+  briefingLoading: false,
 };
 
 const STATUS_LABEL = {
@@ -74,6 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
   bindEvents();
   bindCmdk();
   refreshAll();
+
+  // Phase 7a: 첫 로드 시 브리핑
+  loadBriefing(false);
 });
 
 // ── 통신 ──────────────────────────────────────────────────
@@ -2141,6 +2148,10 @@ function bindEvents() {
   // ── AI (Phase 5) ─────────────────────────────────────
   const dailyAnalyzeBtn = document.getElementById("dailyAnalyzeBtn");
   if (dailyAnalyzeBtn) dailyAnalyzeBtn.addEventListener("click", () => analyzeDailyLogNow());
+
+  // ── Phase 7a: 브리핑 새로고침 ─────────────────────────
+  const briefingRefreshBtn = document.getElementById("briefingRefreshBtn");
+  if (briefingRefreshBtn) briefingRefreshBtn.addEventListener("click", () => loadBriefing(true));
   const aiRefresh = document.getElementById("aiExtractsRefresh");
   if (aiRefresh) aiRefresh.addEventListener("click", () => analyzeDailyLogNow());
 
@@ -2615,4 +2626,92 @@ function bindCmdk() {
   // Topbar trigger button
   const trigger = document.getElementById("cmdkTrigger");
   if (trigger) trigger.addEventListener("click", openCmdk);
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 7a — AI Dashboard Briefing
+// ════════════════════════════════════════════════════════
+async function loadBriefing(force) {
+  const card = document.getElementById("briefing");
+  if (!card) return;
+  if (STATE.briefingLoading) return;
+  STATE.briefingLoading = true;
+
+  card.hidden = false;
+  const text = document.getElementById("briefingText");
+  const meta = document.getElementById("briefingMeta");
+  const refreshBtn = document.getElementById("briefingRefreshBtn");
+  if (refreshBtn) refreshBtn.disabled = true;
+  if (force || !STATE.briefing) {
+    text.textContent = "오늘 상태를 정리하는 중...";
+    text.className = "briefing-text is-loading";
+  }
+
+  try {
+    const url = force ? "/api/me/dashboard-briefing?force=true" : "/api/me/dashboard-briefing";
+    const data = await api("POST", url);
+    STATE.briefing = data;
+    renderBriefing();
+  } catch (e) {
+    text.className = "briefing-text is-empty";
+    if ((e.message || "").includes("503")) {
+      text.textContent = "AI 비활성 (서버에 ANTHROPIC_API_KEY 미설정).";
+    } else {
+      text.textContent = "브리핑을 불러오지 못했어요.";
+    }
+    if (meta) meta.textContent = "";
+  } finally {
+    STATE.briefingLoading = false;
+    if (refreshBtn) refreshBtn.disabled = false;
+  }
+}
+
+function renderBriefing() {
+  const data = STATE.briefing;
+  if (!data) return;
+  const card = document.getElementById("briefing");
+  const text = document.getElementById("briefingText");
+  const meta = document.getElementById("briefingMeta");
+  const cards = document.getElementById("briefingCards");
+  if (!card || !text || !cards) return;
+
+  card.hidden = false;
+
+  if (data.text) {
+    text.textContent = data.text;
+    text.className = "briefing-text";
+  } else if (data.ai_enabled === false) {
+    text.textContent = "AI 비활성 — 서버에 ANTHROPIC_API_KEY 가 설정되면 한 줄 요약이 표시됩니다.";
+    text.className = "briefing-text is-empty";
+  } else {
+    text.textContent = "오늘 큰 일정은 없어요.";
+    text.className = "briefing-text is-empty";
+  }
+
+  if (meta) {
+    if (data.cached) {
+      meta.textContent = `${data.today} · 캐시`;
+    } else if (data.generated_at) {
+      meta.textContent = `${data.today} · 방금 갱신`;
+    } else {
+      meta.textContent = data.today || "";
+    }
+  }
+
+  const n = data.numbers || {};
+  const items = [
+    { label: "오늘 마감", num: n.today_due ?? 0,
+      cls: (n.today_due ?? 0) > 0 ? "is-warn" : "" },
+    { label: "미처리 메모", num: n.inbox_unprocessed ?? 0,
+      cls: (n.inbox_unprocessed ?? 0) > 5 ? "is-warn" : "" },
+    { label: "진행 프로젝트", num: n.projects_active ?? 0, cls: "" },
+    { label: "위험 task", num: n.at_risk ?? 0,
+      cls: (n.at_risk ?? 0) > 0 ? "is-danger" : "" },
+  ];
+  cards.innerHTML = items.map(it => `
+    <div class="briefing-card">
+      <div class="briefing-card-num ${it.cls}">${it.num}</div>
+      <div class="briefing-card-label">${escapeHtml(it.label)}</div>
+    </div>
+  `).join("");
 }
