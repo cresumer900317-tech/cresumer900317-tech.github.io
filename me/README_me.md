@@ -59,7 +59,7 @@ Railway 가 main 브랜치 push 감지 → 자동 재배포.
 | `SUPABASE_URL` | Supabase 프로젝트 URL |
 | `SUPABASE_SERVICE_KEY` | service_role 키 |
 | `JWT_SECRET` | 로그인 토큰 서명 |
-| `OPENAI_API_KEY` | AI 정리 기능 (Phase 5; 미설정 시 AI 비활성) |
+| `ANTHROPIC_API_KEY` | AI 정리 기능 (Phase 5; 미설정 시 AI 비활성, `claude-haiku-4-5`) |
 
 ## API 엔드포인트 (개인 업무 관련)
 
@@ -104,3 +104,15 @@ Railway 가 main 브랜치 push 감지 → 자동 재배포.
 ### Dashboard 한 번에
 
 - `GET /api/me/dashboard` — `{tasks, projects, inbox, daily_logs, categories}`
+
+### AI 정리 (Phase 5 — Claude haiku)
+
+전부 `ANTHROPIC_API_KEY` 가 Railway 환경변수에 있어야 작동. 없으면 503 응답.
+
+- `GET /api/me/ai/status` — `{enabled: bool, model: "claude-haiku-4-5-..."}`
+- `POST /api/me/daily-logs/{YYYY-MM-DD}/analyze` — 그 날 로그를 분석해 `{tasks, future, decisions, tags}` 추출.
+  동일 내용은 `personal_ai_summaries(kind=daily_log_extract, source_hash)` 캐시에서 재사용 (API 호출 없음).
+- `GET /api/me/daily-logs/{YYYY-MM-DD}/extracts` — 캐시된 추출 결과만 조회 (없으면 `{id: null, extract: null}`). API 호출 없음.
+- `POST /api/me/extracts/{eid}/promote` — `{kind:"tasks"|"future", index, category?, project_id?, priority?, due_date?}` → 새 personal_tasks 행 생성 + payload.promoted 에 마킹.
+- `POST /api/me/extracts/{eid}/dismiss` — `{kind:"tasks"|"future"|"decisions", index}` → payload.dismissed 마킹 (체크리스트에서 비활성).
+- `POST /api/me/search` — `{query, days?}` → 최근 `days(기본 90, 7~365)` 일치 하루 로그를 컨텍스트로 자연어 질의응답. `{answer, sources:[{date,snippet}], logs_searched, days}` 반환.

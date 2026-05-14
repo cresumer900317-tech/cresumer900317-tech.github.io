@@ -19,6 +19,12 @@ const STATE = {
   inboxSuggestions: {},
   aiBusy: false,
 
+  // AI (Phase 5)
+  aiEnabled: null,           // null=unknown, true/false 후 자동 분기
+  aiExtract: null,           // { id, extract, promoted, dismissed }
+  aiAnalyzing: false,
+  smartSearching: false,
+
   editingTaskId: null,
   editingProjectId: null,
   promotingInboxId: null,
@@ -1515,6 +1521,8 @@ async function renderDailyEditor() {
     setDailyStatus("", "변경사항 없음");
   }
   renderDailyList();
+  // AI 분석 결과 캐시 로드 (있으면 표시, 없으면 섹션 숨김)
+  loadAiExtracts(STATE.dailyDate);
 }
 
 function renderDailyList() {
@@ -1550,7 +1558,7 @@ function setDailyStatus(cls, text) {
   el.textContent = text;
 }
 
-async function saveDailyLog() {
+async function saveDailyLog(opts = {}) {
   if (STATE.dailySaving) return;
   STATE.dailySaving = true;
   setDailyStatus("dirty", "저장 중...");
@@ -1567,12 +1575,317 @@ async function saveDailyLog() {
     if (idx >= 0) STATE.dailyLogs[idx].content = content;
     else STATE.dailyLogs.unshift({ log_date: STATE.dailyDate, content });
     renderDailyList();
+    // 저장 후 AI 캐시 결과를 자동으로 새로고침 (이미 분석된 동일 내용이면 즉시 표시)
+    if (!opts.skipAi) loadAiExtracts(STATE.dailyDate);
   } catch (e) {
     showToast(e.message, true);
     setDailyStatus("dirty", "저장 실패 — 재시도하세요");
   } finally {
     STATE.dailySaving = false;
   }
+}
+
+// ════════════════════════════════════════════════════════
+// AI (Phase 5) — 하루 로그 추출 + 자연어 검색
+// ════════════════════════════════════════════════════════
+
+async function ensureAiStatus() {
+  if (STATE.aiEnabled !== null) return STATE.aiEnabled;
+  try {
+    const data = await api("GET", "/api/me/ai/status");
+    STATE.aiEnabled = !!data.enabled;
+  } catch (e) {
+    STATE.aiEnabled = false;
+  }
+  return STATE.aiEnabled;
+}
+
+async function loadAiExtracts(logDate) {
+  const section = document.getElementById("aiExtracts");
+  if (!section) return;
+  const enabled = await ensureAiStatus();
+  if (!enabled) {
+    STATE.aiExtract = null;
+    section.hidden = true;
+    return;
+  }
+  try {
+    const data = await api("GET", `/api/me/daily-logs/${logDate}/extracts`);
+    if (!data || !data.extract) {
+      STATE.aiExtract = null;
+      hideAiExtracts();
+      return;
+    }
+    STATE.aiExtract = data;
+    renderAiExtracts();
+  } catch (e) {
+    STATE.aiExtract = null;
+    hideAiExtracts();
+  }
+}
+
+async function analyzeDailyLogNow() {
+  const enabled = await ensureAiStatus();
+  if (!enabled) {
+    showToast("AI 기능이 비활성 상태입니다 (서버에 ANTHROPIC_API_KEY 미설정)", true);
+    return;
+  }
+  if (STATE.aiAnalyzing) return;
+  // 미저장 내용이 있으면 먼저 저장
+  if (STATE.dailyDirty) {
+    await saveDailyLog({ skipAi: true });
+  }
+  STATE.aiAnalyzing = true;
+  const section = document.getElementById("aiExtracts");
+  const status = document.getElementById("aiExtractsStatus");
+  section.hidden = false;
+  section.classList.add("is-analyzing");
+  if (status) status.textContent = "분석 중...";
+  document.getElementById("aiExtractsBody").innerHTML =
+    `<div class="ai-empty">AI 가 하루 로그를 읽고 있어요... (보통 5–10초)</div>`;
+  try {
+    const data = await api("POST", `/api/me/daily-logs/${STATE.dailyDate}/analyze`);
+    if (data.status === "empty") {
+      document.getElementById("aiExtractsBody").innerHTML =
+        `<div class="ai-empty">로그가 비어있어요. 뭐라도 적어보세요.</div>`;
+      STATE.aiExtract = null;
+    } else {
+      STATE.aiExtract = data;
+      renderAiExtracts();
+    }
+  } catch (e) {
+    showToast("AI 분석 실패: " + e.message, true);
+    document.getElementById("aiExtractsBody").innerHTML =
+      `<div class="ai-empty">분석 중 오류가 발생했어요.</div>`;
+  } finally {
+    STATE.aiAnalyzing = false;
+    section.classList.remove("is-analyzing");
+    if (status) status.textContent = "";
+  }
+}
+
+function hideAiExtracts() {
+  const section = document.getElementById("aiExtracts");
+  if (section) section.hidden = true;
+}
+
+function renderAiExtracts() {
+  const section = document.getElementById("aiExtracts");
+  const body = document.getElementById("aiExtractsBody");
+  if (!section || !body) return;
+  const data = STATE.aiExtract;
+  if (!data || !data.extract) {
+    section.hidden = true;
+    return;
+  }
+  section.hidden = false;
+  const ex = data.extract;
+  const promoted = new Set(data.promoted || []);
+  const dismissed = new Set(data.dismissed || []);
+
+  const tasksHtml = renderExtractActionGroup(
+    "tasks", ex.tasks || [], promoted, dismissed,
+    "📋 할 일 후보", "오늘/단기 안에 해야 할 일",
+  );
+  const futureHtml = renderExtractActionGroup(
+    "future", ex.future || [], promoted, dismissed,
+    "📅 앞으로 할 거", "1주 이후 미래 할 일",
+  );
+  const decisionsHtml = renderExtractDecisions(
+    ex.decisions || [], dismissed,
+  );
+  const tagsHtml = renderExtractTags(ex.tags || []);
+
+  const hasAny =
+    (ex.tasks || []).length || (ex.future || []).length ||
+    (ex.decisions || []).length || (ex.tags || []).length;
+
+  if (!hasAny) {
+    body.innerHTML = `<div class="ai-empty">뽑을 만한 항목이 보이지 않아요. 회의/할 일/결정사항을 더 자세히 적어보세요.</div>`;
+  } else {
+    body.innerHTML = [tasksHtml, futureHtml, decisionsHtml, tagsHtml].filter(Boolean).join("");
+  }
+
+  // 핸들러 바인딩
+  body.querySelectorAll("[data-ai-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.aiAction;
+      const kind = btn.dataset.aiKind;
+      const idx = Number(btn.dataset.aiIndex);
+      if (action === "promote") promoteAiExtract(kind, idx);
+      else if (action === "dismiss") dismissAiExtract(kind, idx);
+    });
+  });
+}
+
+function renderExtractActionGroup(kind, items, promoted, dismissed, title, subtitle) {
+  if (!items.length) return "";
+  const rows = items.map((it, i) => {
+    const key = `${kind}:${i}`;
+    const isPromoted = promoted.has(key);
+    const isDismissed = dismissed.has(key);
+    const stateCls = isPromoted ? "is-promoted" : isDismissed ? "is-dismissed" : "";
+    const dueHint = it.due_hint ? `<span class="ai-due">${escapeHtml(it.due_hint)}</span>` : "";
+    const stateLabel = isPromoted
+      ? `<span class="ai-state-label is-done">✓ Task 추가됨</span>`
+      : isDismissed
+      ? `<span class="ai-state-label is-faint">무시함</span>`
+      : `<div class="ai-actions">
+           <button class="btn-mini btn-mini-primary" data-ai-action="promote" data-ai-kind="${kind}" data-ai-index="${i}">＋ Task</button>
+           <button class="btn-mini btn-mini-ghost" data-ai-action="dismiss" data-ai-kind="${kind}" data-ai-index="${i}">무시</button>
+         </div>`;
+    return `
+      <li class="ai-item ${stateCls}">
+        <div class="ai-item-main">
+          <span class="ai-item-title">${escapeHtml(it.title || "")}</span>
+          ${dueHint}
+        </div>
+        ${stateLabel}
+      </li>
+    `;
+  }).join("");
+  return `
+    <div class="ai-group">
+      <div class="ai-group-head">
+        <h4>${title} <span class="ai-count">${items.length}</span></h4>
+        <span class="ai-group-sub">${subtitle}</span>
+      </div>
+      <ul class="ai-list">${rows}</ul>
+    </div>
+  `;
+}
+
+function renderExtractDecisions(items, dismissed) {
+  if (!items.length) return "";
+  const rows = items.map((it, i) => {
+    const key = `decisions:${i}`;
+    const isDismissed = dismissed.has(key);
+    return `
+      <li class="ai-item ${isDismissed ? "is-dismissed" : ""}">
+        <div class="ai-item-main">
+          <span class="ai-item-title">${escapeHtml(it.summary || "")}</span>
+        </div>
+        ${isDismissed
+          ? `<span class="ai-state-label is-faint">무시함</span>`
+          : `<div class="ai-actions">
+               <button class="btn-mini btn-mini-ghost" data-ai-action="dismiss" data-ai-kind="decisions" data-ai-index="${i}">무시</button>
+             </div>`}
+      </li>
+    `;
+  }).join("");
+  return `
+    <div class="ai-group">
+      <div class="ai-group-head">
+        <h4>💡 회의 결정사항 <span class="ai-count">${items.length}</span></h4>
+        <span class="ai-group-sub">나중에 검색용으로 기억해둘 메모</span>
+      </div>
+      <ul class="ai-list">${rows}</ul>
+    </div>
+  `;
+}
+
+function renderExtractTags(tags) {
+  if (!tags.length) return "";
+  const chips = tags.map(t => `<span class="ai-tag">#${escapeHtml(t)}</span>`).join("");
+  return `
+    <div class="ai-group ai-group-tags">
+      <div class="ai-group-head"><h4>🏷 주제 태그</h4></div>
+      <div class="ai-tags">${chips}</div>
+    </div>
+  `;
+}
+
+async function promoteAiExtract(kind, index) {
+  if (!STATE.aiExtract || !STATE.aiExtract.id) return;
+  const eid = STATE.aiExtract.id;
+  try {
+    const data = await api("POST", `/api/me/extracts/${eid}/promote`, {
+      kind, index, priority: "medium",
+    });
+    STATE.aiExtract.promoted = data.promoted || [];
+    if (data.task) STATE.tasks.unshift(data.task);
+    renderAiExtracts();
+    showToast("할 일에 추가됐어요");
+  } catch (e) {
+    showToast("추가 실패: " + e.message, true);
+  }
+}
+
+async function dismissAiExtract(kind, index) {
+  if (!STATE.aiExtract || !STATE.aiExtract.id) return;
+  const eid = STATE.aiExtract.id;
+  try {
+    const data = await api("POST", `/api/me/extracts/${eid}/dismiss`, { kind, index });
+    STATE.aiExtract.dismissed = data.dismissed || [];
+    renderAiExtracts();
+  } catch (e) {
+    showToast("무시 실패: " + e.message, true);
+  }
+}
+
+// ── 스마트 검색 ──────────────────────────────────────────
+async function smartSearch(query) {
+  const enabled = await ensureAiStatus();
+  if (!enabled) {
+    showToast("AI 기능이 비활성 상태입니다 (서버에 ANTHROPIC_API_KEY 미설정)", true);
+    return;
+  }
+  if (STATE.smartSearching) return;
+  STATE.smartSearching = true;
+  const result = document.getElementById("smartSearchResult");
+  const btn = document.getElementById("smartSearchBtn");
+  result.hidden = false;
+  result.innerHTML = `<div class="ss-loading">하루 로그를 뒤지는 중... (보통 5–10초)</div>`;
+  if (btn) btn.disabled = true;
+  try {
+    const data = await api("POST", "/api/me/search", { query, days: 90 });
+    renderSmartSearchResult(data);
+  } catch (e) {
+    result.innerHTML = `<div class="ss-error">검색 실패: ${escapeHtml(e.message || "")}</div>`;
+  } finally {
+    STATE.smartSearching = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function renderSmartSearchResult(data) {
+  const result = document.getElementById("smartSearchResult");
+  if (!result) return;
+  const answer = (data && data.answer) || "(답변 없음)";
+  const sources = (data && data.sources) || [];
+  const sourcesHtml = sources.length
+    ? `<div class="ss-sources">
+         <div class="ss-sources-head">출처</div>
+         <ul>
+           ${sources.map(s => `
+             <li>
+               <button class="ss-source-link" data-date="${escapeAttr(s.date)}">${formatDateLong(s.date)}</button>
+               <span class="ss-source-snippet">${escapeHtml(s.snippet || "")}</span>
+             </li>
+           `).join("")}
+         </ul>
+       </div>`
+    : `<div class="ss-sources is-empty">관련된 로그를 찾지 못했어요.</div>`;
+  result.innerHTML = `
+    <div class="ss-card">
+      <div class="ss-header">
+        <span class="ai-badge">AI 답변</span>
+        <span class="ss-meta">${data.logs_searched || 0}개 로그 검색 · 최근 ${data.days || 90}일</span>
+      </div>
+      <div class="ss-answer">${escapeHtml(answer)}</div>
+      ${sourcesHtml}
+    </div>
+  `;
+  // 출처 클릭 → 그 날짜로 점프
+  result.querySelectorAll(".ss-source-link").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const d = btn.dataset.date;
+      if (!d) return;
+      STATE.dailyDate = d;
+      renderDailyEditor();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1819,11 +2132,28 @@ function bindEvents() {
   dailyContent.addEventListener("blur", () => {
     if (STATE.dailyDirty) saveDailyLog();
   });
-  document.getElementById("dailySaveBtn").addEventListener("click", saveDailyLog);
+  document.getElementById("dailySaveBtn").addEventListener("click", () => saveDailyLog());
   document.getElementById("dailySearchInput").addEventListener("input", e => {
     STATE.dailySearch = e.target.value;
     renderDailyList();
   });
+
+  // ── AI (Phase 5) ─────────────────────────────────────
+  const dailyAnalyzeBtn = document.getElementById("dailyAnalyzeBtn");
+  if (dailyAnalyzeBtn) dailyAnalyzeBtn.addEventListener("click", () => analyzeDailyLogNow());
+  const aiRefresh = document.getElementById("aiExtractsRefresh");
+  if (aiRefresh) aiRefresh.addEventListener("click", () => analyzeDailyLogNow());
+
+  const smartForm = document.getElementById("smartSearchForm");
+  if (smartForm) {
+    smartForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const input = document.getElementById("smartSearchInput");
+      const q = (input.value || "").trim();
+      if (!q) return;
+      smartSearch(q);
+    });
+  }
 
   // ── 모달 닫기/배경 클릭 ───────────────────────────────
   document.querySelectorAll("[data-close]").forEach(btn => {
