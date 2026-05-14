@@ -60,6 +60,17 @@ Railway 가 main 브랜치 push 감지 → 자동 재배포.
 | `SUPABASE_SERVICE_KEY` | service_role 키 |
 | `JWT_SECRET` | 로그인 토큰 서명 |
 | `ANTHROPIC_API_KEY` | AI 정리 기능 (Phase 5; 미설정 시 AI 비활성, `claude-haiku-4-5`) |
+| `RESEND_API_KEY` | 이메일 디지스트 발송용 (Resend) |
+| `DIGEST_RECIPIENT_EMAIL` | 디지스트 수신 이메일 (예: `jepak1@coupangfs.com`) |
+| `DIGEST_FROM_EMAIL` | 발신자 (기본: `내 업무 <onboarding@resend.dev>`. 도메인 인증 후 본인 도메인으로 교체 권장) |
+| `DIGEST_OWNER` | 디지스트 대상 owner (기본: `친구닷`) |
+
+### 이메일 디지스트
+
+- 매일 **08:00 KST** APScheduler 가 자동 발송
+- 내용: 오늘 마감 / 지연 / 내일 마감 / D-3 이내 / 진행 중 프로젝트 / 미처리 Inbox / 마감 미정 / 최근 Daily Log
+- 수동 테스트: `POST /api/me/digest/send-test` 또는 `GET /api/me/digest/preview` (HTML 미리보기)
+- Resend 가입 → API 키 발급 → Railway env 에 `RESEND_API_KEY` 추가 후 재배포
 
 ## API 엔드포인트 (개인 업무 관련)
 

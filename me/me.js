@@ -668,13 +668,32 @@ function parseNL(rawText) {
   return { type: "memo" };
 }
 
+// 제목 키워드 → 카테고리 자동 추정. STATE.categories 에 있는 이름만 반환.
+const CATEGORY_KEYWORDS = {
+  "쿠팡":     ["쿠팡","coupang","회의","미팅","보고","발표","OKR","KPI","평가","팀장","리더","스프린트","스탠드업","1on1","워크샵","리뷰","면담"],
+  "결혼":     ["결혼","예식","웨딩","신혼","청첩","신부","신랑","예단","예물","가우디움","상견례","스드메","드레스","턱시도","피로연","주례","사회","축가","혼수","폐백","답례품","허니문","신혼여행"],
+  "자기계발": ["공부","독서","책","강의","운동","헬스","러닝","요가","영어","토익","오픽","자격증","코딩","알고리즘","블로그","글쓰기"],
+  "사업준비": ["사업","창업","EAM","컴브릭스","법인","세무","사업자","아이템","BM","피칭","투자","고객인터뷰","MVP","리서치","경쟁사"],
+};
+function guessCategory(title) {
+  if (!title) return null;
+  const lower = title.toLowerCase();
+  const existing = new Set((STATE.categories || []).map(c => c.name));
+  for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (!existing.has(cat)) continue;
+    if (kws.some(kw => lower.includes(kw.toLowerCase()))) return cat;
+  }
+  return null;
+}
+
 async function addTaskFromNL(parsed) {
+  const guessed = guessCategory(parsed.title);
   const payload = {
     title: parsed.title,
     due_date: parsed.due_date,
     status: "todo",
     priority: "medium",
-    category: null,
+    category: guessed,
     project_id: null,
     tags: [],
     notes: "",
@@ -684,7 +703,8 @@ async function addTaskFromNL(parsed) {
     STATE.tasks.unshift(created);
     if (STATE.tab === "dashboard") renderDashboard();
     else if (STATE.tab === "tasks") renderTasks();
-    showToast(`할 일 추가 · ${parsed.preview}`);
+    const catLabel = guessed ? ` · #${guessed}` : "";
+    showToast(`할 일 추가 · ${parsed.preview}${catLabel}`);
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -2065,8 +2085,10 @@ function bindEvents() {
     const val = qcInput.value;
     const parsed = parseNL(val);
     if (parsed && parsed.type === "task") {
+      const cat = guessCategory(parsed.title);
+      const catChip = cat ? `  #${cat}` : "";
       qcPreview.hidden = false;
-      qcPreview.textContent = `→ 할 일로 인식: ${parsed.preview}`;
+      qcPreview.textContent = `→ 할 일로 인식: ${parsed.preview}${catChip}`;
       qcPreview.classList.add("is-task");
     } else if (val.trim()) {
       qcPreview.hidden = false;
