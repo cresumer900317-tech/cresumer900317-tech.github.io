@@ -2032,3 +2032,17 @@ input, button, select, textarea { font: inherit; color: inherit; }
   .briefing-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ════════════════════════════════════════════════════════
+   Phase 7c — Daily auto-template "🪄 자동 채우기" 버튼
+   ════════════════════════════════════════════════════════ */
+.btn-magic {
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-dim);
+}
+.btn-magic:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text-strong);
+  border-color: var(--primary);
+}
+

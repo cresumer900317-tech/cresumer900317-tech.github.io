@@ -1516,11 +1516,13 @@ function dayIndexFromStart(windowStart, dateStr, totalDays) {
 async function renderDailyEditor() {
   document.getElementById("dailyDateInput").value = STATE.dailyDate;
   // 해당 날짜 로그 로드
+  let isEmpty = true;
   try {
     const log = await api("GET", `/api/me/daily-logs/${STATE.dailyDate}`);
     document.getElementById("dailyContent").value = log.content || "";
+    isEmpty = !(log.content && log.content.trim());
     STATE.dailyDirty = false;
-    setDailyStatus("saved", "저장됨");
+    setDailyStatus(isEmpty ? "" : "saved", isEmpty ? "변경사항 없음" : "저장됨");
   } catch (e) {
     if (e.message && !e.message.includes("404")) showToast(e.message, true);
     document.getElementById("dailyContent").value = "";
@@ -1530,6 +1532,21 @@ async function renderDailyEditor() {
   renderDailyList();
   // AI 분석 결과 캐시 로드 (있으면 표시, 없으면 섹션 숨김)
   loadAiExtracts(STATE.dailyDate);
+
+  // Phase 7c: 오늘 로그가 비어있으면 자동 템플릿 한 번 채워주기
+  const dailyAutoKey = `me_daily_auto_${STATE.dailyDate}`;
+  if (isEmpty && STATE.dailyDate === todayStr() && !sessionStorage.getItem(dailyAutoKey)) {
+    sessionStorage.setItem(dailyAutoKey, "1");
+    try {
+      const data = await api("GET", `/api/me/daily-logs/${STATE.dailyDate}/auto-template`);
+      const ta = document.getElementById("dailyContent");
+      if (ta && !ta.value.trim() && data && data.template) {
+        ta.value = data.template;
+        STATE.dailyDirty = true;
+        setDailyStatus("dirty", "초안 생성됨 — 검토 후 저장하세요");
+      }
+    } catch (_) { /* 자동 채우기 실패는 조용히 무시 */ }
+  }
 }
 
 function renderDailyList() {
@@ -2152,6 +2169,10 @@ function bindEvents() {
   // ── Phase 7a: 브리핑 새로고침 ─────────────────────────
   const briefingRefreshBtn = document.getElementById("briefingRefreshBtn");
   if (briefingRefreshBtn) briefingRefreshBtn.addEventListener("click", () => loadBriefing(true));
+
+  // ── Phase 7c: 하루로그 자동 채우기 ──────────────────
+  const dailyAutoFillBtn = document.getElementById("dailyAutoFillBtn");
+  if (dailyAutoFillBtn) dailyAutoFillBtn.addEventListener("click", dailyAutoFill);
   const aiRefresh = document.getElementById("aiExtractsRefresh");
   if (aiRefresh) aiRefresh.addEventListener("click", () => analyzeDailyLogNow());
 
@@ -2714,4 +2735,29 @@ function renderBriefing() {
       <div class="briefing-card-label">${escapeHtml(it.label)}</div>
     </div>
   `).join("");
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 7c — Daily auto-template
+// ════════════════════════════════════════════════════════
+async function dailyAutoFill() {
+  const ta = document.getElementById("dailyContent");
+  if (!ta) return;
+  if (ta.value.trim() && !confirm("이미 작성 중인 내용을 지우고 자동 초안으로 덮어쓸까요?")) return;
+  try {
+    const data = await api("GET", `/api/me/daily-logs/${STATE.dailyDate}/auto-template`);
+    if (!data || !data.template) {
+      showToast("템플릿을 받지 못했어요", true);
+      return;
+    }
+    ta.value = data.template;
+    STATE.dailyDirty = true;
+    setDailyStatus("dirty", "변경사항 있음 — 검토 후 저장하세요");
+    ta.focus();
+    const first = data.template.indexOf("\n");
+    ta.setSelectionRange(first > 0 ? first : 0, first > 0 ? first : 0);
+    showToast(`초안 생성 (완료 ${data.completed_count}개 / 일정 ${data.due_today_count}개)`);
+  } catch (e) {
+    showToast("자동 채우기 실패: " + e.message, true);
+  }
 }
