@@ -168,17 +168,56 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .view-btn.is-active { background: var(--primary); color: white; }
 
 .icon-btn {
-  background: var(--bg-soft); border: 1px solid var(--border);
+  background: var(--surface-1); border: 1px solid var(--border);
   width: 36px; height: 36px; border-radius: 10px;
   cursor: pointer; display: grid; place-items: center;
-  color: var(--text-dim); transition: all 0.15s;
+  color: var(--text-dim);
+  transition: background var(--dur) var(--ease),
+              color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              transform var(--dur) var(--ease);
 }
-.icon-btn:hover { background: var(--bg-elev); color: var(--text); }
+.icon-btn:hover {
+  background: var(--surface-3); color: var(--text);
+  border-color: var(--border-strong);
+}
+.icon-btn:active { transform: translateY(1px); }
 
 .user-chip {
   font-size: 0.85rem; color: var(--text-dim);
-  padding: 6px 12px; background: var(--bg-soft);
+  padding: 6px 12px; background: var(--surface-1);
   border: 1px solid var(--border); border-radius: 10px;
+  font-weight: var(--fw-medium);
+}
+
+.cmdk-trigger {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 10px; padding-right: 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              color var(--dur) var(--ease);
+}
+.cmdk-trigger:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.cmdk-trigger-icon { opacity: 0.7; }
+.cmdk-trigger-text { font-weight: var(--fw-medium); }
+.cmdk-trigger-kbd {
+  font-size: 0.7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: var(--text-faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* ── Filter bar ────────────────────────────────────────── */
@@ -196,20 +235,29 @@ input, button, select, textarea { font: inherit; color: inherit; }
   flex: 1; min-width: 240px;
 }
 .chip {
-  padding: 6px 12px;
-  background: var(--bg-soft);
+  padding: 5px 11px;
+  background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-dim);
-  transition: all 0.15s;
+  transition: background var(--dur) var(--ease),
+              color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              transform var(--dur) var(--ease);
   display: inline-flex; align-items: center; gap: 6px;
 }
-.chip:hover { background: var(--bg-elev); }
+.chip:hover {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
 .chip.is-active {
   background: var(--primary); color: white;
   border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(99,102,241,0.32);
 }
 .chip-dot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -388,13 +436,24 @@ input, button, select, textarea { font: inherit; color: inherit; }
 }
 .kanban-list {
   padding: 10px;
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 6px;
   flex: 1;
   min-height: 100px;
+  transition: background var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
 }
 .kanban-list.is-dragover {
-  background: rgba(99,102,241,0.08);
+  background: rgba(99,102,241,0.12);
   border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 2px rgba(99,102,241,0.55);
+}
+.kanban-col.is-dragover-col {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 12px 28px rgba(99,102,241,0.18);
+}
+.kanban-col {
+  transition: border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
 }
 
 .kanban-card {
@@ -497,16 +556,22 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .field input,
 .field select,
 .field textarea {
-  background: var(--bg-soft);
+  background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 9px 12px;
   outline: none;
-  transition: border 0.15s;
+  transition: border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease),
+              background var(--dur) var(--ease);
 }
 .field input:focus,
 .field select:focus,
-.field textarea:focus { border-color: var(--primary); }
+.field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+  background: var(--surface-2);
+}
 .field textarea { resize: vertical; min-height: 80px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -1543,6 +1608,7 @@ input, button, select, textarea { font: inherit; color: inherit; }
   .cmdk-backdrop { padding: 6vh 12px 12px; }
   .cmdk-panel { max-height: 80vh; }
   .cmdk-input { font-size: 16px; /* iOS zoom 방지 */ }
+  .cmdk-trigger-text { display: none; }
   .inbox-ai-bar { flex-wrap: wrap; }
   .ai-suggestion-body { flex-direction: column; align-items: stretch; }
 }

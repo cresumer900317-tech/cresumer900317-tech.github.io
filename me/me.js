@@ -886,14 +886,24 @@ function bindKanbanDnD() {
     });
   });
   document.querySelectorAll(".kanban-list").forEach(list => {
+    const col = list.closest(".kanban-col");
     list.addEventListener("dragover", e => {
       e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
       list.classList.add("is-dragover");
+      if (col) col.classList.add("is-dragover-col");
     });
-    list.addEventListener("dragleave", () => list.classList.remove("is-dragover"));
+    list.addEventListener("dragleave", e => {
+      // Only un-mark when leaving the actual list (avoid flicker on children)
+      if (!list.contains(e.relatedTarget)) {
+        list.classList.remove("is-dragover");
+        if (col) col.classList.remove("is-dragover-col");
+      }
+    });
     list.addEventListener("drop", async e => {
       e.preventDefault();
       list.classList.remove("is-dragover");
+      if (col) col.classList.remove("is-dragover-col");
       if (!draggingId) return;
       const newStatus = list.dataset.drop;
       const task = STATE.tasks.find(t => t.id === draggingId);
@@ -902,6 +912,7 @@ function bindKanbanDnD() {
         const updated = await api("PATCH", `/api/me/tasks/${draggingId}`, { status: newStatus });
         Object.assign(task, updated);
         renderKanban();
+        showToast(`→ ${STATUS_LABEL[newStatus] || newStatus}`);
       } catch (e) { showToast(e.message, true); }
     });
   });
@@ -2093,4 +2104,8 @@ function bindCmdk() {
       if (e.target === bd) closeCmdk();
     });
   }
+
+  // Topbar trigger button
+  const trigger = document.getElementById("cmdkTrigger");
+  if (trigger) trigger.addEventListener("click", openCmdk);
 }
