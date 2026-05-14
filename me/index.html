@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=8" as="style" />
+  <link rel="preload" href="./me.css?v=9" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=8" as="script" />
+  <link rel="preload" href="./me.js?v=9" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=8" />
+  <link rel="stylesheet" href="./me.css?v=9" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -155,6 +155,29 @@
             </div>
             <div class="widget-body">
               <div class="feedback-counts" id="feedbackCounts"></div>
+            </div>
+          </div>
+
+          <!-- 💰 AI 사용량 (Phase 8) -->
+          <div class="widget aiu-widget" id="aiUsageWidget">
+            <div class="widget-head">
+              <h3>💰 AI 사용량</h3>
+              <div class="aiu-widget-actions">
+                <button class="aiu-icon-btn" id="aiUsageRefreshBtn" title="새로고침">↻</button>
+                <button class="aiu-icon-btn" id="aiUsageDetailBtn" title="자세히">📊</button>
+              </div>
+            </div>
+            <div class="widget-body">
+              <div class="aiu-cost-line">
+                <span class="aiu-cost-now" id="aiUsageCostNow">$0.00</span>
+                <span class="aiu-cost-sep">/</span>
+                <span class="aiu-cost-cap" id="aiUsageCostCap">$10.00</span>
+              </div>
+              <div class="aiu-bar" aria-label="월 한도 진행률">
+                <div class="aiu-bar-fill" id="aiUsageBarFill" style="width:0%"></div>
+              </div>
+              <div class="aiu-meta" id="aiUsageMeta">불러오는 중…</div>
+              <div class="aiu-meta aiu-meta-sub" id="aiUsageSub" hidden></div>
             </div>
           </div>
         </div>
@@ -565,6 +588,19 @@
       </div>
     </div>
 
+    <!-- 💰 AI 사용량 상세 모달 (Phase 8) -->
+    <div class="modal-backdrop" id="aiUsageModal" hidden>
+      <div class="modal modal-lg" role="dialog" aria-modal="true">
+        <header class="modal-head">
+          <h2>💰 AI 사용량 — 자세히</h2>
+          <button class="modal-close" data-close="aiUsage">✕</button>
+        </header>
+        <div class="modal-body aiu-modal-body" id="aiUsageModalBody">
+          <div class="aiu-loading">불러오는 중…</div>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast" hidden></div>
 
     <!-- # 태그 자동완성 popup (Phase 7) -->
@@ -618,13 +654,14 @@
           <span><span class="cmdk-kbd">/t</span> 할일 ·
                 <span class="cmdk-kbd">/p</span> 프로젝트 ·
                 <span class="cmdk-kbd">/m</span> 메모 ·
-                <span class="cmdk-kbd">/d</span> 하루로그</span>
+                <span class="cmdk-kbd">/d</span> 하루로그 ·
+                <span class="cmdk-kbd">/usage</span> AI사용량</span>
         </div>
       </div>
     </div>
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=8"></script>
+  <script src="./me.js?v=9"></script>
 </body>
 </html>

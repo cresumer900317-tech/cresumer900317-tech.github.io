@@ -98,6 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadBriefing(false);
   // Phase 7e: 피드백 배너
   refreshFeedbackBanner();
+  // Phase 8: AI 사용량 위젯
+  loadAiUsage(false);
 });
 
 // ── 통신 ──────────────────────────────────────────────────
@@ -2217,6 +2219,12 @@ function bindEvents() {
   const briefingRefreshBtn = document.getElementById("briefingRefreshBtn");
   if (briefingRefreshBtn) briefingRefreshBtn.addEventListener("click", () => loadBriefing(true));
 
+  // ── Phase 8: AI 사용량 위젯 ──────────────────────────
+  const aiuRefresh = document.getElementById("aiUsageRefreshBtn");
+  if (aiuRefresh) aiuRefresh.addEventListener("click", () => loadAiUsage(true));
+  const aiuDetail = document.getElementById("aiUsageDetailBtn");
+  if (aiuDetail) aiuDetail.addEventListener("click", openAiUsageModal);
+
   // ── Phase 7c: 하루로그 자동 채우기 ──────────────────
   const dailyAutoFillBtn = document.getElementById("dailyAutoFillBtn");
   if (dailyAutoFillBtn) dailyAutoFillBtn.addEventListener("click", dailyAutoFill);
@@ -2242,6 +2250,7 @@ function bindEvents() {
       else if (target === "category") closeCategoryModal();
       else if (target === "project") closeProjectModal();
       else if (target === "promote") closePromoteModal();
+      else if (target === "aiUsage") closeAiUsageModal();
     });
   });
   document.querySelectorAll(".modal-backdrop").forEach(bd => {
@@ -2431,6 +2440,19 @@ function buildCmdkResults(query) {
         tag: rest ? "Enter로 실행" : "내용 입력 필요",
       }];
     }
+    // /usage — AI 사용량 모달 열기 (Phase 8)
+    const lower = q.slice(1).toLowerCase();
+    if (lower === "usage" || lower.startsWith("usage")
+        || lower === "u" || lower.startsWith("u ")) {
+      return [{
+        section: "빠른 명령",
+        kind: "usage",
+        title: "💰 AI 사용량 자세히",
+        sub: "월 한도 대비 사용량 + 종류별 + 일별 차트",
+        icon: "💰",
+        tag: "Enter로 열기",
+      }];
+    }
   }
 
   // Navigation entries (always visible when no query)
@@ -2507,6 +2529,22 @@ function buildCmdkResults(query) {
   if (q) {
     const matched = navItems.filter(n => fuzzyMatch(n.title, q));
     matched.forEach(n => results.push({ section: "이동", ...n }));
+  }
+
+  // Phase 8: "사용량" / "usage" / "ai" 같은 자연어로도 찾히게
+  if (q) {
+    const lower = q.toLowerCase();
+    if (lower.includes("사용량") || lower.includes("usage")
+        || lower.includes("토큰") || lower.includes("비용")
+        || lower.includes("cost") || lower.includes("ai 사용")) {
+      results.push({
+        section: "AI",
+        kind: "usage",
+        title: "💰 AI 사용량 자세히",
+        sub: "월 한도 대비 사용량 + 종류별 + 일별 차트",
+        icon: "💰",
+      });
+    }
   }
 
   return results;
@@ -2629,6 +2667,12 @@ async function executeCmdk() {
   if (r.kind === "inbox") {
     closeCmdk();
     setTab("inbox");
+    return;
+  }
+
+  if (r.kind === "usage") {
+    closeCmdk();
+    openAiUsageModal();
     return;
   }
 
@@ -3114,3 +3158,247 @@ function renderFeedbackCounts() {
     });
   });
 }
+
+// ════════════════════════════════════════════════════════
+// Phase 8 — AI 사용량 위젯 & 상세 모달
+// ════════════════════════════════════════════════════════
+
+const AI_USAGE = {
+  data: null,
+  loadedAt: 0,
+  inflight: null,
+};
+
+const KIND_LABEL = {
+  briefing: "대시보드 브리핑",
+  inbox_classify: "Inbox 분류",
+  daily_log_extract: "하루로그 추출",
+  search: "스마트 검색",
+  other: "기타",
+};
+
+function fmtUsd(n) {
+  const v = Number(n) || 0;
+  if (v >= 1) return `$${v.toFixed(2)}`;
+  return `$${v.toFixed(3)}`;
+}
+function fmtTok(n) {
+  const v = Number(n) || 0;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+  return String(v);
+}
+
+async function loadAiUsage(force) {
+  // 30초 이내 재호출은 캐시
+  if (!force && AI_USAGE.data && (Date.now() - AI_USAGE.loadedAt) < 30_000) {
+    renderAiUsageWidget(AI_USAGE.data);
+    return AI_USAGE.data;
+  }
+  if (AI_USAGE.inflight) return AI_USAGE.inflight;
+
+  const widget = document.getElementById("aiUsageWidget");
+  if (widget) widget.classList.add("is-loading");
+
+  AI_USAGE.inflight = (async () => {
+    try {
+      const data = await api("GET", "/api/me/ai-usage");
+      AI_USAGE.data = data;
+      AI_USAGE.loadedAt = Date.now();
+      renderAiUsageWidget(data);
+      return data;
+    } catch (e) {
+      console.warn("AI usage load failed:", e);
+      renderAiUsageWidget(null, e.message);
+      return null;
+    } finally {
+      AI_USAGE.inflight = null;
+      if (widget) widget.classList.remove("is-loading");
+    }
+  })();
+  return AI_USAGE.inflight;
+}
+
+function renderAiUsageWidget(data, errMsg) {
+  const costNow = document.getElementById("aiUsageCostNow");
+  const costCap = document.getElementById("aiUsageCostCap");
+  const fill = document.getElementById("aiUsageBarFill");
+  const meta = document.getElementById("aiUsageMeta");
+  const sub = document.getElementById("aiUsageSub");
+  if (!costNow || !costCap || !fill || !meta) return;
+
+  if (!data) {
+    costNow.textContent = "$0.00";
+    costCap.textContent = "$10.00";
+    fill.style.width = "0%";
+    meta.textContent = errMsg
+      ? `불러오기 실패 — ${errMsg.slice(0, 80)}`
+      : "데이터 없음";
+    if (sub) sub.hidden = true;
+    return;
+  }
+
+  const month = data.this_month || {};
+  const cap = Number(month.limit_usd) || 10;
+  const cost = Number(month.cost_usd) || 0;
+  const pct = Math.min(100, Number(month.pct) || (cap > 0 ? (cost / cap) * 100 : 0));
+
+  costNow.textContent = fmtUsd(cost);
+  costCap.textContent = fmtUsd(cap);
+  fill.style.width = `${pct.toFixed(1)}%`;
+  fill.classList.toggle("is-warn", pct >= 70 && pct < 90);
+  fill.classList.toggle("is-danger", pct >= 90);
+
+  const calls = month.calls || 0;
+  const tin = month.tokens_in || 0;
+  const tout = month.tokens_out || 0;
+  const days = month.days_until_reset || 1;
+  meta.textContent = `이번 달 ${calls}건 · 입력 ${fmtTok(tin)} · 출력 ${fmtTok(tout)} 토큰 · 리셋까지 ${days}일`;
+
+  if (sub) {
+    if (data.table_missing) {
+      sub.hidden = false;
+      sub.textContent = "⚠ DB 테이블 미생성 — sql/ai_usage.sql 실행 필요";
+    } else if (data.ai_enabled === false) {
+      sub.hidden = false;
+      sub.textContent = "ANTHROPIC_API_KEY 미설정 — AI 호출 자체가 비활성화";
+    } else if (pct >= 90) {
+      sub.hidden = false;
+      sub.textContent = `한도 ${pct.toFixed(0)}% 도달 — Anthropic 콘솔 한도 ${fmtUsd(cap)} 도달 시 API 차단됩니다`;
+    } else {
+      sub.hidden = true;
+    }
+  }
+}
+
+function openAiUsageModal() {
+  const m = document.getElementById("aiUsageModal");
+  if (!m) return;
+  m.hidden = false;
+  renderAiUsageModalBody(AI_USAGE.data, AI_USAGE.data ? null : "불러오는 중…");
+  // 최신 데이터로 한 번 더 (force)
+  loadAiUsage(true).then(d => renderAiUsageModalBody(d));
+}
+
+function closeAiUsageModal() {
+  const m = document.getElementById("aiUsageModal");
+  if (m) m.hidden = true;
+}
+
+function renderAiUsageModalBody(data, placeholder) {
+  const body = document.getElementById("aiUsageModalBody");
+  if (!body) return;
+  if (!data) {
+    body.innerHTML = `<div class="aiu-loading">${escapeHtml(placeholder || "데이터 없음")}</div>`;
+    return;
+  }
+
+  const today = data.today || {};
+  const week = data.this_week || {};
+  const month = data.this_month || {};
+  const cap = Number(month.limit_usd) || 10;
+  const pct = Math.min(100, Number(month.pct) || 0);
+
+  // 통계 카드 3개
+  const statsHtml = `
+    <div class="aiu-stat-row">
+      <div class="aiu-stat-card">
+        <div class="aiu-stat-label">오늘</div>
+        <div class="aiu-stat-cost">${fmtUsd(today.cost_usd || 0)}</div>
+        <div class="aiu-stat-sub">${today.calls || 0}건 · 입력 ${fmtTok(today.tokens_in)} · 출력 ${fmtTok(today.tokens_out)}</div>
+      </div>
+      <div class="aiu-stat-card">
+        <div class="aiu-stat-label">이번 주</div>
+        <div class="aiu-stat-cost">${fmtUsd(week.cost_usd || 0)}</div>
+        <div class="aiu-stat-sub">${week.calls || 0}건 · 입력 ${fmtTok(week.tokens_in)} · 출력 ${fmtTok(week.tokens_out)}</div>
+      </div>
+      <div class="aiu-stat-card">
+        <div class="aiu-stat-label">이번 달</div>
+        <div class="aiu-stat-cost">${fmtUsd(month.cost_usd || 0)}<small style="font-size:13px;color:var(--text-meta);font-weight:500;"> / ${fmtUsd(cap)}</small></div>
+        <div class="aiu-stat-sub">${pct.toFixed(1)}% · ${month.calls || 0}건 · 리셋까지 ${month.days_until_reset || 1}일</div>
+      </div>
+    </div>
+  `;
+
+  // 종류별 (이번 달)
+  const byKind = data.by_kind || [];
+  const maxKindCost = byKind.reduce((m, k) => Math.max(m, Number(k.cost_usd) || 0), 0) || 1;
+  const byKindHtml = byKind.length === 0
+    ? `<div class="aiu-loading" style="padding:14px 0;">이번 달 AI 호출 기록이 없습니다.</div>`
+    : `<div class="aiu-bykind-list">${byKind.map(k => {
+        const w = ((Number(k.cost_usd) || 0) / maxKindCost) * 100;
+        const label = KIND_LABEL[k.kind] || k.kind;
+        return `<div class="aiu-bykind-row">
+          <span class="aiu-bykind-name">${escapeHtml(label)}</span>
+          <div class="aiu-bykind-bar"><div class="aiu-bykind-bar-fill" style="width:${w.toFixed(1)}%"></div></div>
+          <span class="aiu-bykind-cost">${fmtUsd(k.cost_usd)} · ${k.calls}건</span>
+        </div>`;
+      }).join("")}</div>`;
+
+  // 지난 30일 일별
+  const daily = data.daily_last_30 || [];
+  const todayStrLocal = (function () {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const maxDaily = daily.reduce((m, d) => Math.max(m, Number(d.cost_usd) || 0), 0) || 0.0001;
+  const dailyBarsHtml = daily.map(d => {
+    const cost = Number(d.cost_usd) || 0;
+    const h = Math.max(2, (cost / maxDaily) * 84);
+    const zero = cost <= 0 ? "is-zero" : "";
+    const todayFlag = d.date === todayStrLocal ? `data-today="1"` : "";
+    return `<div class="aiu-daily-bar ${zero}" style="height:${h.toFixed(1)}px"
+                 title="${escapeAttr(d.date)} — ${fmtUsd(cost)} (${d.calls || 0}건)" ${todayFlag}></div>`;
+  }).join("");
+  const firstDate = daily[0]?.date || "";
+  const lastDate = daily[daily.length - 1]?.date || "";
+
+  // 모델 / 단가
+  const model = data.model || "claude-haiku-4-5";
+  const priceIn = data.price?.input_per_m_usd ?? 1.0;
+  const priceOut = data.price?.output_per_m_usd ?? 5.0;
+
+  // 경고
+  let warn = "";
+  if (data.table_missing) {
+    warn = `<div class="aiu-warn-note">⚠ <strong>personal_ai_usage</strong> 테이블이 아직 생성되지 않았습니다. <code>guild_backend/sql/ai_usage.sql</code> 을 Supabase SQL Editor 에서 한 번 실행해 주세요.</div>`;
+  } else if (data.ai_enabled === false) {
+    warn = `<div class="aiu-warn-note">⚠ Railway 에 <code>ANTHROPIC_API_KEY</code> 가 설정되지 않아 AI 호출 자체가 비활성 상태입니다.</div>`;
+  } else if (pct >= 90) {
+    warn = `<div class="aiu-warn-note">⚠ 월 한도 ${pct.toFixed(0)}% 사용. Anthropic 콘솔 한도(<strong>${fmtUsd(cap)}</strong>) 도달 시 API 호출이 자동 차단됩니다.</div>`;
+  }
+
+  body.innerHTML = `
+    ${warn}
+    ${statsHtml}
+
+    <div>
+      <div class="aiu-section-title">
+        <span>종류별 (이번 달)</span>
+        <span class="aiu-section-note">총 ${month.calls || 0}건 · ${fmtUsd(month.cost_usd || 0)}</span>
+      </div>
+      ${byKindHtml}
+    </div>
+
+    <div>
+      <div class="aiu-section-title">
+        <span>지난 30일 일별</span>
+        <span class="aiu-section-note">최대 ${fmtUsd(maxDaily)} / 일 · 오늘은 외곽선</span>
+      </div>
+      <div class="aiu-daily-chart">${dailyBarsHtml}</div>
+      <div class="aiu-daily-axis">
+        <span>${escapeHtml(firstDate)}</span>
+        <span>${escapeHtml(lastDate)}</span>
+      </div>
+    </div>
+
+    <div class="aiu-info">
+      <strong>모델</strong>: <code>${escapeHtml(model)}</code><br>
+      <strong>단가</strong>: 입력 <code>$${priceIn}/M tokens</code> · 출력 <code>$${priceOut}/M tokens</code><br>
+      <strong>한도</strong>: 월 <code>${fmtUsd(cap)}</code> (환경변수 <code>AI_MONTHLY_BUDGET_USD</code>로 조정).
+      이 위젯은 backend 가 기록한 추정치이며, 실제 결제는 Anthropic 콘솔이 정확합니다. 한도 도달 시 API 가 자동 차단됩니다.<br>
+      <strong>주의</strong>: 캐시 hit (실제 호출 없음) 은 기록되지 않습니다.
+    </div>
+  `;
+}
+
