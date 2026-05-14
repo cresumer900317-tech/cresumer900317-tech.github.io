@@ -2046,3 +2046,64 @@ input, button, select, textarea { font: inherit; color: inherit; }
   border-color: var(--primary);
 }
 
+/* ════════════════════════════════════════════════════════
+   Phase 7d — Quick Memo (Cmd/Ctrl + N) 모달
+   ════════════════════════════════════════════════════════ */
+.qmemo-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,4,12,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 14vh 16px 16px;
+}
+.qmemo-panel {
+  width: 100%;
+  max-width: 540px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.qmemo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
+}
+.qmemo-head small {
+  color: var(--text-meta);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-4);
+}
+.qmemo-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 92px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+  font: inherit;
+  line-height: 1.5;
+}
+.qmemo-textarea:focus { border-color: var(--primary); }
+.qmemo-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.qmemo-hint { color: var(--text-meta); font-size: var(--fs-4); }
+

@@ -548,6 +548,29 @@
 
     <div id="toast" class="toast" hidden></div>
 
+    <!-- Quick Memo (Cmd/Ctrl + N) — Phase 7 -->
+    <div class="qmemo-backdrop" id="qmemoBackdrop" hidden>
+      <div class="qmemo-panel" role="dialog" aria-modal="true" aria-label="빠른 메모">
+        <div class="qmemo-head">
+          <span>📥 빠른 메모</span>
+          <small>Enter 저장 · Shift+Enter 줄바꿈 · Esc 닫기</small>
+        </div>
+        <textarea
+          id="qmemoTextarea"
+          class="qmemo-textarea"
+          placeholder="떠오른 생각을 적어두세요."
+          maxlength="2000"
+        ></textarea>
+        <div class="qmemo-foot">
+          <span class="qmemo-hint">바로 받은 메모(Inbox)에 담깁니다.</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-outline" type="button" id="qmemoCancelBtn">취소</button>
+            <button class="btn btn-primary" type="button" id="qmemoSaveBtn">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Command Palette (Cmd/Ctrl + K) -->
     <div class="cmdk-backdrop" id="cmdkBackdrop" hidden>
       <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="명령 팔레트">

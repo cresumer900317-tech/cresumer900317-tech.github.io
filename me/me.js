@@ -77,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   bindEvents();
   bindCmdk();
+  bindQuickMemo();
   refreshAll();
 
   // Phase 7a: 첫 로드 시 브리핑
@@ -2759,5 +2760,68 @@ async function dailyAutoFill() {
     showToast(`초안 생성 (완료 ${data.completed_count}개 / 일정 ${data.due_today_count}개)`);
   } catch (e) {
     showToast("자동 채우기 실패: " + e.message, true);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 7d — Quick Memo (Cmd/Ctrl + N)
+// ════════════════════════════════════════════════════════
+function openQuickMemo() {
+  const bd = document.getElementById("qmemoBackdrop");
+  const ta = document.getElementById("qmemoTextarea");
+  if (!bd || !ta) return;
+  bd.hidden = false;
+  ta.value = "";
+  setTimeout(() => ta.focus(), 10);
+}
+
+function closeQuickMemo() {
+  const bd = document.getElementById("qmemoBackdrop");
+  if (bd) bd.hidden = true;
+}
+
+async function submitQuickMemo() {
+  const ta = document.getElementById("qmemoTextarea");
+  if (!ta) return;
+  const val = (ta.value || "").trim();
+  if (!val) { showToast("내용이 비어있어요", true); return; }
+  closeQuickMemo();
+  await addInbox(val);
+}
+
+function bindQuickMemo() {
+  const bd = document.getElementById("qmemoBackdrop");
+  const ta = document.getElementById("qmemoTextarea");
+  const saveBtn = document.getElementById("qmemoSaveBtn");
+  const cancelBtn = document.getElementById("qmemoCancelBtn");
+
+  // Global Cmd/Ctrl+N → open. Cmd+K 가 열려있을 때는 무시.
+  window.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "n" || e.key === "N")) {
+      const cmdkOpen = !document.getElementById("cmdkBackdrop")?.hidden;
+      if (cmdkOpen) return;
+      e.preventDefault();
+      if (bd && !bd.hidden) closeQuickMemo();
+      else openQuickMemo();
+    }
+  });
+
+  if (bd) {
+    bd.addEventListener("click", e => {
+      if (e.target === bd) closeQuickMemo();
+    });
+  }
+  if (cancelBtn) cancelBtn.addEventListener("click", closeQuickMemo);
+  if (saveBtn) saveBtn.addEventListener("click", submitQuickMemo);
+  if (ta) {
+    ta.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        submitQuickMemo();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeQuickMemo();
+      }
+    });
   }
 }
