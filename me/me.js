@@ -44,7 +44,20 @@ const STATE = {
   // Phase 7a: Briefing
   briefing: null,            // {today, text, numbers, ai_enabled, cached, generated_at}
   briefingLoading: false,
+
+  // Phase 7e: Feedback tag filter (when clicking count chip)
+  inboxTagFilter: null,      // null | "friction" | "unused" | "automate" | "repeat"
 };
+
+// Phase 7e — feedback tags
+const FEEDBACK_TAGS = [
+  { tag: "friction",  desc: "어색한 점 / 막히는 부분" },
+  { tag: "unused",    desc: "안 쓰는 기능" },
+  { tag: "automate",  desc: "자동화 후보" },
+  { tag: "repeat",    desc: "반복 입력하는 것" },
+];
+const FEEDBACK_BANNER_START_KEY = "me_feedback_banner_start";
+const FEEDBACK_BANNER_DAYS = 7;
 
 const STATUS_LABEL = {
   todo: "할 일",
@@ -78,10 +91,13 @@ document.addEventListener("DOMContentLoaded", () => {
   bindEvents();
   bindCmdk();
   bindQuickMemo();
+  bindTagSuggest();
   refreshAll();
 
   // Phase 7a: 첫 로드 시 브리핑
   loadBriefing(false);
+  // Phase 7e: 피드백 배너
+  refreshFeedbackBanner();
 });
 
 // ── 통신 ──────────────────────────────────────────────────
@@ -296,6 +312,9 @@ function renderDashboard() {
       STATE.dailyDate = el.dataset.date;
       setTab("daily");
     }));
+
+  // Phase 7e: 피드백 카운트 위젯 갱신
+  renderFeedbackCounts();
 }
 
 function fillWidget(bodyId, countId, count, items, emptyMsg) {
@@ -383,15 +402,38 @@ function renderInbox() {
     }
   }
   const list = document.getElementById("inboxList");
-  if (!STATE.inbox.length) {
-    list.innerHTML = `<div class="widget-empty">${
-      STATE.inboxFilter === "active"
-        ? "받은 메모가 비어있어요. 위 입력창에 떠오르는 대로 적어두세요."
-        : "처리된 메모가 없습니다."
-    }</div>`;
+
+  // Phase 7e: 피드백 태그 필터 적용
+  let items = STATE.inbox;
+  if (STATE.inboxTagFilter) {
+    const re = new RegExp(`#${STATE.inboxTagFilter}\\b`, "i");
+    items = items.filter(i => re.test(i.content || ""));
+  }
+
+  if (!items.length) {
+    const filterMsg = STATE.inboxTagFilter
+      ? `<div class="widget-empty">#${escapeHtml(STATE.inboxTagFilter)} 태그가 붙은 메모가 없어요.
+           <br><button class="btn btn-outline" id="inboxFilterClearBtn" style="margin-top:8px;">필터 해제</button></div>`
+      : `<div class="widget-empty">${
+          STATE.inboxFilter === "active"
+            ? "받은 메모가 비어있어요. 위 입력창에 떠오르는 대로 적어두세요."
+            : "처리된 메모가 없습니다."
+        }</div>`;
+    list.innerHTML = filterMsg;
+    const clr = document.getElementById("inboxFilterClearBtn");
+    if (clr) clr.addEventListener("click", () => { STATE.inboxTagFilter = null; renderInbox(); });
     return;
   }
-  list.innerHTML = STATE.inbox.map(i => inboxItemHtml(i)).join("");
+  let header = "";
+  if (STATE.inboxTagFilter) {
+    header = `<div class="widget-empty" style="text-align:left; padding:8px 12px; margin-bottom:8px;">
+      필터: <code style="color:#c7d2fe;">#${escapeHtml(STATE.inboxTagFilter)}</code> · ${items.length}건
+      <button class="btn btn-outline" id="inboxFilterClearBtn" style="margin-left:12px; padding:2px 10px;">전체 보기</button>
+    </div>`;
+  }
+  list.innerHTML = header + items.map(i => inboxItemHtml(i)).join("");
+  const clr = document.getElementById("inboxFilterClearBtn");
+  if (clr) clr.addEventListener("click", () => { STATE.inboxTagFilter = null; renderInbox(); });
   list.querySelectorAll("[data-action='delete']").forEach(btn => {
     btn.addEventListener("click", () => deleteInbox(Number(btn.dataset.id)));
   });
@@ -1982,7 +2024,11 @@ function renderCategoryList() {
 function bindEvents() {
   // 큰 네비
   document.querySelectorAll(".nav-tab").forEach(btn => {
-    btn.addEventListener("click", () => setTab(btn.dataset.tab));
+    btn.addEventListener("click", () => {
+      // 탭 직접 클릭은 항상 전체 보기 (피드백 태그 필터 해제)
+      STATE.inboxTagFilter = null;
+      setTab(btn.dataset.tab);
+    });
   });
 
   // Tasks 안의 list/kanban 토글
@@ -2778,6 +2824,8 @@ function openQuickMemo() {
 function closeQuickMemo() {
   const bd = document.getElementById("qmemoBackdrop");
   if (bd) bd.hidden = true;
+  // 태그 자동완성도 같이 닫기 (Phase 7e)
+  if (typeof hideTagSuggest === "function") hideTagSuggest();
 }
 
 async function submitQuickMemo() {
@@ -2815,6 +2863,9 @@ function bindQuickMemo() {
   if (saveBtn) saveBtn.addEventListener("click", submitQuickMemo);
   if (ta) {
     ta.addEventListener("keydown", e => {
+      // 태그 자동완성이 열려있으면 키 처리 양보 (Phase 7e)
+      if (typeof TAG_SUGGEST !== "undefined" && TAG_SUGGEST.open
+          && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter" || e.key === "Tab" || e.key === "Escape")) return;
       if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         submitQuickMemo();
@@ -2824,4 +2875,242 @@ function bindQuickMemo() {
       }
     });
   }
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 7e — # 태그 자동완성 (Inbox · Daily · Quick · Quick-capture)
+// ════════════════════════════════════════════════════════
+const TAG_SUGGEST = {
+  open: false,
+  target: null,        // input/textarea element
+  hashStart: -1,       // index of `#` in target.value
+  filter: "",          // chars typed after #
+  results: [],
+  activeIndex: 0,
+};
+
+function bindTagSuggest() {
+  const targets = [
+    "quickCaptureInput",
+    "inboxAddInput",
+    "dailyContent",
+    "qmemoTextarea",
+  ];
+  targets.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", () => onTagSuggestInput(el));
+    el.addEventListener("keydown", e => onTagSuggestKeydown(e, el));
+    el.addEventListener("blur", () => setTimeout(hideTagSuggest, 120));
+  });
+
+  // 클릭 외부 시 닫기
+  document.addEventListener("click", e => {
+    const popup = document.getElementById("tagSuggest");
+    if (!popup || popup.hidden) return;
+    if (popup.contains(e.target)) return;
+    if (TAG_SUGGEST.target === e.target) return;
+    hideTagSuggest();
+  });
+  // 스크롤 시 닫기
+  window.addEventListener("scroll", hideTagSuggest, { passive: true });
+}
+
+function onTagSuggestInput(el) {
+  const val = el.value || "";
+  const cursor = el.selectionStart ?? val.length;
+  // 가장 가까운 # 찾기 (커서 바로 앞쪽)
+  let i = cursor - 1;
+  let hashIdx = -1;
+  while (i >= 0) {
+    const ch = val[i];
+    if (ch === "#") { hashIdx = i; break; }
+    if (/\s/.test(ch)) break;
+    i--;
+  }
+  if (hashIdx < 0) { hideTagSuggest(); return; }
+  // # 앞은 줄 시작 또는 공백이어야 함
+  const before = hashIdx > 0 ? val[hashIdx - 1] : "";
+  if (before && !/\s/.test(before)) { hideTagSuggest(); return; }
+
+  const filter = val.slice(hashIdx + 1, cursor);
+  if (/\s/.test(filter)) { hideTagSuggest(); return; }
+
+  TAG_SUGGEST.target = el;
+  TAG_SUGGEST.hashStart = hashIdx;
+  TAG_SUGGEST.filter = filter.toLowerCase();
+  TAG_SUGGEST.results = FEEDBACK_TAGS.filter(t =>
+    !filter || t.tag.startsWith(filter.toLowerCase())
+  );
+  // 사용자가 4개 외 다른 태그를 적으면 자동완성 사라짐
+  if (TAG_SUGGEST.results.length === 0) { hideTagSuggest(); return; }
+  TAG_SUGGEST.activeIndex = 0;
+  renderTagSuggest();
+}
+
+function onTagSuggestKeydown(e, el) {
+  if (!TAG_SUGGEST.open || TAG_SUGGEST.target !== el) return;
+  if (e.key === "Escape") {
+    e.preventDefault(); hideTagSuggest(); return;
+  }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    TAG_SUGGEST.activeIndex = (TAG_SUGGEST.activeIndex + 1) % TAG_SUGGEST.results.length;
+    renderTagSuggest();
+    return;
+  }
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    TAG_SUGGEST.activeIndex = (TAG_SUGGEST.activeIndex - 1 + TAG_SUGGEST.results.length) % TAG_SUGGEST.results.length;
+    renderTagSuggest();
+    return;
+  }
+  if (e.key === "Enter" || e.key === "Tab") {
+    e.preventDefault();
+    applyTagSuggest(TAG_SUGGEST.activeIndex);
+    return;
+  }
+}
+
+function renderTagSuggest() {
+  const popup = document.getElementById("tagSuggest");
+  const el = TAG_SUGGEST.target;
+  if (!popup || !el) return;
+  const rect = el.getBoundingClientRect();
+  popup.style.left = `${Math.max(8, rect.left)}px`;
+  popup.style.top = `${rect.bottom + 4 + window.scrollY}px`;
+  const items = TAG_SUGGEST.results.map((r, idx) => `
+    <div class="tag-suggest-item ${idx === TAG_SUGGEST.activeIndex ? "is-active" : ""}" data-idx="${idx}">
+      <span class="tag-suggest-tag">#${r.tag}</span>
+      <span class="tag-suggest-desc">${escapeHtml(r.desc)}</span>
+    </div>
+  `).join("");
+  popup.innerHTML = items + `<div class="tag-suggest-foot">↑↓ 이동 · Enter/Tab 삽입 · Esc 닫기</div>`;
+  popup.hidden = false;
+  TAG_SUGGEST.open = true;
+  popup.querySelectorAll(".tag-suggest-item").forEach(itm => {
+    itm.addEventListener("mousedown", e => {
+      e.preventDefault(); // blur 방지
+      applyTagSuggest(Number(itm.dataset.idx));
+    });
+  });
+}
+
+function hideTagSuggest() {
+  const popup = document.getElementById("tagSuggest");
+  if (popup) popup.hidden = true;
+  TAG_SUGGEST.open = false;
+  TAG_SUGGEST.target = null;
+}
+
+function applyTagSuggest(idx) {
+  const el = TAG_SUGGEST.target;
+  const r = TAG_SUGGEST.results[idx];
+  if (!el || !r) { hideTagSuggest(); return; }
+  const val = el.value || "";
+  const cursor = el.selectionStart ?? val.length;
+  const before = val.slice(0, TAG_SUGGEST.hashStart);
+  const after = val.slice(cursor);
+  const inserted = `#${r.tag} `;
+  el.value = before + inserted + after;
+  const newPos = before.length + inserted.length;
+  el.setSelectionRange(newPos, newPos);
+  hideTagSuggest();
+  // input 이벤트 트리거 — 다른 핸들러도 갱신되도록
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+// ════════════════════════════════════════════════════════
+// Phase 7e — 피드백 가이드 배너 + 카운트
+// ════════════════════════════════════════════════════════
+function refreshFeedbackBanner() {
+  const banner = document.getElementById("feedbackBanner");
+  if (!banner) return;
+
+  // 시작 시점 기록 (없으면 오늘로 세팅)
+  let start = localStorage.getItem(FEEDBACK_BANNER_START_KEY);
+  if (!start) {
+    start = todayStr();
+    localStorage.setItem(FEEDBACK_BANNER_START_KEY, start);
+  }
+  const startDate = new Date(start + "T00:00:00");
+  const today = startOfDay(new Date());
+  const dayDiff = Math.floor((today - startDate) / (24 * 3600 * 1000));
+  if (dayDiff >= FEEDBACK_BANNER_DAYS) {
+    banner.hidden = true;
+    return;
+  }
+
+  // 오늘 숨김 처리됐는지 확인
+  const hiddenKey = `me_feedback_banner_hidden_${todayStr()}`;
+  if (localStorage.getItem(hiddenKey) === "1") {
+    banner.hidden = true;
+    return;
+  }
+  banner.hidden = false;
+
+  const closeBtn = document.getElementById("feedbackBannerCloseBtn");
+  if (closeBtn && !closeBtn.dataset.bound) {
+    closeBtn.dataset.bound = "1";
+    closeBtn.addEventListener("click", () => {
+      localStorage.setItem(hiddenKey, "1");
+      banner.hidden = true;
+    });
+  }
+}
+
+function countFeedbackTags() {
+  const counts = { friction: 0, unused: 0, automate: 0, repeat: 0 };
+  // 이번 주 시작 (월요일)
+  const today = startOfDay(new Date());
+  const dow = today.getDay() || 7; // 일=7
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - (dow - 1));
+
+  STATE.inbox.forEach(i => {
+    const created = i.created_at ? new Date(i.created_at) : null;
+    if (created && created < weekStart) return;
+    const txt = (i.content || "").toLowerCase();
+    FEEDBACK_TAGS.forEach(t => {
+      const re = new RegExp(`#${t.tag}\\b`, "i");
+      if (re.test(txt)) counts[t.tag]++;
+    });
+  });
+  return counts;
+}
+
+function renderFeedbackCounts() {
+  const widget = document.getElementById("feedbackCountsWidget");
+  const grid = document.getElementById("feedbackCounts");
+  const total = document.getElementById("feedbackTotalCount");
+  if (!widget || !grid) return;
+
+  // 시작 후 7일 내에만 노출
+  const start = localStorage.getItem(FEEDBACK_BANNER_START_KEY);
+  if (start) {
+    const startDate = new Date(start + "T00:00:00");
+    const today = startOfDay(new Date());
+    const dayDiff = Math.floor((today - startDate) / (24 * 3600 * 1000));
+    if (dayDiff >= FEEDBACK_BANNER_DAYS) {
+      widget.hidden = true;
+      return;
+    }
+  }
+  widget.hidden = false;
+
+  const counts = countFeedbackTags();
+  if (total) total.textContent = Object.values(counts).reduce((a, b) => a + b, 0);
+  grid.innerHTML = FEEDBACK_TAGS.map(t => `
+    <button class="fc-chip ${counts[t.tag] === 0 ? "is-zero" : ""}" data-tag="${t.tag}" type="button">
+      <span class="fc-chip-tag">#${t.tag}</span>
+      <span class="fc-chip-num">${counts[t.tag]}</span>
+    </button>
+  `).join("");
+  grid.querySelectorAll(".fc-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      STATE.inboxTagFilter = btn.dataset.tag;
+      STATE.inboxFilter = "active";
+      setTab("inbox");
+    });
+  });
 }

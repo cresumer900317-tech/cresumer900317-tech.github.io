@@ -2107,3 +2107,125 @@ input, button, select, textarea { font: inherit; color: inherit; }
 }
 .qmemo-hint { color: var(--text-meta); font-size: var(--fs-4); }
 
+/* ════════════════════════════════════════════════════════
+   Phase 7e — 피드백 가이드 (배너 / 카운트 / # 자동완성)
+   ════════════════════════════════════════════════════════ */
+.feedback-banner {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(124,108,242,0.10) 0%,
+    rgba(124,108,242,0.04) 100%
+  );
+  border: 1px solid rgba(124,108,242,0.30);
+  border-radius: var(--radius);
+  padding: 12px 36px 12px 14px;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: var(--fs-3);
+  line-height: 1.5;
+}
+.feedback-banner strong { color: var(--text-strong); }
+.feedback-banner code {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: #c7d2fe;
+  margin: 0 1px;
+}
+.feedback-banner-close {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-meta);
+  cursor: pointer;
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.feedback-banner-close:hover { background: var(--surface-3); color: var(--text-strong); }
+
+.feedback-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.fc-chip {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.fc-chip:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+.fc-chip-tag {
+  font-size: var(--fs-4);
+  color: var(--text-meta);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+.fc-chip-num {
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+.fc-chip.is-zero .fc-chip-num { color: var(--text-meta); }
+
+.tag-suggest {
+  position: absolute;
+  z-index: 1200;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lift);
+  min-width: 240px;
+  max-width: 320px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.tag-suggest-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+}
+.tag-suggest-item:hover,
+.tag-suggest-item.is-active {
+  background: var(--surface-3);
+}
+.tag-suggest-tag {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  color: #c7d2fe;
+  font-weight: var(--fw-semibold);
+}
+.tag-suggest-desc {
+  color: var(--text-meta);
+  font-size: var(--fs-4);
+}
+.tag-suggest-foot {
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+  padding: 6px 10px;
+  color: var(--text-meta);
+  font-size: 11px;
+}
+

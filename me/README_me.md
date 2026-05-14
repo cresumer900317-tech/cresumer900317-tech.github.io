@@ -116,3 +116,15 @@ Railway 가 main 브랜치 push 감지 → 자동 재배포.
 - `POST /api/me/extracts/{eid}/promote` — `{kind:"tasks"|"future", index, category?, project_id?, priority?, due_date?}` → 새 personal_tasks 행 생성 + payload.promoted 에 마킹.
 - `POST /api/me/extracts/{eid}/dismiss` — `{kind:"tasks"|"future"|"decisions", index}` → payload.dismissed 마킹 (체크리스트에서 비활성).
 - `POST /api/me/search` — `{query, days?}` → 최근 `days(기본 90, 7~365)` 일치 하루 로그를 컨텍스트로 자연어 질의응답. `{answer, sources:[{date,snippet}], logs_searched, days}` 반환.
+
+### Phase 7 — 브리핑 / 자동 템플릿 / 피드백
+
+- `POST /api/me/dashboard-briefing[?force=true]` — Claude haiku 1~3문장 한국어 요약 + `numbers:{today_due, inbox_unprocessed, projects_active, at_risk}`.
+  AI 비활성 시 `text=""` + `ai_enabled:false` 로 graceful 응답 (대시보드는 숫자 카드만 표시).
+  같은 입력은 24h 캐시 (`personal_ai_summaries.kind = dashboard_briefing`).
+- `GET /api/me/daily-logs/{YYYY-MM-DD}/auto-template` — 오늘 완료 task / 오늘 마감 / 진행 프로젝트 기반
+  결정론적 초안 (AI 호출 없음). 빈 textarea 자동 채우기 + "🪄 자동 채우기" 버튼.
+
+**피드백 태그 (1주 사용 데이터 수집)** — 메모 끝에 `#friction` (어색) · `#unused` (안 씀) · `#automate` (자동화 후보) · `#repeat` (반복) 를 붙이면 대시보드 위젯에서 카운트 + 클릭 시 Inbox 필터.
+
+**Quick Memo (Cmd/Ctrl+N)** — 어디서든 빠른 메모 모달. Enter 저장 / Esc 닫기. Cmd+K(검색·명령)와 공존.

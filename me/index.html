@@ -70,12 +70,20 @@
           <div class="briefing-cards" id="briefingCards"></div>
         </div>
 
+        <!-- 📣 1주 사용 피드백 가이드 배너 (Phase 7) -->
+        <div class="feedback-banner" id="feedbackBanner" hidden>
+          <button class="feedback-banner-close" id="feedbackBannerCloseBtn" title="오늘 동안 숨기기">✕</button>
+          이번 주 사용 피드백 수집 중. 어색한 점·자동화 후보·반복 입력을 메모 끝에 다음 태그로 던져주세요:
+          <code>#friction</code> <code>#unused</code> <code>#automate</code> <code>#repeat</code>.
+          <strong>1주 뒤 자동 정리됩니다.</strong>
+        </div>
+
         <div class="quick-capture">
           <form id="quickCaptureForm" class="quick-capture-form">
             <input
               type="text"
               id="quickCaptureInput"
-              placeholder="예: 내일 오후 3시 회의 / 6월 8일 신혼여행 출발 / 그냥 메모도 OK"
+              placeholder="예: 내일 오후 3시 회의 / 6월 8일 신혼여행 출발 / 그냥 메모도 OK (피드백은 #friction / #unused / #automate / #repeat)"
               maxlength="500"
               autocomplete="off"
             />
@@ -138,6 +146,17 @@
             </div>
             <div class="widget-body" id="dashLogs"></div>
           </div>
+
+          <!-- 이번 주 피드백 카운트 (Phase 7) -->
+          <div class="widget" id="feedbackCountsWidget" hidden>
+            <div class="widget-head">
+              <h3>이번 주 피드백</h3>
+              <span class="widget-count" id="feedbackTotalCount">0</span>
+            </div>
+            <div class="widget-body">
+              <div class="feedback-counts" id="feedbackCounts"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -148,7 +167,7 @@
             <input
               type="text"
               id="inboxAddInput"
-              placeholder="떠오른 생각, 할 일, 아이디어 — 일단 적어두세요"
+              placeholder="떠오른 생각, 할 일, 아이디어 — 일단 적어두세요 (피드백은 #friction / #unused / #automate / #repeat)"
               maxlength="2000"
               autocomplete="off"
             />
@@ -287,7 +306,7 @@
         <div class="daily-edit">
           <textarea
             id="dailyContent"
-            placeholder="오늘 뭐 했나요? 떠오르는 대로 적어두세요. 회의 결정사항이나 앞으로 할 일도 같이 적어두면 AI 가 알아서 뽑아드려요."
+            placeholder="오늘 뭐 했나요? 떠오르는 대로 적어두세요. (피드백은 #friction / #unused / #automate / #repeat)"
             rows="14"
           ></textarea>
           <div class="daily-meta">
@@ -548,6 +567,9 @@
 
     <div id="toast" class="toast" hidden></div>
 
+    <!-- # 태그 자동완성 popup (Phase 7) -->
+    <div class="tag-suggest" id="tagSuggest" hidden></div>
+
     <!-- Quick Memo (Cmd/Ctrl + N) — Phase 7 -->
     <div class="qmemo-backdrop" id="qmemoBackdrop" hidden>
       <div class="qmemo-panel" role="dialog" aria-modal="true" aria-label="빠른 메모">
@@ -558,7 +580,7 @@
         <textarea
           id="qmemoTextarea"
           class="qmemo-textarea"
-          placeholder="떠오른 생각을 적어두세요."
+          placeholder="떠오른 생각을 적어두세요. (피드백은 #friction / #unused / #automate / #repeat)"
           maxlength="2000"
         ></textarea>
         <div class="qmemo-foot">
