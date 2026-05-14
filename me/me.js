@@ -549,7 +549,7 @@ async function addTaskFromNL(parsed) {
     title: parsed.title,
     due_date: parsed.due_date,
     status: "todo",
-    priority: "normal",
+    priority: "medium",
     category: null,
     project_id: null,
     tags: [],
