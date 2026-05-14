@@ -471,6 +471,36 @@
     </div>
 
     <div id="toast" class="toast" hidden></div>
+
+    <!-- Command Palette (Cmd/Ctrl + K) -->
+    <div class="cmdk-backdrop" id="cmdkBackdrop" hidden>
+      <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="명령 팔레트">
+        <div class="cmdk-header">
+          <svg class="cmdk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="cmdkInput"
+            class="cmdk-input"
+            placeholder="검색하거나 명령을 입력하세요  (예: /t 회의 준비)"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span class="cmdk-kbd">ESC</span>
+        </div>
+        <div class="cmdk-list" id="cmdkList"></div>
+        <div class="cmdk-footer">
+          <span><span class="cmdk-kbd">↑</span> <span class="cmdk-kbd">↓</span> 이동</span>
+          <span><span class="cmdk-kbd">Enter</span> 선택</span>
+          <span><span class="cmdk-kbd">/t</span> 할일 ·
+                <span class="cmdk-kbd">/p</span> 프로젝트 ·
+                <span class="cmdk-kbd">/m</span> 메모 ·
+                <span class="cmdk-kbd">/d</span> 하루로그</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>

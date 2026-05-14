@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
   STATE.dailyDate = todayStr();
 
   bindEvents();
+  bindCmdk();
   refreshAll();
 });
 
@@ -1773,4 +1774,323 @@ function showToast(msg, isError) {
   el.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
+}
+
+// ════════════════════════════════════════════════════════
+// Command Palette (Cmd/Ctrl + K)  — Phase 6b
+// ════════════════════════════════════════════════════════
+const CMDK = {
+  open: false,
+  results: [],
+  activeIndex: 0,
+};
+
+function openCmdk() {
+  if (CMDK.open) return;
+  CMDK.open = true;
+  const bd = document.getElementById("cmdkBackdrop");
+  const input = document.getElementById("cmdkInput");
+  bd.hidden = false;
+  input.value = "";
+  CMDK.activeIndex = 0;
+  refreshCmdk("");
+  setTimeout(() => input.focus(), 10);
+}
+
+function closeCmdk() {
+  if (!CMDK.open) return;
+  CMDK.open = false;
+  document.getElementById("cmdkBackdrop").hidden = true;
+}
+
+function fuzzyMatch(text, q) {
+  if (!q) return true;
+  return (text || "").toLowerCase().includes(q.toLowerCase());
+}
+
+function buildCmdkResults(query) {
+  const q = (query || "").trim();
+
+  // Quick commands first
+  if (q.startsWith("/") || q.startsWith(":")) {
+    const cmd = q[1];
+    const rest = q.slice(2).trim();
+    const cmdMap = {
+      t: { title: "새 할 일", icon: "📋", sub: rest || "제목을 입력하세요" },
+      p: { title: "새 프로젝트", icon: "📁", sub: rest || "이름을 입력하세요" },
+      m: { title: "메모(Inbox)에 담기", icon: "📥", sub: rest || "내용을 입력하세요" },
+      d: { title: "오늘 하루로그에 추가", icon: "📓", sub: rest || "내용을 입력하세요" },
+    };
+    if (cmdMap[cmd]) {
+      const def = cmdMap[cmd];
+      return [{
+        section: "빠른 명령",
+        kind: "command",
+        cmd,
+        text: rest,
+        title: def.title,
+        sub: def.sub,
+        icon: def.icon,
+        tag: rest ? "Enter로 실행" : "내용 입력 필요",
+      }];
+    }
+  }
+
+  // Navigation entries (always visible when no query)
+  const navItems = [
+    { kind: "nav", tab: "dashboard", title: "대시보드로 이동", icon: "🏠", sub: "위젯 모음 + 빠른 입력" },
+    { kind: "nav", tab: "inbox",     title: "받은 메모로 이동", icon: "📥", sub: "Inbox 모음" },
+    { kind: "nav", tab: "tasks",     title: "할 일로 이동",     icon: "✓", sub: "리스트 / 칸반" },
+    { kind: "nav", tab: "projects",  title: "프로젝트로 이동",  icon: "📁", sub: "프로젝트 카드" },
+    { kind: "nav", tab: "calendar",  title: "달력으로 이동",    icon: "📅", sub: "월간 보기" },
+    { kind: "nav", tab: "gantt",     title: "간트로 이동",      icon: "📊", sub: "365일 일단위" },
+    { kind: "nav", tab: "daily",     title: "하루 로그로 이동", icon: "📓", sub: "오늘 작성" },
+  ];
+
+  const results = [];
+
+  if (!q) {
+    navItems.forEach(n => results.push({ section: "이동", ...n }));
+  }
+
+  // Tasks
+  const tasks = (STATE.tasks || []).filter(t =>
+    fuzzyMatch(t.title, q) || fuzzyMatch(t.notes, q) ||
+    (t.tags || []).some(tg => fuzzyMatch(tg, q))
+  ).slice(0, 8);
+  tasks.forEach(t => results.push({
+    section: "할 일",
+    kind: "task",
+    id: t.id,
+    title: t.title,
+    sub: [t.category, t.due_date].filter(Boolean).join(" · ") || STATUS_LABEL[t.status],
+    icon: t.status === "done" ? "✅" : (t.priority === "high" ? "🔥" : "📋"),
+    tag: t.status !== "done" && t.due_date ? dueDisplay(t.due_date).label : null,
+  }));
+
+  // Projects
+  const projects = (STATE.projects || []).filter(p =>
+    fuzzyMatch(p.name, q) || fuzzyMatch(p.description, q)
+  ).slice(0, 5);
+  projects.forEach(p => results.push({
+    section: "프로젝트",
+    kind: "project",
+    id: p.id,
+    title: p.name,
+    sub: p.description || PROJECT_STATUS_LABEL[p.status],
+    icon: "📁",
+    tag: p.end_date ? (dDayInfo(p.end_date)?.label || null) : null,
+  }));
+
+  // Inbox
+  const inboxItems = (STATE.inbox || []).filter(i => fuzzyMatch(i.content, q)).slice(0, 5);
+  inboxItems.forEach(i => results.push({
+    section: "받은 메모",
+    kind: "inbox",
+    id: i.id,
+    title: i.content.slice(0, 80),
+    sub: relativeTime(i.created_at),
+    icon: "📥",
+  }));
+
+  // Daily logs
+  if (q) {
+    const logs = (STATE.dailyLogs || []).filter(l => fuzzyMatch(l.content, q)).slice(0, 5);
+    logs.forEach(l => results.push({
+      section: "하루 로그",
+      kind: "daily",
+      date: l.log_date,
+      title: formatDateLong(l.log_date),
+      sub: (l.content || "").slice(0, 80),
+      icon: "📓",
+    }));
+  }
+
+  // Nav (when query exists) — match tab names
+  if (q) {
+    const matched = navItems.filter(n => fuzzyMatch(n.title, q));
+    matched.forEach(n => results.push({ section: "이동", ...n }));
+  }
+
+  return results;
+}
+
+function refreshCmdk(query) {
+  CMDK.results = buildCmdkResults(query);
+  if (CMDK.activeIndex >= CMDK.results.length) CMDK.activeIndex = 0;
+  renderCmdkList();
+}
+
+function renderCmdkList() {
+  const list = document.getElementById("cmdkList");
+  if (!CMDK.results.length) {
+    list.innerHTML = `<div class="cmdk-empty">결과가 없습니다.<br><small>"/t 회의" 처럼 입력해 바로 만들어 보세요.</small></div>`;
+    return;
+  }
+  // Group by section
+  let html = "";
+  let lastSection = null;
+  CMDK.results.forEach((r, idx) => {
+    if (r.section !== lastSection) {
+      if (lastSection !== null) html += "";
+      html += `<div class="cmdk-section-title">${escapeHtml(r.section)}</div>`;
+      lastSection = r.section;
+    }
+    const active = idx === CMDK.activeIndex ? "is-active" : "";
+    const tagHtml = r.tag ? `<span class="cmdk-item-tag">${escapeHtml(r.tag)}</span>` : "";
+    html += `<div class="cmdk-item ${active}" data-idx="${idx}">
+      <span class="cmdk-item-icon">${r.icon || "•"}</span>
+      <div class="cmdk-item-main">
+        <div class="cmdk-item-title">${escapeHtml(r.title)}</div>
+        ${r.sub ? `<div class="cmdk-item-sub">${escapeHtml(r.sub)}</div>` : ""}
+      </div>
+      ${tagHtml}
+    </div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll(".cmdk-item").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      CMDK.activeIndex = Number(el.dataset.idx);
+      renderCmdkList();
+    });
+    el.addEventListener("click", () => {
+      CMDK.activeIndex = Number(el.dataset.idx);
+      executeCmdk();
+    });
+  });
+  // Scroll active into view
+  const activeEl = list.querySelector(".cmdk-item.is-active");
+  if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+}
+
+async function executeCmdk() {
+  const r = CMDK.results[CMDK.activeIndex];
+  if (!r) return;
+
+  if (r.kind === "command") {
+    const text = (r.text || "").trim();
+    if (!text) { showToast("내용을 입력해주세요", true); return; }
+    if (r.cmd === "t") {
+      try {
+        const created = await api("POST", "/api/me/tasks", {
+          title: text, status: "todo", priority: "medium",
+          category: null, project_id: null, tags: [], notes: "", due_date: null,
+        });
+        STATE.tasks.unshift(created);
+        closeCmdk();
+        setTab("tasks");
+        showToast("할 일 추가됨");
+      } catch (e) { showToast(e.message, true); }
+    } else if (r.cmd === "p") {
+      closeCmdk();
+      setTab("projects");
+      setTimeout(() => {
+        openProjectModal(null);
+        document.getElementById("projectName").value = text;
+      }, 60);
+    } else if (r.cmd === "m") {
+      try {
+        await addInbox(text);
+        closeCmdk();
+      } catch (e) { showToast(e.message, true); }
+    } else if (r.cmd === "d") {
+      closeCmdk();
+      STATE.dailyDate = todayStr();
+      setTab("daily");
+      setTimeout(async () => {
+        const ta = document.getElementById("dailyContent");
+        const stamp = new Date().toTimeString().slice(0, 5);
+        const append = `${ta.value ? ta.value.replace(/\s+$/, "") + "\n" : ""}- ${stamp} ${text}`;
+        ta.value = append;
+        STATE.dailyDirty = true;
+        await saveDailyLog();
+      }, 80);
+    }
+    return;
+  }
+
+  if (r.kind === "nav") {
+    closeCmdk();
+    setTab(r.tab);
+    return;
+  }
+
+  if (r.kind === "task") {
+    closeCmdk();
+    setTab("tasks");
+    setTimeout(() => openTaskModal(r.id), 60);
+    return;
+  }
+
+  if (r.kind === "project") {
+    closeCmdk();
+    setTab("projects");
+    setTimeout(() => openProjectModal(r.id), 60);
+    return;
+  }
+
+  if (r.kind === "inbox") {
+    closeCmdk();
+    setTab("inbox");
+    return;
+  }
+
+  if (r.kind === "daily") {
+    closeCmdk();
+    STATE.dailyDate = r.date;
+    setTab("daily");
+    return;
+  }
+}
+
+function bindCmdk() {
+  // Open: Cmd/Ctrl + K
+  window.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      if (CMDK.open) closeCmdk();
+      else openCmdk();
+      return;
+    }
+    if (!CMDK.open) return;
+    if (e.key === "Escape") { e.preventDefault(); closeCmdk(); return; }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (CMDK.results.length) {
+        CMDK.activeIndex = (CMDK.activeIndex + 1) % CMDK.results.length;
+        renderCmdkList();
+      }
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (CMDK.results.length) {
+        CMDK.activeIndex = (CMDK.activeIndex - 1 + CMDK.results.length) % CMDK.results.length;
+        renderCmdkList();
+      }
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      executeCmdk();
+      return;
+    }
+  });
+
+  // Input handler
+  const input = document.getElementById("cmdkInput");
+  if (input) {
+    input.addEventListener("input", () => {
+      CMDK.activeIndex = 0;
+      refreshCmdk(input.value);
+    });
+  }
+
+  // Backdrop click to close
+  const bd = document.getElementById("cmdkBackdrop");
+  if (bd) {
+    bd.addEventListener("click", e => {
+      if (e.target === bd) closeCmdk();
+    });
+  }
 }
