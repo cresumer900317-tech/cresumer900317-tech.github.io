@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>내 업무</title>
   <meta name="description" content="개인 업무 통합 관리 페이지" />
-  <link rel="stylesheet" href="./me.css?v=4" />
+  <link rel="stylesheet" href="./me.css?v=5" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -252,17 +252,57 @@
         <div class="daily-edit">
           <textarea
             id="dailyContent"
-            placeholder="오늘 뭐 했나요? 떠오르는 대로 적어두세요."
+            placeholder="오늘 뭐 했나요? 떠오르는 대로 적어두세요. 회의 결정사항이나 앞으로 할 일도 같이 적어두면 AI 가 알아서 뽑아드려요."
             rows="14"
           ></textarea>
           <div class="daily-meta">
             <span id="dailySaveStatus" class="daily-save-status">변경사항 없음</span>
-            <button class="btn btn-primary" id="dailySaveBtn">저장</button>
+            <div class="daily-meta-right">
+              <button class="btn btn-outline" id="dailyAnalyzeBtn" type="button" title="AI 가 할 일/결정사항을 뽑아냅니다">✨ AI 정리</button>
+              <button class="btn btn-primary" id="dailySaveBtn">저장</button>
+            </div>
           </div>
         </div>
+
+        <!-- AI 추출 결과 -->
+        <section class="ai-extracts" id="aiExtracts" hidden>
+          <header class="ai-extracts-head">
+            <h3>
+              <span class="ai-badge">AI 의견</span>
+              <span id="aiExtractsTitle">하루 로그에서 뽑은 항목</span>
+            </h3>
+            <div class="ai-extracts-meta">
+              <span class="ai-status" id="aiExtractsStatus"></span>
+              <button class="icon-btn" id="aiExtractsRefresh" title="다시 분석">↻</button>
+            </div>
+          </header>
+          <div class="ai-extracts-body" id="aiExtractsBody"></div>
+        </section>
+
+        <!-- 스마트 검색 -->
+        <section class="smart-search">
+          <header class="smart-search-head">
+            <h3>🔍 스마트 검색
+              <span class="ai-badge">AI</span>
+            </h3>
+            <p class="smart-search-hint">자연어로 물어보세요. 최근 90일치 하루 로그에서 답을 찾아드립니다.</p>
+          </header>
+          <form id="smartSearchForm" class="smart-search-form">
+            <input
+              type="text"
+              id="smartSearchInput"
+              placeholder="예) 지난주 ㅇㅇ팀이랑 회의에서 결정난 거 뭐였더라?"
+              maxlength="500"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn btn-primary" id="smartSearchBtn">물어보기</button>
+          </form>
+          <div class="smart-search-result" id="smartSearchResult" hidden></div>
+        </section>
+
         <div class="daily-recent">
           <h3>최근 로그</h3>
-          <input type="search" id="dailySearchInput" class="daily-search" placeholder="로그 내용 검색..." />
+          <input type="search" id="dailySearchInput" class="daily-search" placeholder="로그 내용 검색 (단순 일치)..." />
           <div class="daily-list" id="dailyList"></div>
         </div>
       </section>
@@ -474,6 +514,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=3"></script>
+  <script src="./me.js?v=4"></script>
 </body>
 </html>
