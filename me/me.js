@@ -19,7 +19,7 @@ const STATE = {
   editingProjectId: null,
   promotingInboxId: null,
 
-  // Calendar
+  // Calendarh
   calCursor: null,           // Date — 표시 중인 달 (1일 기준)
 
   // Gantt
@@ -555,7 +555,7 @@ async function addTaskFromNL(parsed) {
     title: parsed.title,
     due_date: parsed.due_date,
     status: "todo",
-    priority: "normal",
+    priority: "medium",
     category: null,
     project_id: null,
     tags: [],
