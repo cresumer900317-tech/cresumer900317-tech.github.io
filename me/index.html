@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>내 업무</title>
   <meta name="description" content="개인 업무 통합 관리 페이지" />
-  <link rel="stylesheet" href="./me.css?v=4" />
+  <link rel="stylesheet" href="./me.css?v=7" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -139,6 +139,16 @@
         <div class="inbox-tabs">
           <button class="inbox-tab is-active" data-inbox-tab="active">미처리</button>
           <button class="inbox-tab" data-inbox-tab="processed">처리됨</button>
+        </div>
+
+        <div class="inbox-ai-bar" id="inboxAiBar" hidden>
+          <div class="inbox-ai-bar-text">
+            <strong>✨ AI 정리</strong>
+            <span id="inboxAiBarHint">— 미처리 메모 각각에 카테고리·우선순위·태그·제목을 제안받습니다.</span>
+          </div>
+          <button class="btn-ai" id="inboxAiBtn">
+            <span class="btn-ai-label">AI로 정리</span>
+          </button>
         </div>
 
         <div class="inbox-list" id="inboxList"></div>
@@ -509,6 +519,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=4"></script>
+  <script src="./me.js?v=7"></script>
 </body>
 </html>

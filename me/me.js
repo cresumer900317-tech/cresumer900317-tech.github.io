@@ -15,6 +15,10 @@ const STATE = {
   inbox: [],
   dailyLogs: [],
 
+  // Phase 6d: AI 분류 제안 { inbox_id: {suggested_title, suggested_category, suggested_priority, suggested_tags, cached} }
+  inboxSuggestions: {},
+  aiBusy: false,
+
   editingTaskId: null,
   editingProjectId: null,
   promotingInboxId: null,
@@ -347,6 +351,23 @@ function renderInbox() {
   document.querySelectorAll(".inbox-tab").forEach(b => {
     b.classList.toggle("is-active", b.dataset.inboxTab === STATE.inboxFilter);
   });
+  // AI 바: 미처리 탭 + 항목 1개 이상일 때만 노출
+  const aiBar = document.getElementById("inboxAiBar");
+  if (aiBar) {
+    const showBar = STATE.inboxFilter === "active" && STATE.inbox.length > 0;
+    aiBar.hidden = !showBar;
+    if (showBar) {
+      const btn = document.getElementById("inboxAiBtn");
+      const noSugCount = STATE.inbox.filter(i => !STATE.inboxSuggestions[i.id]).length;
+      if (btn) {
+        const lbl = btn.querySelector(".btn-ai-label");
+        if (lbl) lbl.textContent = noSugCount > 0
+          ? `AI로 정리 (${noSugCount}개)`
+          : "전부 분석됨";
+        btn.disabled = STATE.aiBusy || noSugCount === 0;
+      }
+    }
+  }
   const list = document.getElementById("inboxList");
   if (!STATE.inbox.length) {
     list.innerHTML = `<div class="widget-empty">${
@@ -369,6 +390,15 @@ function renderInbox() {
   list.querySelectorAll("[data-action='promote']").forEach(btn => {
     btn.addEventListener("click", () => openPromoteModal(Number(btn.dataset.id)));
   });
+  list.querySelectorAll("[data-action='ai-classify-one']").forEach(btn => {
+    btn.addEventListener("click", () => aiClassifyOne(Number(btn.dataset.id)));
+  });
+  list.querySelectorAll("[data-action='ai-apply']").forEach(btn => {
+    btn.addEventListener("click", () => aiApplySuggestion(Number(btn.dataset.id)));
+  });
+  list.querySelectorAll("[data-action='ai-dismiss']").forEach(btn => {
+    btn.addEventListener("click", () => aiDismissSuggestion(Number(btn.dataset.id)));
+  });
 }
 
 function inboxItemHtml(i) {
@@ -376,6 +406,7 @@ function inboxItemHtml(i) {
   const processed = i.processed
     ? `<small>처리됨 · ${relativeTime(i.processed_at) || ""}</small>`
     : `<small>${ago}</small>`;
+  const sug = !i.processed ? STATE.inboxSuggestions[i.id] : null;
   const actions = i.processed
     ? `
       <button class="ii-btn" data-action="unprocess" data-id="${i.id}">되돌리기</button>
@@ -383,6 +414,7 @@ function inboxItemHtml(i) {
     `
     : `
       <button class="ii-btn is-primary" data-action="promote" data-id="${i.id}">할 일로</button>
+      ${sug ? "" : `<button class="ii-btn" data-action="ai-classify-one" data-id="${i.id}" title="이 메모만 AI로 분류">✨ AI</button>`}
       <button class="ii-btn" data-action="processed" data-id="${i.id}">처리됨</button>
       <button class="ii-btn is-danger" data-action="delete" data-id="${i.id}">삭제</button>
     `;
@@ -391,8 +423,41 @@ function inboxItemHtml(i) {
       <div>
         <div class="ii-content">${escapeHtml(i.content)}</div>
         ${processed}
+        ${sug ? aiSuggestionHtml(i, sug) : ""}
       </div>
       <div class="ii-actions">${actions}</div>
+    </div>
+  `;
+}
+
+function aiSuggestionHtml(inboxItem, sug) {
+  const rows = [];
+  if (sug.suggested_title && sug.suggested_title !== inboxItem.content) {
+    rows.push(`<span class="ai-suggestion-row"><span class="ais-label">제목</span><span class="ais-val">${escapeHtml(sug.suggested_title)}</span></span>`);
+  }
+  if (sug.suggested_category) {
+    const color = getCategoryColor(sug.suggested_category);
+    rows.push(`<span class="ai-suggestion-row" style="border-color:${escapeAttr(color)};"><span class="ais-label">카테고리</span><span class="ais-val">${escapeHtml(sug.suggested_category)}</span></span>`);
+  }
+  if (sug.suggested_priority) {
+    rows.push(`<span class="ai-suggestion-row"><span class="ais-label">우선순위</span><span class="ais-val">${priorityIcon(sug.suggested_priority)}${PRIORITY_LABEL[sug.suggested_priority] || sug.suggested_priority}</span></span>`);
+  }
+  if ((sug.suggested_tags || []).length) {
+    rows.push(`<span class="ai-suggestion-row"><span class="ais-label">태그</span><span class="ais-val">${sug.suggested_tags.map(t => `#${escapeHtml(t)}`).join(" ")}</span></span>`);
+  }
+  const cachedBadge = sug.cached ? `<span class="ais-label" style="margin-left:auto;">(캐시)</span>` : "";
+  return `
+    <div class="ai-suggestion">
+      <div class="ai-suggestion-head">
+        ✨ AI 제안 ${cachedBadge}
+      </div>
+      <div class="ai-suggestion-body">
+        ${rows.join("")}
+      </div>
+      <div class="ai-suggestion-foot">
+        <button class="ii-btn" data-action="ai-dismiss" data-id="${inboxItem.id}">무시</button>
+        <button class="ii-btn is-primary" data-action="ai-apply" data-id="${inboxItem.id}">적용</button>
+      </div>
     </div>
   `;
 }
@@ -573,6 +638,114 @@ async function deleteInbox(id) {
     renderAll();
     showToast("삭제됨");
   } catch (e) { showToast(e.message, true); }
+}
+
+// ── Phase 6d: AI Inbox 분류 ──────────────────────────────
+async function aiClassifyBulk() {
+  if (STATE.aiBusy) return;
+  const targets = STATE.inbox.filter(i => !i.processed && !STATE.inboxSuggestions[i.id]);
+  if (!targets.length) {
+    showToast("이미 모두 분석됐어요");
+    return;
+  }
+  STATE.aiBusy = true;
+  setAiBusy(true);
+  try {
+    const data = await api("POST", "/api/me/inbox/bulk-ai-classify");
+    const results = data.results || [];
+    let added = 0;
+    results.forEach(r => {
+      if (!r || !r.inbox_id) return;
+      STATE.inboxSuggestions[r.inbox_id] = {
+        suggested_title: r.suggested_title || "",
+        suggested_category: r.suggested_category || null,
+        suggested_priority: r.suggested_priority || "medium",
+        suggested_tags: r.suggested_tags || [],
+        cached: !!r.cached,
+        error: r.error || null,
+      };
+      added++;
+    });
+    renderInbox();
+    if (added) showToast(`${added}건 분석 완료 — 각 메모 아래 제안 확인`);
+    else showToast("분석 결과가 없어요", true);
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    STATE.aiBusy = false;
+    setAiBusy(false);
+  }
+}
+
+async function aiClassifyOne(inboxId) {
+  if (STATE.aiBusy) return;
+  STATE.aiBusy = true;
+  setAiBusy(true);
+  try {
+    const r = await api("POST", `/api/me/inbox/${inboxId}/ai-classify`);
+    STATE.inboxSuggestions[inboxId] = {
+      suggested_title: r.suggested_title || "",
+      suggested_category: r.suggested_category || null,
+      suggested_priority: r.suggested_priority || "medium",
+      suggested_tags: r.suggested_tags || [],
+      cached: !!r.cached,
+    };
+    renderInbox();
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    STATE.aiBusy = false;
+    setAiBusy(false);
+  }
+}
+
+function aiDismissSuggestion(inboxId) {
+  delete STATE.inboxSuggestions[inboxId];
+  renderInbox();
+}
+
+async function aiApplySuggestion(inboxId) {
+  const sug = STATE.inboxSuggestions[inboxId];
+  const item = STATE.inbox.find(i => i.id === inboxId);
+  if (!sug || !item) return;
+  const payload = {
+    title: (sug.suggested_title || item.content || "").slice(0, 200),
+    category: sug.suggested_category || null,
+    priority: sug.suggested_priority || "medium",
+    project_id: null,
+    due_date: null,
+  };
+  try {
+    const result = await api("POST", `/api/me/inbox/${inboxId}/promote`, payload);
+    // 태그 제안이 있으면 새 task에 PATCH로 붙이기
+    if (result.task && (sug.suggested_tags || []).length) {
+      try {
+        const upd = await api("PATCH", `/api/me/tasks/${result.task.id}`, {
+          tags: sug.suggested_tags.slice(0, 5),
+        });
+        Object.assign(result.task, upd);
+      } catch (_) { /* 태그 실패는 무시 */ }
+    }
+    if (result.task) STATE.tasks.unshift(result.task);
+    STATE.inbox = STATE.inbox.filter(i => i.id !== inboxId);
+    delete STATE.inboxSuggestions[inboxId];
+    renderAll();
+    showToast("AI 제안으로 할 일 생성");
+  } catch (e) { showToast(e.message, true); }
+}
+
+function setAiBusy(busy) {
+  const btn = document.getElementById("inboxAiBtn");
+  if (!btn) return;
+  if (busy) {
+    btn.disabled = true;
+    const lbl = btn.querySelector(".btn-ai-label");
+    if (lbl) lbl.innerHTML = `<span class="btn-ai-spinner"></span> 분석 중...`;
+  } else {
+    btn.disabled = false;
+    const lbl = btn.querySelector(".btn-ai-label");
+    if (lbl) lbl.textContent = "AI로 정리";
+  }
 }
 
 async function toggleInboxProcessed(id, processed) {
@@ -1546,6 +1719,10 @@ function bindEvents() {
       refreshInboxOnly();
     });
   });
+
+  // ── Phase 6d: AI Inbox 정리 ───────────────────────────
+  const aiBtn = document.getElementById("inboxAiBtn");
+  if (aiBtn) aiBtn.addEventListener("click", aiClassifyBulk);
 
   // ── Project ───────────────────────────────────────────
   document.getElementById("newProjectBtn").addEventListener("click", () => openProjectModal(null));
