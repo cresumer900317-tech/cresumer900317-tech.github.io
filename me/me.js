@@ -54,6 +54,28 @@ const PROJECT_STATUS_LABEL = {
 };
 const COLOR_FALLBACK = "#6366f1";
 
+// ── Dashboard cache (Stale-While-Revalidate) ─────────────
+const DASH_CACHE_KEY = "me_dashboard_cache_v1";
+const DASH_CACHE_TTL_MS = 12 * 3600 * 1000;
+
+function readDashCache() {
+  try {
+    const raw = sessionStorage.getItem(DASH_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.ts || !obj.data) return null;
+    if (Date.now() - obj.ts > DASH_CACHE_TTL_MS) return null;
+    return obj.data;
+  } catch { return null; }
+}
+function writeDashCache(data) {
+  try { sessionStorage.setItem(DASH_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); }
+  catch {}
+}
+function invalidateDashboardCache() {
+  try { sessionStorage.removeItem(DASH_CACHE_KEY); } catch {}
+}
+
 // ── 부팅 ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const user = getUser();
@@ -86,10 +108,22 @@ async function api(method, path, body) {
   if (!res.ok) {
     throw new Error(data.detail || data.message || `요청 실패 (${res.status})`);
   }
+  if (method !== "GET") invalidateDashboardCache();
   return data;
 }
 
 async function refreshAll() {
+  const cached = readDashCache();
+  if (cached) {
+    STATE.tasks = cached.tasks || [];
+    STATE.categories = cached.categories || [];
+    STATE.projects = cached.projects || [];
+    STATE.inbox = cached.inbox || [];
+    STATE.dailyLogs = cached.daily_logs || [];
+    renderAll();
+  } else {
+    renderSkeletons();
+  }
   try {
     const dash = await api("GET", "/api/me/dashboard");
     STATE.tasks = dash.tasks || [];
@@ -97,9 +131,10 @@ async function refreshAll() {
     STATE.projects = dash.projects || [];
     STATE.inbox = dash.inbox || [];
     STATE.dailyLogs = dash.daily_logs || [];
+    writeDashCache(dash);
     renderAll();
   } catch (e) {
-    showToast(e.message, true);
+    if (!cached) showToast(e.message, true);
   }
 }
 
@@ -200,6 +235,21 @@ function renderAll() {
   else if (STATE.tab === "calendar") renderCalendar();
   else if (STATE.tab === "gantt") renderGantt();
   else if (STATE.tab === "daily") renderDailyEditor();
+}
+
+function renderSkeletons() {
+  const rows = (n) => `<div class="skeleton-stack">${
+    Array.from({ length: n }, () => '<div class="skeleton skeleton-row"></div>').join("")
+  }</div>`;
+  const cards = (n) => Array.from({ length: n }, () => '<div class="skeleton skeleton-card"></div>').join("");
+  ["dashToday","dashUpcoming","dashWeek","dashProjects","dashInbox","dashLogs"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = rows(3); });
+  const listStack = document.getElementById("listStack");
+  if (listStack) listStack.innerHTML = rows(6);
+  const pg = document.getElementById("projectGrid");
+  if (pg) pg.innerHTML = cards(4);
+  const il = document.getElementById("inboxList");
+  if (il) il.innerHTML = rows(4);
 }
 
 // ════════════════════════════════════════════════════════
