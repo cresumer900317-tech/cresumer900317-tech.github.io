@@ -23,6 +23,7 @@ const STATE = {
   aiEnabled: null,           // null=unknown, true/false 후 자동 분기
   aiExtract: null,           // { id, extract, promoted, dismissed }
   aiAnalyzing: false,
+  aiEditing: null,           // 편집 중인 추출 항목 "kind:index" 또는 null
   smartSearching: false,
 
   editingTaskId: null,
@@ -1803,32 +1804,71 @@ function renderAiExtracts() {
       const idx = Number(btn.dataset.aiIndex);
       if (action === "promote") promoteAiExtract(kind, idx);
       else if (action === "dismiss") dismissAiExtract(kind, idx);
+      else if (action === "edit") startEditAiExtract(kind, idx);
+      else if (action === "edit-confirm") confirmEditAiExtract(kind, idx);
+      else if (action === "edit-cancel") cancelEditAiExtract();
     });
+  });
+
+  // 편집 모드 input: Enter 로 추가, Esc 로 취소, 자동 포커스
+  body.querySelectorAll("[data-ai-edit-input]").forEach(input => {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const kind = input.dataset.aiKind;
+        const idx = Number(input.dataset.aiIndex);
+        confirmEditAiExtract(kind, idx);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cancelEditAiExtract();
+      }
+    });
+    setTimeout(() => { input.focus(); input.select(); }, 0);
   });
 }
 
 function renderExtractActionGroup(kind, items, promoted, dismissed, title, subtitle) {
   if (!items.length) return "";
+  const editingKey = STATE.aiEditing;
   const rows = items.map((it, i) => {
     const key = `${kind}:${i}`;
     const isPromoted = promoted.has(key);
     const isDismissed = dismissed.has(key);
-    const stateCls = isPromoted ? "is-promoted" : isDismissed ? "is-dismissed" : "";
+    const isEditing = editingKey === key;
+    const stateCls = isPromoted
+      ? "is-promoted"
+      : isDismissed
+      ? "is-dismissed"
+      : isEditing
+      ? "is-editing"
+      : "";
     const dueHint = it.due_hint ? `<span class="ai-due">${escapeHtml(it.due_hint)}</span>` : "";
+    const titleSafe = escapeHtml(it.title || "");
+    const mainHtml = isEditing
+      ? `<div class="ai-item-main">
+           <input class="ai-edit-input" type="text" data-ai-edit-input data-ai-kind="${kind}" data-ai-index="${i}" value="${titleSafe}" />
+         </div>`
+      : `<div class="ai-item-main">
+           <span class="ai-item-title">${titleSafe}</span>
+           ${dueHint}
+         </div>`;
     const stateLabel = isPromoted
       ? `<span class="ai-state-label is-done">✓ Task 추가됨</span>`
       : isDismissed
       ? `<span class="ai-state-label is-faint">무시함</span>`
+      : isEditing
+      ? `<div class="ai-actions">
+           <button class="btn-mini btn-mini-primary" data-ai-action="edit-confirm" data-ai-kind="${kind}" data-ai-index="${i}">＋ Task</button>
+           <button class="btn-mini btn-mini-ghost" data-ai-action="edit-cancel">취소</button>
+         </div>`
       : `<div class="ai-actions">
            <button class="btn-mini btn-mini-primary" data-ai-action="promote" data-ai-kind="${kind}" data-ai-index="${i}">＋ Task</button>
+           <button class="btn-mini btn-mini-ghost" data-ai-action="edit" data-ai-kind="${kind}" data-ai-index="${i}">수정</button>
            <button class="btn-mini btn-mini-ghost" data-ai-action="dismiss" data-ai-kind="${kind}" data-ai-index="${i}">무시</button>
          </div>`;
     return `
       <li class="ai-item ${stateCls}">
-        <div class="ai-item-main">
-          <span class="ai-item-title">${escapeHtml(it.title || "")}</span>
-          ${dueHint}
-        </div>
+        ${mainHtml}
         ${stateLabel}
       </li>
     `;
@@ -1884,13 +1924,13 @@ function renderExtractTags(tags) {
   `;
 }
 
-async function promoteAiExtract(kind, index) {
+async function promoteAiExtract(kind, index, titleOverride) {
   if (!STATE.aiExtract || !STATE.aiExtract.id) return;
   const eid = STATE.aiExtract.id;
   try {
-    const data = await api("POST", `/api/me/extracts/${eid}/promote`, {
-      kind, index, priority: "medium",
-    });
+    const body = { kind, index, priority: "medium" };
+    if (titleOverride) body.title_override = titleOverride;
+    const data = await api("POST", `/api/me/extracts/${eid}/promote`, body);
     STATE.aiExtract.promoted = data.promoted || [];
     if (data.task) STATE.tasks.unshift(data.task);
     renderAiExtracts();
@@ -1898,6 +1938,30 @@ async function promoteAiExtract(kind, index) {
   } catch (e) {
     showToast("추가 실패: " + e.message, true);
   }
+}
+
+function startEditAiExtract(kind, index) {
+  STATE.aiEditing = `${kind}:${index}`;
+  renderAiExtracts();
+}
+
+function cancelEditAiExtract() {
+  if (!STATE.aiEditing) return;
+  STATE.aiEditing = null;
+  renderAiExtracts();
+}
+
+async function confirmEditAiExtract(kind, index) {
+  const input = document.querySelector(
+    `[data-ai-edit-input][data-ai-kind="${kind}"][data-ai-index="${index}"]`,
+  );
+  const newTitle = (input?.value || "").trim();
+  if (!newTitle) {
+    showToast("제목을 입력해주세요", true);
+    return;
+  }
+  STATE.aiEditing = null;
+  await promoteAiExtract(kind, index, newTitle);
 }
 
 async function dismissAiExtract(kind, index) {

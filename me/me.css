@@ -1404,6 +1404,23 @@ input, button, select, textarea { font: inherit; color: inherit; }
   opacity: 0.5;
   background: transparent;
 }
+.ai-item.is-editing {
+  border-color: var(--primary);
+  background: rgba(99,102,241,0.06);
+}
+.ai-edit-input {
+  width: 100%;
+  font-size: 0.88rem;
+  color: var(--text);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 6px 10px;
+  outline: none;
+}
+.ai-edit-input:focus {
+  border-color: var(--primary);
+}
 .ai-item-main {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 8px;
