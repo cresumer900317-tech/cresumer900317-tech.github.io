@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=9" as="style" />
+  <link rel="preload" href="./me.css?v=10" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=9" as="script" />
+  <link rel="preload" href="./me.js?v=10" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=9" />
+  <link rel="stylesheet" href="./me.css?v=10" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -40,6 +40,7 @@
           <button class="nav-tab" data-tab="calendar" role="tab">달력</button>
           <button class="nav-tab" data-tab="gantt" role="tab">간트</button>
           <button class="nav-tab" data-tab="daily" role="tab">하루 로그</button>
+          <button class="nav-tab" data-tab="english" role="tab">영어</button>
         </nav>
         <div class="topbar-actions">
           <button class="cmdk-trigger" id="cmdkTrigger" title="명령 팔레트 열기 (Cmd/Ctrl+K)">
@@ -57,6 +58,27 @@
 
       <!-- ═══════════════════════ 1) 대시보드 ═══════════════════════ -->
       <section class="page" id="pageDashboard">
+        <!-- 🪄 Life OS 히어로 -->
+        <section class="hero" id="hero" hidden>
+          <div class="hero-row">
+            <div class="hero-main">
+              <p class="hero-eyebrow" id="heroDate"></p>
+              <h1 class="hero-title" id="heroGreeting"></h1>
+              <div class="hero-stats" id="heroStats"></div>
+            </div>
+            <div class="hero-dday" id="heroDday"></div>
+          </div>
+          <div class="hero-year">
+            <div class="hero-year-head">
+              <span id="heroYearLabel"></span>
+              <span id="heroYearPct"></span>
+            </div>
+            <div class="hero-year-bar">
+              <div class="hero-year-fill" id="heroYearFill" style="width:0%"></div>
+            </div>
+          </div>
+        </section>
+
         <!-- 🌅 오늘의 브리핑 (Phase 7) -->
         <div class="briefing" id="briefing" hidden>
           <div class="briefing-head">
@@ -385,6 +407,19 @@
         </div>
       </section>
 
+      <!-- ═══════════════════════ 8) English ════════════════════════ -->
+      <section class="page" id="pageEnglish" hidden>
+        <div class="page-header">
+          <h2>영어 한 입</h2>
+          <div class="eng-streak" id="engStreak"></div>
+        </div>
+        <div class="eng-card" id="engCard"></div>
+        <div class="eng-history">
+          <h3>지난 표현</h3>
+          <div class="eng-history-list" id="engHistoryList"></div>
+        </div>
+      </section>
+
     </main>
 
     <button class="fab" id="newTaskBtn" title="새 업무 추가" hidden>＋</button>
@@ -662,6 +697,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=9"></script>
+  <script src="./me.js?v=10"></script>
 </body>
 </html>

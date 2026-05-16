@@ -188,6 +188,7 @@ function setTab(name) {
     calendar: "pageCalendar",
     gantt: "pageGantt",
     daily: "pageDaily",
+    english: "pageEnglish",
   };
   const page = document.getElementById(map[name]);
   if (page) page.hidden = false;
@@ -217,6 +218,7 @@ function setTab(name) {
     renderDailyEditor();
     refreshDailyLogsList();
   }
+  else if (name === "english") renderEnglish();
 
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -232,12 +234,14 @@ function renderAll() {
   else if (STATE.tab === "calendar") renderCalendar();
   else if (STATE.tab === "gantt") renderGantt();
   else if (STATE.tab === "daily") renderDailyEditor();
+  else if (STATE.tab === "english") renderEnglish();
 }
 
 // ════════════════════════════════════════════════════════
 // 1) DASHBOARD
 // ════════════════════════════════════════════════════════
 function renderDashboard() {
+  renderHero();
   const today = startOfDay(new Date());
   const todayMs = today.getTime();
   const day = 24 * 3600 * 1000;
@@ -2550,6 +2554,7 @@ function buildCmdkResults(query) {
     { kind: "nav", tab: "calendar",  title: "달력으로 이동",    icon: "📅", sub: "월간 보기" },
     { kind: "nav", tab: "gantt",     title: "간트로 이동",      icon: "📊", sub: "365일 일단위" },
     { kind: "nav", tab: "daily",     title: "하루 로그로 이동", icon: "📓", sub: "오늘 작성" },
+    { kind: "nav", tab: "english",   title: "영어로 이동",      icon: "🗣", sub: "오늘의 표현 + 스트릭" },
   ];
 
   const results = [];
@@ -3486,5 +3491,230 @@ function renderAiUsageModalBody(data, placeholder) {
       <strong>주의</strong>: 캐시 hit (실제 호출 없음) 은 기록되지 않습니다.
     </div>
   `;
+}
+
+// ════════════════════════════════════════════════════════
+// Life OS — 히어로 (인사말 · D-day · 올해 진행률 · 스탯)
+// ════════════════════════════════════════════════════════
+const LIFE_EVENTS = [
+  { emoji: "💍", label: "결혼식",   date: "2026-06-06" },
+  { emoji: "✈️", label: "신혼여행", date: "2026-06-08" },
+];
+
+function renderHero() {
+  const hero = document.getElementById("hero");
+  if (!hero) return;
+
+  const now = new Date();
+  const h = now.getHours();
+  const greet = h < 5  ? "고요한 새벽이에요"
+              : h < 11 ? "좋은 아침이에요"
+              : h < 14 ? "점심은 챙기셨어요?"
+              : h < 18 ? "좋은 오후예요"
+              : h < 22 ? "좋은 저녁이에요"
+              :          "늦은 밤이에요";
+  const user = getUser();
+  const name = (user && user.character_name) ? user.character_name : "친구닷";
+  const wd = ["일","월","화","수","목","금","토"][now.getDay()];
+
+  document.getElementById("heroDate").textContent =
+    `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${wd}요일`;
+  document.getElementById("heroGreeting").innerHTML =
+    `${escapeHtml(greet)}, <span class="hero-accent">${escapeHtml(name)}</span> 님`;
+
+  // D-day 카드 (지난 일정은 숨김)
+  const todayMid = startOfDay(now).getTime();
+  document.getElementById("heroDday").innerHTML = LIFE_EVENTS.map(ev => {
+    const diff = Math.round(
+      (new Date(ev.date + "T00:00:00").getTime() - todayMid) / 86400000
+    );
+    if (diff < 0) return "";
+    const num = diff === 0 ? "D-DAY" : "D-" + diff;
+    return `<div class="dday-card ${diff <= 31 ? "is-soon" : ""}">
+      <span class="dday-emoji">${ev.emoji}</span>
+      <span class="dday-num">${num}</span>
+      <span class="dday-label">${escapeHtml(ev.label)}</span>
+    </div>`;
+  }).filter(Boolean).join("");
+
+  // 올해 진행률
+  const y = now.getFullYear();
+  const startY = new Date(y, 0, 1).getTime();
+  const endY = new Date(y + 1, 0, 1).getTime();
+  const pct = Math.round(((now.getTime() - startY) / (endY - startY)) * 100);
+  document.getElementById("heroYearLabel").innerHTML = `<strong>${y}년</strong> 흘러간 시간`;
+  document.getElementById("heroYearPct").textContent = pct + "%";
+  document.getElementById("heroYearFill").style.width = pct + "%";
+
+  // 스탯 칩
+  const openTasks = STATE.tasks.filter(t => t.status !== "done");
+  const dueToday = openTasks.filter(t => t.due_date &&
+    new Date(t.due_date + "T00:00:00").getTime() <= todayMid).length;
+  const activeProj = STATE.projects.filter(p => p.status === "active").length;
+  document.getElementById("heroStats").innerHTML = [
+    `<span class="hero-stat">오늘 할 일 <b>${dueToday}</b></span>`,
+    `<span class="hero-stat">진행 프로젝트 <b>${activeProj}</b></span>`,
+    `<span class="hero-stat">🔥 영어 <b>${engStreakCount()}</b>일</span>`,
+  ].join("");
+
+  hero.hidden = false;
+}
+
+// ════════════════════════════════════════════════════════
+// 영어 한 입 — 오늘의 표현 + 스트릭 (백엔드 없이 로컬 동작)
+// ════════════════════════════════════════════════════════
+const EXPRESSIONS = [
+  { en: "Let's circle back on this.", ko: "이 건은 나중에 다시 얘기해요.", note: "회의에서 주제를 정중히 미룰 때. circle back = 나중에 다시 다루다." },
+  { en: "I'll loop you in.", ko: "관련해서 같이 공유드릴게요.", note: "메일·메신저에서 누군가를 대화에 합류시킬 때. loop in = 끼워 넣다." },
+  { en: "Can you give me a heads-up?", ko: "미리 좀 알려주실래요?", note: "heads-up = 사전 귀띔. 갑작스럽지 않게 미리 알리는 것." },
+  { en: "Let's touch base tomorrow.", ko: "내일 잠깐 상황 공유해요.", note: "touch base = 짧게 근황·진행을 확인하다." },
+  { en: "That's out of scope for now.", ko: "그건 지금 범위 밖이에요.", note: "업무 범위를 정중하게 선 긋는 표현." },
+  { en: "We're on the same page.", ko: "우리 생각이 같네요.", note: "서로 합의·이해가 일치했음을 확인할 때." },
+  { en: "Let's take this offline.", ko: "이건 따로 얘기해요.", note: "회의 중 곁가지 주제를 회의 밖으로 빼낼 때." },
+  { en: "I'll keep you posted.", ko: "진행되는 대로 알려드릴게요.", note: "keep posted = 계속 업데이트해 주다." },
+  { en: "Let's not reinvent the wheel.", ko: "있는 걸 굳이 다시 만들 필요는 없어요.", note: "이미 있는 해법을 쓰자는 뜻." },
+  { en: "Can we ballpark it?", ko: "대략 어림잡아 볼 수 있을까요?", note: "ballpark = 대략적인 추정치." },
+  { en: "It's a no-brainer.", ko: "고민할 것도 없죠.", note: "너무 당연해서 망설일 필요 없는 선택." },
+  { en: "Let's hit the ground running.", ko: "시작하자마자 바로 달려봐요.", note: "준비 단계 없이 곧장 본격적으로 가동하다." },
+  { en: "I'm swamped today.", ko: "오늘 일이 너무 많아요.", note: "swamped = 일에 파묻힌, 정신없이 바쁜." },
+  { en: "Let's table this discussion.", ko: "이 논의는 잠시 보류해요.", note: "(미국식) table = 안건을 일단 미루다." },
+  { en: "Could you walk me through it?", ko: "차근차근 설명해 주실래요?", note: "walk through = 단계별로 안내하다." },
+  { en: "Let's sync up later.", ko: "이따 한번 맞춰봐요.", note: "sync up = 진행 상황을 서로 맞추다." },
+  { en: "That's a fair point.", ko: "일리 있는 말이에요.", note: "상대 의견을 정중히 인정할 때." },
+  { en: "Let me get back to you.", ko: "확인하고 다시 알려드릴게요.", note: "즉답이 어려울 때 자연스러운 표현." },
+  { en: "We need to manage expectations.", ko: "기대치를 좀 조절해야 해요.", note: "과한 기대를 미리 누그러뜨리는 것." },
+  { en: "Let's go for the low-hanging fruit.", ko: "쉬운 것부터 처리해요.", note: "low-hanging fruit = 손쉽게 얻는 성과." },
+  { en: "Let me take a rain check.", ko: "다음 기회로 미룰게요.", note: "초대·약속을 정중히 다음으로 미룰 때." },
+  { en: "Let's not boil the ocean.", ko: "한 번에 다 하려고 하지 말아요.", note: "지나치게 거대한 목표를 경계하는 말." },
+  { en: "Ping me when you're done.", ko: "끝나면 알려줘요.", note: "ping = 가볍게 연락하다, 메시지 보내다." },
+  { en: "It slipped my mind.", ko: "깜빡했어요.", note: "잊었다는 걸 부드럽게 인정하는 표현." },
+  { en: "Let's double down on this.", ko: "여기에 더 집중하고 투자해요.", note: "double down = 더 강하게 밀어붙이다." },
+  { en: "I'm playing it by ear.", ko: "상황 봐가며 할게요.", note: "play it by ear = 미리 정하지 않고 융통성 있게." },
+  { en: "Let's nail down the details.", ko: "세부사항을 확정해요.", note: "nail down = 못 박듯 확실하게 정하다." },
+  { en: "That ship has sailed.", ko: "이미 지난 일이에요.", note: "되돌릴 수 없는 기회를 가리킬 때." },
+  { en: "Let's keep it on the radar.", ko: "계속 주시해 둬요.", note: "on the radar = 시야에 두고 챙기다." },
+  { en: "Let me cut to the chase.", ko: "본론부터 말할게요.", note: "cut to the chase = 핵심으로 곧장 가다." },
+  { en: "Let's pencil it in.", ko: "일단 임시로 잡아둬요.", note: "pencil in = 변경 가능성을 두고 예약하다." },
+  { en: "It's a win-win.", ko: "서로한테 다 좋은 일이에요.", note: "양쪽 모두 이득을 보는 상황." },
+  { en: "Let me give you the gist.", ko: "요지만 짚어드릴게요.", note: "gist = 핵심 요지, 줄거리." },
+  { en: "We're cutting it close.", ko: "시간이 빠듯해요.", note: "cut it close = 아슬아슬하게 맞추다." },
+  { en: "Let's move the needle.", ko: "실질적인 변화를 만들어요.", note: "move the needle = 눈에 띄는 성과를 내다." },
+  { en: "I'll wrap up soon.", ko: "곧 마무리할게요.", note: "wrap up = 일을 끝맺다, 정리하다." },
+  { en: "Let's not jump the gun.", ko: "너무 성급하게 굴지 말아요.", note: "jump the gun = 신호도 전에 출발하다." },
+  { en: "Can you flag any issues?", ko: "문제 있으면 짚어 줄래요?", note: "flag = 문제를 표시·제기하다." },
+  { en: "Let's revisit this next week.", ko: "다음 주에 다시 보죠.", note: "revisit = 나중에 다시 검토하다." },
+  { en: "I'm on the fence about it.", ko: "아직 결정을 못 했어요.", note: "on the fence = 어느 쪽도 정하지 못한." },
+  { en: "Let's get the ball rolling.", ko: "일단 시작해 봐요.", note: "get the ball rolling = 일을 착수하다." },
+  { en: "That's the bottom line.", ko: "결국 핵심은 그거예요.", note: "bottom line = 결론, 가장 중요한 점." },
+  { en: "Let me run it by my manager.", ko: "매니저한테 한번 확인해 볼게요.", note: "run by = 의견을 물어 확인받다." },
+  { en: "We're stretched thin.", ko: "인력·자원이 빠듯해요.", note: "stretched thin = 여력이 부족한 상태." },
+  { en: "Let's circle up at 3.", ko: "3시에 잠깐 모여요.", note: "circle up = 짧게 모여 이야기하다." },
+  { en: "I'll ride it out.", ko: "버티면서 지나가 볼게요.", note: "ride out = 어려운 시기를 견뎌내다." },
+  { en: "Let's call it a day.", ko: "오늘은 여기까지 해요.", note: "하루 일과를 마칠 때 쓰는 말." },
+  { en: "Let's play it safe.", ko: "안전하게 가요.", note: "위험을 피하고 신중한 선택을 하다." },
+];
+
+function engDayIndex() {
+  const now = new Date();
+  const doy = Math.floor(
+    (now - new Date(now.getFullYear(), 0, 0)) / 86400000
+  );
+  return doy % EXPRESSIONS.length;
+}
+
+function engData() {
+  try {
+    const d = JSON.parse(localStorage.getItem("me_eng_v1"));
+    if (d && Array.isArray(d.done)) return d;
+  } catch (e) {}
+  return { done: [] };
+}
+
+function engStreakCount() {
+  const set = new Set(engData().done);
+  if (!set.size) return 0;
+  const cursor = new Date(todayStr() + "T00:00:00");
+  // 오늘 미완료면 어제부터 — 어제도 없으면 스트릭 끊김
+  if (!set.has(dateOnly(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!set.has(dateOnly(cursor))) return 0;
+  }
+  let count = 0;
+  while (set.has(dateOnly(cursor))) {
+    count++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return count;
+}
+
+function renderEnglish() {
+  const ex = EXPRESSIONS[engDayIndex()];
+  const doneToday = engData().done.includes(todayStr());
+
+  const streakEl = document.getElementById("engStreak");
+  if (streakEl) streakEl.innerHTML = `🔥 연속 <b>${engStreakCount()}</b>일`;
+
+  const card = document.getElementById("engCard");
+  card.className = "eng-card" + (doneToday ? " is-done" : "");
+  card.innerHTML = `
+    <span class="eng-tag">오늘의 표현</span>
+    <p class="eng-en">${escapeHtml(ex.en)}</p>
+    <p class="eng-ko">${escapeHtml(ex.ko)}</p>
+    <div class="eng-note">${escapeHtml(ex.note)}</div>
+    <div class="eng-actions">
+      <button class="btn btn-outline" id="engSpeakBtn" type="button">🔊 발음 듣기</button>
+      <button class="btn btn-primary" id="engDoneBtn" type="button" ${doneToday ? "disabled" : ""}>
+        ${doneToday ? "✓ 오늘 학습 완료됨" : "오늘 학습 완료"}
+      </button>
+    </div>`;
+  document.getElementById("engSpeakBtn").addEventListener("click", () => engSpeak(ex.en));
+  const doneBtn = document.getElementById("engDoneBtn");
+  if (doneBtn && !doneToday) doneBtn.addEventListener("click", markEnglishDone);
+
+  renderEngHistory();
+}
+
+function renderEngHistory() {
+  const list = document.getElementById("engHistoryList");
+  if (!list) return;
+  const now = new Date();
+  const rows = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+    const ex = EXPRESSIONS[doy % EXPRESSIONS.length];
+    rows.push(`<div class="eng-hist-item">
+      <span class="eng-hist-en">${escapeHtml(ex.en)}</span>
+      <span class="eng-hist-ko">${escapeHtml(ex.ko)}</span>
+      <span class="eng-hist-day">${d.getMonth() + 1}/${d.getDate()}</span>
+    </div>`);
+  }
+  list.innerHTML = rows.join("");
+}
+
+function engSpeak(text) {
+  if (!("speechSynthesis" in window)) {
+    showToast("이 브라우저는 음성 재생을 지원하지 않아요", true);
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+
+function markEnglishDone() {
+  const data = engData();
+  const today = todayStr();
+  if (!data.done.includes(today)) {
+    data.done.push(today);
+    if (data.done.length > 400) data.done = data.done.slice(-400);
+    try { localStorage.setItem("me_eng_v1", JSON.stringify(data)); } catch (e) {}
+  }
+  renderEnglish();
+  if (STATE.tab === "dashboard") renderHero();
+  showToast(`🔥 영어 ${engStreakCount()}일 연속! 잘하고 있어요`);
 }
 
