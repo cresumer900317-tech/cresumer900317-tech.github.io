@@ -2879,9 +2879,78 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .pd-sub-input:focus { border-bottom-color: var(--primary); border-bottom-style: solid; }
 .pd-sub-input::placeholder { color: var(--text-faint); }
 
+/* 작업 뷰 토글 (목록 / 타임라인) */
+.pd-view-toggle {
+  display: inline-flex; gap: 2px; margin-right: auto; margin-left: 10px;
+  background: var(--surface-1); border-radius: var(--radius-sm); padding: 3px;
+}
+.pd-view-btn {
+  background: transparent; border: 0; cursor: pointer;
+  padding: 5px 12px; border-radius: 8px;
+  color: var(--text-meta); font-size: 0.8rem; font-weight: var(--fw-medium);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.pd-view-btn:hover { color: var(--text); }
+.pd-view-btn.is-active { background: var(--primary); color: #fff; }
+
+/* 타임라인 (간트) — % 좌표 기반 */
+.tl { margin-top: 4px; }
+.tl-row { display: flex; align-items: stretch; }
+.tl-label {
+  width: 132px; flex-shrink: 0;
+  padding: 0 12px 0 2px;
+  display: flex; align-items: center;
+  font-size: 0.85rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tl-label.is-done { color: var(--text-meta); text-decoration: line-through; }
+.tl-track { flex: 1; position: relative; min-width: 0; }
+.tl-head { height: 26px; }
+.tl-head .tl-track { border-bottom: 1px solid var(--border-strong); }
+.tl-month {
+  position: absolute; bottom: 4px;
+  font-size: 0.7rem; color: var(--text-meta);
+  white-space: nowrap; padding-left: 3px;
+}
+.tl-body { position: relative; }
+.tl-overlay {
+  position: absolute; left: 132px; right: 0; top: 0; bottom: 0;
+  pointer-events: none; z-index: 0;
+}
+.tl-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.tl-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); opacity: 0.65; }
+.tl-row:not(.tl-head) {
+  height: 36px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.tl-row:not(.tl-head):hover .tl-label { color: var(--text-strong); }
+.tl-bar {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  height: 14px; border-radius: 5px; z-index: 1;
+  background: var(--proj-color, var(--primary));
+}
+.tl-bar.is-done { opacity: 0.4; }
+.tl-marker {
+  position: absolute; top: 50%; transform: translate(-6px, -50%);
+  width: 12px; height: 12px; border-radius: 50%; z-index: 1;
+  background: var(--proj-color, var(--primary));
+}
+.tl-nodate {
+  position: absolute; top: 50%; transform: translateY(-50%); left: 4px;
+  font-size: 0.74rem; color: var(--text-faint); font-style: italic;
+}
+.tl-legend {
+  margin-top: 12px; font-size: 0.76rem; color: var(--text-meta);
+  display: flex; align-items: center; gap: 7px;
+}
+.tl-lg { width: 22px; height: 9px; border-radius: 3px; display: inline-block; }
+.tl-lg-plan { background: var(--primary); }
+
 @media (max-width: 720px) {
   .pd-head { padding: 20px 16px; }
   .pd-name { font-size: 1.2rem; }
+  .tl-label { width: 96px; }
+  .tl-overlay { left: 96px; }
 }
 
 

@@ -30,6 +30,7 @@ const STATE = {
   editingProjectId: null,
   promotingInboxId: null,
   detailProjectId: null,     // 프로젝트 상세 페이지에서 보고 있는 프로젝트
+  pdView: "list",            // 프로젝트 상세 작업 뷰: list | timeline
 
   // Calendar
   calCursor: null,           // Date — 표시 중인 달 (1일 기준)
@@ -1315,22 +1316,106 @@ function renderProjectDetail() {
     <section class="pd-tasks">
       <div class="pd-tasks-head">
         <h3>작업 <span class="pd-count">${tasks.length}</span></h3>
+        <div class="pd-view-toggle">
+          <button class="pd-view-btn ${STATE.pdView === "list" ? "is-active" : ""}" data-pdview="list" type="button">목록</button>
+          <button class="pd-view-btn ${STATE.pdView === "timeline" ? "is-active" : ""}" data-pdview="timeline" type="button">타임라인</button>
+        </div>
         <button class="btn btn-primary btn-sm" id="pdAddTaskBtn" type="button">＋ 작업 추가</button>
       </div>
       ${tasks.length === 0
         ? `<div class="widget-empty">아직 작업이 없어요. "작업 추가"로 시작하세요.</div>`
-        : `<div class="pd-task-list">${open.map(t => pdTaskBlock(t)).join("")
-            || `<div class="widget-empty">열린 작업이 없어요 🎉</div>`}</div>
-           ${done.length ? `<details class="pd-done">
-             <summary>완료한 작업 ${done.length}</summary>
-             <div class="pd-task-list">${done.map(t => pdTaskBlock(t)).join("")}</div>
-           </details>` : ""}`}
+        : (STATE.pdView === "timeline"
+            ? pdTimelineHtml(tasks, p)
+            : `<div class="pd-task-list">${open.map(t => pdTaskBlock(t)).join("")
+                || `<div class="widget-empty">열린 작업이 없어요 🎉</div>`}</div>
+               ${done.length ? `<details class="pd-done">
+                 <summary>완료한 작업 ${done.length}</summary>
+                 <div class="pd-task-list">${done.map(t => pdTaskBlock(t)).join("")}</div>
+               </details>` : ""}`)}
     </section>
   `;
 
   document.getElementById("pdEditBtn").addEventListener("click", () => openProjectModal(p.id));
   document.getElementById("pdAddTaskBtn").addEventListener("click", () => openTaskModal(null, p.id));
-  bindPdTaskBlocks(body);
+  body.querySelectorAll(".pd-view-btn").forEach(btn => {
+    btn.addEventListener("click", () => { STATE.pdView = btn.dataset.pdview; renderProjectDetail(); });
+  });
+  if (STATE.pdView === "timeline") {
+    body.querySelectorAll(".tl-row[data-id]").forEach(row => {
+      row.addEventListener("click", () => openTaskModal(Number(row.dataset.id)));
+    });
+  } else {
+    bindPdTaskBlocks(body);
+  }
+}
+
+// 프로젝트 상세 — 타임라인(간트) 뷰. 막대는 % 좌표로 컨테이너 폭에 맞춤.
+function pdTimelineHtml(tasks, p) {
+  const dayMs = 86400000;
+  const toDay = s => Math.round(new Date(s + "T00:00:00").getTime() / dayMs);
+  const dates = [];
+  tasks.forEach(t => {
+    if (t.start_date) dates.push(toDay(t.start_date));
+    if (t.due_date) dates.push(toDay(t.due_date));
+  });
+  if (p.start_date) dates.push(toDay(p.start_date));
+  if (p.end_date) dates.push(toDay(p.end_date));
+  if (!dates.length) {
+    return `<div class="widget-empty">작업에 날짜가 없어요. 작업을 열어 시작일·마감일을 넣으면 타임라인에 막대로 나타나요.</div>`;
+  }
+  const todayD = Math.round(startOfDay(new Date()).getTime() / dayMs);
+  dates.push(todayD);
+  const winStart = Math.min(...dates) - 3;
+  const winEnd = Math.max(...dates) + 3;
+  const total = Math.max(winEnd - winStart, 1);
+  const pos = d => ((d - winStart) / total) * 100;
+
+  // 월 눈금 + 세로 그리드
+  let months = "", grid = "";
+  let cur = (() => { const d = new Date(winStart * dayMs); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+  while (Math.round(cur.getTime() / dayMs) <= winEnd) {
+    const cd = Math.round(cur.getTime() / dayMs);
+    if (cd >= winStart) {
+      const left = pos(cd);
+      months += `<span class="tl-month" style="left:${left}%">${cur.getMonth() + 1}월</span>`;
+      grid += `<div class="tl-grid" style="left:${left}%"></div>`;
+    }
+    cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+  }
+  const todayLine = (todayD >= winStart && todayD <= winEnd)
+    ? `<div class="tl-today" style="left:${pos(todayD)}%"></div>` : "";
+
+  const rows = tasks.map(t => {
+    const isDone = t.status === "done";
+    let bar;
+    if (t.start_date && t.due_date) {
+      const l = pos(toDay(t.start_date));
+      const w = Math.max(pos(toDay(t.due_date) + 1) - l, 1.2);
+      bar = `<div class="tl-bar tl-plan ${isDone ? "is-done" : ""}" style="left:${l}%;width:${w}%"
+              title="계획 ${escapeAttr(t.start_date + " ~ " + t.due_date)}"></div>`;
+    } else if (t.due_date || t.start_date) {
+      const d = t.due_date || t.start_date;
+      bar = `<div class="tl-marker" style="left:${pos(toDay(d))}%" title="${escapeAttr(d)}"></div>`;
+    } else {
+      bar = `<span class="tl-nodate">기간 미설정</span>`;
+    }
+    return `<div class="tl-row" data-id="${t.id}">
+      <div class="tl-label ${isDone ? "is-done" : ""}">${escapeHtml(t.title)}</div>
+      <div class="tl-track">${bar}</div>
+    </div>`;
+  }).join("");
+
+  return `<div class="tl">
+    <div class="tl-row tl-head">
+      <div class="tl-label"></div>
+      <div class="tl-track">${months}</div>
+    </div>
+    <div class="tl-body">
+      <div class="tl-overlay">${grid}${todayLine}</div>
+      ${rows}
+    </div>
+    <div class="tl-legend"><span class="tl-lg tl-lg-plan"></span> 계획 (시작일~마감일) · 빨간 선 = 오늘</div>
+  </div>`;
 }
 
 function pdTaskBlock(t) {
