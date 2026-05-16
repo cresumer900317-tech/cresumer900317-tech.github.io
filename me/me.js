@@ -1373,7 +1373,7 @@ function pdTimelineHtml(tasks, p) {
   const total = Math.max(winEnd - winStart, 1);
   const pos = d => ((d - winStart) / total) * 100;
 
-  // 월 눈금 + 세로 그리드
+  // 월 눈금 (윗줄)
   let months = "", grid = "";
   let cur = (() => { const d = new Date(winStart * dayMs); return new Date(d.getFullYear(), d.getMonth(), 1); })();
   while (Math.round(cur.getTime() / dayMs) <= winEnd) {
@@ -1381,10 +1381,26 @@ function pdTimelineHtml(tasks, p) {
     if (cd >= winStart) {
       const left = pos(cd);
       months += `<span class="tl-month" style="left:${left}%">${cur.getMonth() + 1}월</span>`;
-      grid += `<div class="tl-grid" style="left:${left}%"></div>`;
+      grid += `<div class="tl-grid tl-grid-month" style="left:${left}%"></div>`;
     }
     cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
   }
+  // 주 눈금 (아랫줄 — 월요일 기준 M/D)
+  let weeks = "";
+  const weekDates = [];
+  const firstMon = new Date(winStart * dayMs);
+  while (firstMon.getDay() !== 1) firstMon.setDate(firstMon.getDate() + 1);
+  for (let w = new Date(firstMon); Math.round(w.getTime() / dayMs) <= winEnd; w.setDate(w.getDate() + 7)) {
+    weekDates.push(new Date(w));
+  }
+  const weekStep = weekDates.length > 18 ? 2 : 1;
+  weekDates.forEach((dt, i) => {
+    const left = pos(Math.round(dt.getTime() / dayMs));
+    grid += `<div class="tl-grid tl-grid-week" style="left:${left}%"></div>`;
+    if (i % weekStep === 0) {
+      weeks += `<span class="tl-week" style="left:${left}%">${dt.getMonth() + 1}/${dt.getDate()}</span>`;
+    }
+  });
   const todayLine = (todayD >= winStart && todayD <= winEnd)
     ? `<div class="tl-today" style="left:${pos(todayD)}%"></div>` : "";
 
@@ -1423,7 +1439,10 @@ function pdTimelineHtml(tasks, p) {
   return `<div class="tl" style="--proj-color:${escapeAttr(p.color || COLOR_FALLBACK)}">
     <div class="tl-row tl-head">
       <div class="tl-label"></div>
-      <div class="tl-track">${months}</div>
+      <div class="tl-track">
+        <div class="tl-axis-month">${months}</div>
+        <div class="tl-axis-week">${weeks}</div>
+      </div>
     </div>
     <div class="tl-body">
       <div class="tl-overlay">${grid}${todayLine}</div>
