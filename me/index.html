@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=16" as="style" />
+  <link rel="preload" href="./me.css?v=17" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=16" as="script" />
+  <link rel="preload" href="./me.js?v=17" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=16" />
+  <link rel="stylesheet" href="./me.css?v=17" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -481,12 +481,22 @@
           </div>
           <div class="field-row">
             <label class="field">
-              <span>시작일</span>
+              <span>계획 시작</span>
               <input type="date" id="taskStartDate" />
             </label>
             <label class="field">
-              <span>마감일</span>
+              <span>계획 마감</span>
               <input type="date" id="taskDueDate" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>실제 시작</span>
+              <input type="date" id="taskActualStart" />
+            </label>
+            <label class="field">
+              <span>실제 완료</span>
+              <input type="date" id="taskActualEnd" />
             </label>
           </div>
           <label class="field">
@@ -712,6 +722,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=16"></script>
+  <script src="./me.js?v=17"></script>
 </body>
 </html>

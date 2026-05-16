@@ -1231,6 +1231,8 @@ function openTaskModal(taskId, presetProjectId) {
   document.getElementById("taskPriority").value = t?.priority || "medium";
   document.getElementById("taskStartDate").value = t?.start_date || "";
   document.getElementById("taskDueDate").value = t?.due_date || "";
+  document.getElementById("taskActualStart").value = t?.actual_start_date || "";
+  document.getElementById("taskActualEnd").value = t?.actual_end_date || "";
   document.getElementById("taskTags").value = (t?.tags || []).join(", ");
   document.getElementById("taskNotes").value = t?.notes || "";
   document.getElementById("deleteTaskBtn").hidden = !t;
@@ -1355,13 +1357,14 @@ function pdTimelineHtml(tasks, p) {
   const toDay = s => Math.round(new Date(s + "T00:00:00").getTime() / dayMs);
   const dates = [];
   tasks.forEach(t => {
-    if (t.start_date) dates.push(toDay(t.start_date));
-    if (t.due_date) dates.push(toDay(t.due_date));
+    ["start_date", "due_date", "actual_start_date", "actual_end_date"].forEach(k => {
+      if (t[k]) dates.push(toDay(t[k]));
+    });
   });
   if (p.start_date) dates.push(toDay(p.start_date));
   if (p.end_date) dates.push(toDay(p.end_date));
   if (!dates.length) {
-    return `<div class="widget-empty">작업에 날짜가 없어요. 작업을 열어 시작일·마감일을 넣으면 타임라인에 막대로 나타나요.</div>`;
+    return `<div class="widget-empty">작업에 날짜가 없어요. 작업을 열어 계획/실제 날짜를 넣으면 타임라인에 막대로 나타나요.</div>`;
   }
   const todayD = Math.round(startOfDay(new Date()).getTime() / dayMs);
   dates.push(todayD);
@@ -1385,27 +1388,39 @@ function pdTimelineHtml(tasks, p) {
   const todayLine = (todayD >= winStart && todayD <= winEnd)
     ? `<div class="tl-today" style="left:${pos(todayD)}%"></div>` : "";
 
+  const span = (s, e, cls, label) => {
+    const l = pos(toDay(s));
+    const w = Math.max(pos(toDay(e) + 1) - l, 1.2);
+    return `<div class="tl-bar ${cls}" style="left:${l}%;width:${w}%" title="${escapeAttr(label)}"></div>`;
+  };
+  const point = (d, cls, label) =>
+    `<div class="tl-marker ${cls}" style="left:${pos(toDay(d))}%" title="${escapeAttr(label)}"></div>`;
+
   const rows = tasks.map(t => {
     const isDone = t.status === "done";
-    let bar;
+    let bars = "";
+    // 계획 막대
     if (t.start_date && t.due_date) {
-      const l = pos(toDay(t.start_date));
-      const w = Math.max(pos(toDay(t.due_date) + 1) - l, 1.2);
-      bar = `<div class="tl-bar tl-plan ${isDone ? "is-done" : ""}" style="left:${l}%;width:${w}%"
-              title="계획 ${escapeAttr(t.start_date + " ~ " + t.due_date)}"></div>`;
-    } else if (t.due_date || t.start_date) {
+      bars += span(t.start_date, t.due_date, "tl-plan", `계획 ${t.start_date} ~ ${t.due_date}`);
+    } else if (t.start_date || t.due_date) {
       const d = t.due_date || t.start_date;
-      bar = `<div class="tl-marker" style="left:${pos(toDay(d))}%" title="${escapeAttr(d)}"></div>`;
-    } else {
-      bar = `<span class="tl-nodate">기간 미설정</span>`;
+      bars += point(d, "tl-plan-marker", `계획 ${d}`);
     }
+    // 실제 막대
+    if (t.actual_start_date && t.actual_end_date) {
+      bars += span(t.actual_start_date, t.actual_end_date, "tl-actual", `실제 ${t.actual_start_date} ~ ${t.actual_end_date}`);
+    } else if (t.actual_start_date || t.actual_end_date) {
+      const d = t.actual_end_date || t.actual_start_date;
+      bars += point(d, "tl-actual-marker", `실제 ${d}`);
+    }
+    if (!bars) bars = `<span class="tl-nodate">기간 미설정</span>`;
     return `<div class="tl-row" data-id="${t.id}">
       <div class="tl-label ${isDone ? "is-done" : ""}">${escapeHtml(t.title)}</div>
-      <div class="tl-track">${bar}</div>
+      <div class="tl-track">${bars}</div>
     </div>`;
   }).join("");
 
-  return `<div class="tl">
+  return `<div class="tl" style="--proj-color:${escapeAttr(p.color || COLOR_FALLBACK)}">
     <div class="tl-row tl-head">
       <div class="tl-label"></div>
       <div class="tl-track">${months}</div>
@@ -1414,7 +1429,11 @@ function pdTimelineHtml(tasks, p) {
       <div class="tl-overlay">${grid}${todayLine}</div>
       ${rows}
     </div>
-    <div class="tl-legend"><span class="tl-lg tl-lg-plan"></span> 계획 (시작일~마감일) · 빨간 선 = 오늘</div>
+    <div class="tl-legend">
+      <span class="tl-lg tl-lg-plan"></span> 계획
+      <span class="tl-lg tl-lg-actual"></span> 실제
+      <span class="tl-legend-sep">·</span> 빨간 선 = 오늘
+    </div>
   </div>`;
 }
 
@@ -2677,6 +2696,8 @@ function bindEvents() {
       priority: document.getElementById("taskPriority").value,
       start_date: document.getElementById("taskStartDate").value || null,
       due_date: document.getElementById("taskDueDate").value || null,
+      actual_start_date: document.getElementById("taskActualStart").value || null,
+      actual_end_date: document.getElementById("taskActualEnd").value || null,
       tags: document.getElementById("taskTags").value
         .split(",").map(s => s.trim()).filter(Boolean),
       notes: document.getElementById("taskNotes").value,

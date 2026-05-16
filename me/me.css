@@ -2920,21 +2920,31 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .tl-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
 .tl-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); opacity: 0.65; }
 .tl-row:not(.tl-head) {
-  height: 36px; cursor: pointer;
+  height: 42px; cursor: pointer;
   border-bottom: 1px solid var(--border);
 }
 .tl-row:not(.tl-head):hover .tl-label { color: var(--text-strong); }
-.tl-bar {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  height: 14px; border-radius: 5px; z-index: 1;
+/* 막대 — 계획(외곽선) 위, 실제(채움) 아래 */
+.tl-bar { position: absolute; border-radius: 5px; z-index: 1; }
+.tl-plan {
+  top: 8px; height: 11px;
+  background: transparent;
+  border: 1.6px solid var(--proj-color, var(--primary));
+}
+.tl-actual {
+  top: 23px; height: 13px;
   background: var(--proj-color, var(--primary));
 }
-.tl-bar.is-done { opacity: 0.4; }
 .tl-marker {
-  position: absolute; top: 50%; transform: translate(-6px, -50%);
-  width: 12px; height: 12px; border-radius: 50%; z-index: 1;
+  position: absolute; width: 11px; height: 11px;
+  border-radius: 50%; z-index: 1; transform: translateX(-50%);
   background: var(--proj-color, var(--primary));
 }
+.tl-plan-marker {
+  top: 8px; background: transparent;
+  border: 1.6px solid var(--proj-color, var(--primary));
+}
+.tl-actual-marker { top: 24px; }
 .tl-nodate {
   position: absolute; top: 50%; transform: translateY(-50%); left: 4px;
   font-size: 0.74rem; color: var(--text-faint); font-style: italic;
@@ -2943,8 +2953,10 @@ input, button, select, textarea { font: inherit; color: inherit; }
   margin-top: 12px; font-size: 0.76rem; color: var(--text-meta);
   display: flex; align-items: center; gap: 7px;
 }
-.tl-lg { width: 22px; height: 9px; border-radius: 3px; display: inline-block; }
-.tl-lg-plan { background: var(--primary); }
+.tl-legend-sep { margin: 0 1px; }
+.tl-lg { width: 22px; height: 10px; border-radius: 3px; display: inline-block; }
+.tl-lg-plan { background: transparent; border: 1.6px solid var(--primary); }
+.tl-lg-actual { background: var(--primary); }
 
 @media (max-width: 720px) {
   .pd-head { padding: 20px 16px; }
