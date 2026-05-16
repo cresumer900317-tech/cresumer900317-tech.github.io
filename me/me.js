@@ -1013,7 +1013,8 @@ function fillSelectOptions(selectId, noneLabel, items) {
 }
 
 function filteredTasks() {
-  let tasks = STATE.tasks.slice();
+  // 하위 작업(체크리스트)은 상위 task 안에서만 보이고 전체 목록엔 안 나옴
+  let tasks = STATE.tasks.filter(t => !t.parent_task_id);
   if (STATE.filterCategory !== null) {
     if (STATE.filterCategory === "__none__") tasks = tasks.filter(t => !t.category);
     else tasks = tasks.filter(t => t.category === STATE.filterCategory);
@@ -1227,6 +1228,7 @@ function openTaskModal(taskId, presetProjectId) {
     : (presetProjectId ? String(presetProjectId) : "");
   document.getElementById("taskStatus").value = t?.status || "todo";
   document.getElementById("taskPriority").value = t?.priority || "medium";
+  document.getElementById("taskStartDate").value = t?.start_date || "";
   document.getElementById("taskDueDate").value = t?.due_date || "";
   document.getElementById("taskTags").value = (t?.tags || []).join(", ");
   document.getElementById("taskNotes").value = t?.notes || "";
@@ -1270,6 +1272,8 @@ function openProjectDetail(id) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
+let pdExpanded = new Set();   // 하위 작업이 펼쳐진 task id 들
+
 function renderProjectDetail() {
   const body = document.getElementById("projectDetailBody");
   if (!body) return;
@@ -1279,7 +1283,7 @@ function renderProjectDetail() {
       <div>프로젝트를 찾을 수 없어요. 위 ← 버튼으로 돌아가세요.</div></div>`;
     return;
   }
-  const tasks = STATE.tasks.filter(t => t.project_id === p.id);
+  const tasks = STATE.tasks.filter(t => t.project_id === p.id && !t.parent_task_id);
   const open = tasks.filter(t => t.status !== "done")
     .sort((a, b) => (a.due_date || "9999-99-99").localeCompare(b.due_date || "9999-99-99"));
   const done = tasks.filter(t => t.status === "done");
@@ -1315,39 +1319,78 @@ function renderProjectDetail() {
       </div>
       ${tasks.length === 0
         ? `<div class="widget-empty">아직 작업이 없어요. "작업 추가"로 시작하세요.</div>`
-        : `<div class="pd-task-list">${open.map(t => pdTaskRow(t)).join("")
+        : `<div class="pd-task-list">${open.map(t => pdTaskBlock(t)).join("")
             || `<div class="widget-empty">열린 작업이 없어요 🎉</div>`}</div>
            ${done.length ? `<details class="pd-done">
              <summary>완료한 작업 ${done.length}</summary>
-             <div class="pd-task-list">${done.map(t => pdTaskRow(t)).join("")}</div>
+             <div class="pd-task-list">${done.map(t => pdTaskBlock(t)).join("")}</div>
            </details>` : ""}`}
     </section>
   `;
 
   document.getElementById("pdEditBtn").addEventListener("click", () => openProjectModal(p.id));
   document.getElementById("pdAddTaskBtn").addEventListener("click", () => openTaskModal(null, p.id));
-  body.querySelectorAll(".pd-task").forEach(row => {
-    const id = Number(row.dataset.id);
-    row.querySelector(".pd-check").addEventListener("click", e => {
-      e.stopPropagation();
-      togglePdTaskDone(id);
-    });
-    row.querySelector(".pd-task-title").addEventListener("click", () => openTaskModal(id));
-  });
+  bindPdTaskBlocks(body);
 }
 
-function pdTaskRow(t) {
+function pdTaskBlock(t) {
+  const subs = STATE.tasks.filter(s => s.parent_task_id === t.id);
+  const subDone = subs.filter(s => s.status === "done").length;
+  const expanded = pdExpanded.has(t.id);
   const cat = STATE.categories.find(c => c.name === t.category);
   const dot = cat ? `<span class="di-cat-dot" style="background:${escapeAttr(cat.color)}"></span>` : "";
   const due = dueDisplay(t.due_date);
   const isDone = t.status === "done";
-  return `<div class="pd-task ${isDone ? "is-done" : ""}" data-id="${t.id}">
-    <button class="pd-check ${isDone ? "is-checked" : ""}" type="button" aria-label="완료 토글">${isDone ? "✓" : ""}</button>
-    ${dot}
-    <span class="pd-task-title">${escapeHtml(t.title)}</span>
-    <span class="pd-task-status">${STATUS_LABEL[t.status] || t.status}</span>
-    ${t.due_date ? `<span class="di-due ${due.urgency ? "is-" + due.urgency : ""}">${due.label}</span>` : ""}
+  const subLabel = subs.length ? `하위 ${subDone}/${subs.length}` : "하위 ＋";
+  return `<div class="pd-task-block" data-id="${t.id}">
+    <div class="pd-task ${isDone ? "is-done" : ""}">
+      <button class="pd-check ${isDone ? "is-checked" : ""}" data-act="toggle" type="button" aria-label="완료 토글">${isDone ? "✓" : ""}</button>
+      ${dot}
+      <span class="pd-task-title" data-act="open">${escapeHtml(t.title)}</span>
+      <button class="pd-sub-toggle ${expanded ? "is-open" : ""}" data-act="expand" type="button">${subLabel}</button>
+      ${t.due_date ? `<span class="di-due ${due.urgency ? "is-" + due.urgency : ""}">${due.label}</span>` : ""}
+    </div>
+    <div class="pd-subs" ${expanded ? "" : "hidden"}>
+      ${subs.map(s => pdSubRow(s)).join("")}
+      <form class="pd-sub-add">
+        <input class="pd-sub-input" type="text" placeholder="하위 작업 추가 후 Enter" maxlength="200" autocomplete="off" />
+      </form>
+    </div>
   </div>`;
+}
+
+function pdSubRow(s) {
+  const isDone = s.status === "done";
+  return `<div class="pd-sub ${isDone ? "is-done" : ""}" data-id="${s.id}">
+    <button class="pd-check pd-check-sm ${isDone ? "is-checked" : ""}" data-act="sub-toggle" type="button" aria-label="완료 토글">${isDone ? "✓" : ""}</button>
+    <span class="pd-sub-title">${escapeHtml(s.title)}</span>
+    <button class="pd-sub-del" data-act="sub-del" type="button" aria-label="삭제">✕</button>
+  </div>`;
+}
+
+function bindPdTaskBlocks(body) {
+  body.querySelectorAll(".pd-task-block").forEach(block => {
+    const id = Number(block.dataset.id);
+    block.querySelector('[data-act="toggle"]').addEventListener("click", () => togglePdTaskDone(id));
+    block.querySelector('[data-act="open"]').addEventListener("click", () => openTaskModal(id));
+    block.querySelector('[data-act="expand"]').addEventListener("click", () => {
+      if (pdExpanded.has(id)) pdExpanded.delete(id);
+      else pdExpanded.add(id);
+      renderProjectDetail();
+    });
+    block.querySelectorAll(".pd-sub").forEach(sub => {
+      const sid = Number(sub.dataset.id);
+      sub.querySelector('[data-act="sub-toggle"]').addEventListener("click", () => toggleSubtaskDone(sid));
+      sub.querySelector('[data-act="sub-del"]').addEventListener("click", () => deleteSubtask(sid));
+    });
+    const addForm = block.querySelector(".pd-sub-add");
+    if (addForm) addForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const input = addForm.querySelector(".pd-sub-input");
+      const val = input.value.trim();
+      if (val) addSubtask(id, val);
+    });
+  });
 }
 
 async function togglePdTaskDone(id) {
@@ -1360,6 +1403,43 @@ async function togglePdTaskDone(id) {
     if (idx >= 0) STATE.tasks[idx] = updated;
     renderProjectDetail();
     refreshProjectsOnly();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function addSubtask(parentId, title) {
+  try {
+    const created = await api("POST", "/api/me/tasks", {
+      title, parent_task_id: parentId, status: "todo", priority: "medium",
+      category: null, project_id: null, due_date: null, tags: [], notes: "",
+    });
+    STATE.tasks.push(created);
+    pdExpanded.add(parentId);
+    renderProjectDetail();
+    const input = document.querySelector(`.pd-task-block[data-id="${parentId}"] .pd-sub-input`);
+    if (input) input.focus();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function toggleSubtaskDone(id) {
+  const s = STATE.tasks.find(x => x.id === id);
+  if (!s) return;
+  const newStatus = s.status === "done" ? "todo" : "done";
+  try {
+    const updated = await api("PATCH", `/api/me/tasks/${id}`, { status: newStatus });
+    const idx = STATE.tasks.findIndex(x => x.id === id);
+    if (idx >= 0) STATE.tasks[idx] = updated;
+    if (s.parent_task_id) pdExpanded.add(s.parent_task_id);
+    renderProjectDetail();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function deleteSubtask(id) {
+  const s = STATE.tasks.find(x => x.id === id);
+  try {
+    await api("DELETE", `/api/me/tasks/${id}`);
+    STATE.tasks = STATE.tasks.filter(x => x.id !== id);
+    if (s && s.parent_task_id) pdExpanded.add(s.parent_task_id);
+    renderProjectDetail();
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -2510,6 +2590,7 @@ function bindEvents() {
       project_id: parseIntOrNull(document.getElementById("taskProject").value),
       status: document.getElementById("taskStatus").value,
       priority: document.getElementById("taskPriority").value,
+      start_date: document.getElementById("taskStartDate").value || null,
       due_date: document.getElementById("taskDueDate").value || null,
       tags: document.getElementById("taskTags").value
         .split(",").map(s => s.trim()).filter(Boolean),
@@ -2538,7 +2619,8 @@ function bindEvents() {
     if (!confirm("이 업무를 삭제할까요?")) return;
     try {
       await api("DELETE", `/api/me/tasks/${id}`);
-      STATE.tasks = STATE.tasks.filter(t => t.id !== id);
+      // 하위 작업도 DB에서 cascade 삭제되므로 로컬에서도 같이 제거
+      STATE.tasks = STATE.tasks.filter(t => t.id !== id && t.parent_task_id !== id);
       closeTaskModal();
       refreshProjectsOnly();
       renderAll();

@@ -2837,6 +2837,48 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .pd-done[open] > summary::before { content: "▾ "; }
 .pd-done .pd-task-list { margin-top: 6px; }
 
+/* 하위 작업 (체크리스트) */
+.pd-task-block { display: flex; flex-direction: column; }
+.pd-sub-toggle {
+  background: var(--surface-1); border: 0; cursor: pointer;
+  color: var(--text-meta); font-size: 0.72rem; font-weight: var(--fw-medium);
+  padding: 3px 10px; border-radius: var(--radius-pill); flex-shrink: 0;
+  white-space: nowrap;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.pd-sub-toggle:hover { color: var(--text); background: var(--surface-3); }
+.pd-sub-toggle.is-open { color: var(--primary); }
+.pd-subs {
+  margin: 5px 0 3px 20px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-strong);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.pd-sub {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px;
+  background: var(--surface-1); border-radius: var(--radius-sm);
+}
+.pd-sub.is-done { opacity: 0.5; }
+.pd-sub.is-done .pd-sub-title { text-decoration: line-through; }
+.pd-check-sm { width: 17px; height: 17px; font-size: 0.6rem; border-radius: 5px; }
+.pd-sub-title { flex: 1; min-width: 0; font-size: 0.86rem; color: var(--text); }
+.pd-sub-del {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-faint); font-size: 0.82rem; padding: 2px 7px;
+  border-radius: 6px; flex-shrink: 0;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.pd-sub-del:hover { color: #fca5a5; background: rgba(239,68,68,0.10); }
+.pd-sub-add { margin-top: 2px; }
+.pd-sub-input {
+  width: 100%; background: transparent; border: 0;
+  border-bottom: 1px dashed var(--border-strong);
+  padding: 6px 4px; font-size: 0.85rem; color: var(--text); outline: none;
+}
+.pd-sub-input:focus { border-bottom-color: var(--primary); border-bottom-style: solid; }
+.pd-sub-input::placeholder { color: var(--text-faint); }
+
 @media (max-width: 720px) {
   .pd-head { padding: 20px 16px; }
   .pd-name { font-size: 1.2rem; }

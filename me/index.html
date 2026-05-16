@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=14" as="style" />
+  <link rel="preload" href="./me.css?v=15" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=14" as="script" />
+  <link rel="preload" href="./me.js?v=15" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=14" />
+  <link rel="stylesheet" href="./me.css?v=15" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -479,10 +479,16 @@
               </select>
             </label>
           </div>
-          <label class="field">
-            <span>마감일</span>
-            <input type="date" id="taskDueDate" />
-          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>시작일</span>
+              <input type="date" id="taskStartDate" />
+            </label>
+            <label class="field">
+              <span>마감일</span>
+              <input type="date" id="taskDueDate" />
+            </label>
+          </div>
           <label class="field">
             <span>태그 (쉼표로 구분)</span>
             <input type="text" id="taskTags" placeholder="예: Q2-OKR, 우선과제" />
@@ -706,6 +712,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=14"></script>
+  <script src="./me.js?v=15"></script>
 </body>
 </html>
