@@ -4,21 +4,22 @@
   --surface-1: #15161D;       /* sunken / inputs */
   --surface-2: #1D1F29;       /* cards / panels — 배경과 분리되게 살짝 밝게 */
   --surface-3: #282A36;       /* hover / elevated */
-  --border: rgba(255,255,255,0.10);
-  --border-strong: rgba(255,255,255,0.19);
+  /* 절제: 경계선은 거의 안 보이게 — 카드 구분은 표면 밝기 단차로 */
+  --border: rgba(255,255,255,0.065);
+  --border-strong: rgba(255,255,255,0.12);
 
   /* Backwards-compatible aliases (used widely across me.css) */
   --bg-soft: var(--surface-1);
   --bg-elev: var(--surface-3);
   --panel: var(--surface-2);
 
-  /* ── Text (대비 강화 — 흐릿함 제거) ────────────────────── */
+  /* ── Text — 절제: 딱 3단계 (strong / body / meta) ──────── */
   --text-strong: #F5F8FC;
   --text: rgba(255,255,255,0.91);
   --text-meta: rgba(255,255,255,0.62);
-  /* legacy aliases */
-  --text-dim: #C5CFDD;
-  --text-faint: rgba(255,255,255,0.52);
+  /* legacy aliases — 3단계로 수렴 (dim·faint 폐지) */
+  --text-dim: var(--text-meta);
+  --text-faint: var(--text-meta);
 
   /* ── Brand & status ────────────────────────────────────── */
   --primary: #7C6CF2;         /* slightly muted indigo */
@@ -315,8 +316,6 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .list-row:hover {
   background: var(--surface-3);
   border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card);
 }
 .list-row.is-done { opacity: 0.55; }
 .list-row.is-done .row-title { text-decoration: line-through; color: var(--text-dim); }
@@ -698,7 +697,7 @@ input, button, select, textarea { font: inherit; color: inherit; }
 }
 .page-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--sp-4); gap: var(--sp-3); flex-wrap: wrap;
+  margin-bottom: var(--sp-5); gap: var(--sp-3); flex-wrap: wrap;
 }
 .page-header h2 {
   margin: 0; font-size: var(--fs-1);
@@ -712,8 +711,8 @@ input, button, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-card);
 }
 .quick-capture-form {
   display: flex; gap: 10px; align-items: stretch;
@@ -777,7 +776,7 @@ input, button, select, textarea { font: inherit; color: inherit; }
 
 /* 접어두는 보조 위젯 (AI 사용량 · 피드백) */
 .dash-more {
-  margin-top: 16px;
+  margin-top: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
@@ -1081,8 +1080,8 @@ input, button, select, textarea { font: inherit; color: inherit; }
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.pc-dday.is-overdue { background: rgba(239,68,68,0.2); color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(239,68,68,0.45); }
-.pc-dday.is-today   { background: rgba(245,158,11,0.22); color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(245,158,11,0.4); }
+.pc-dday.is-overdue { background: rgba(239,68,68,0.13); color: #fca5a5; }
+.pc-dday.is-today   { background: rgba(245,158,11,0.15); color: #fcd34d; }
 .pc-dday.is-soon    { background: rgba(99,102,241,0.18); color: #c7d2fe; }
 .pc-dday-sm { font-size: 0.66rem; padding: 1px 6px; }
 
@@ -2574,7 +2573,7 @@ input, button, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 26px 28px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   background:
     radial-gradient(640px 300px at 100% -10%, rgba(124,108,242,0.26), transparent 68%),
     linear-gradient(135deg, #1f1c30 0%, var(--surface-2) 62%);
