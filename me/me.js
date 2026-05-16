@@ -316,17 +316,25 @@ function renderDashEnglish() {
   const body = document.getElementById("dashEnglish");
   if (!body) return;
   const ex = EXPRESSIONS[engDayIndex()];
-  const streakEl = document.getElementById("dashEngStreak");
-  if (streakEl) streakEl.textContent = engStreakCount() + "일";
   const done = engData().done.includes(todayStr());
+  const streakEl = document.getElementById("dashEngStreak");
+  if (streakEl) streakEl.textContent = "🔥 " + engStreakCount() + "일";
   body.innerHTML = `
-    <div class="dash-eng" id="dashEngGo">
+    <div class="dash-eng">
       <div class="dash-eng-en">${escapeHtml(ex.en)}</div>
       <div class="dash-eng-ko">${escapeHtml(ex.ko)}</div>
-      <div class="dash-eng-foot">${done ? "✓ 오늘 학습 완료" : "탭하면 학습하러 가기 →"}</div>
+      <div class="dash-eng-note">${escapeHtml(ex.note)}</div>
+      <div class="dash-eng-actions">
+        <button class="btn btn-outline btn-sm" id="dashEngSpeak" type="button">🔊 발음</button>
+        <button class="btn ${done ? "btn-outline" : "btn-primary"} btn-sm" id="dashEngDone" type="button" ${done ? "disabled" : ""}>
+          ${done ? "✓ 오늘 완료" : "학습 완료"}
+        </button>
+      </div>
     </div>`;
-  const go = document.getElementById("dashEngGo");
-  if (go) go.addEventListener("click", () => setTab("english"));
+  const sp = document.getElementById("dashEngSpeak");
+  if (sp) sp.addEventListener("click", () => engSpeak(ex.en));
+  const dn = document.getElementById("dashEngDone");
+  if (dn && !done) dn.addEventListener("click", markEnglishDone);
 }
 
 function fillWidget(bodyId, countId, count, items, emptyMsg) {
@@ -2569,14 +2577,13 @@ function buildCmdkResults(query) {
 
   // Navigation entries (always visible when no query)
   const navItems = [
-    { kind: "nav", tab: "dashboard", title: "대시보드로 이동", icon: "🏠", sub: "위젯 모음 + 빠른 입력" },
-    { kind: "nav", tab: "inbox",     title: "받은 메모 (이전 보관함)", icon: "📥", sub: "예전에 담아둔 메모" },
+    { kind: "nav", tab: "dashboard", title: "홈으로 이동",     icon: "🏠", sub: "오늘 할 일 + 빠른 입력" },
     { kind: "nav", tab: "tasks",     title: "할 일로 이동",     icon: "✓", sub: "리스트 / 칸반" },
     { kind: "nav", tab: "projects",  title: "프로젝트로 이동",  icon: "📁", sub: "프로젝트 카드" },
-    { kind: "nav", tab: "calendar",  title: "달력으로 이동",    icon: "📅", sub: "월간 보기" },
-    { kind: "nav", tab: "gantt",     title: "간트로 이동",      icon: "📊", sub: "365일 일단위" },
-    { kind: "nav", tab: "daily",     title: "하루 로그로 이동", icon: "📓", sub: "오늘 작성" },
-    { kind: "nav", tab: "english",   title: "영어로 이동",      icon: "🗣", sub: "오늘의 표현 + 스트릭" },
+    { kind: "nav", tab: "calendar",  title: "캘린더로 이동",    icon: "📅", sub: "월간 보기" },
+    { kind: "nav", tab: "daily",     title: "로그로 이동",      icon: "📓", sub: "하루 기록" },
+    { kind: "nav", tab: "gantt",     title: "간트로 이동",      icon: "📊", sub: "365일 — S3에서 프로젝트 뷰로 통합 예정" },
+    { kind: "nav", tab: "inbox",     title: "받은 메모 (이전 보관함)", icon: "📥", sub: "예전에 담아둔 메모" },
   ];
 
   const results = [];
@@ -3735,8 +3742,8 @@ function markEnglishDone() {
     if (data.done.length > 400) data.done = data.done.slice(-400);
     try { localStorage.setItem("me_eng_v1", JSON.stringify(data)); } catch (e) {}
   }
-  renderEnglish();
-  if (STATE.tab === "dashboard") renderHero();
+  renderDashEnglish();
+  renderHero();
   showToast(`🔥 영어 ${engStreakCount()}일 연속! 잘하고 있어요`);
 }
 

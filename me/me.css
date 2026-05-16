@@ -803,12 +803,13 @@ input, button, select, textarea { font: inherit; color: inherit; }
   gap: 12px; padding: 2px 14px 14px;
 }
 
-/* 영어 위젯 미니 카드 */
-.dash-eng { cursor: pointer; padding: 12px 14px; border-radius: var(--radius-sm); transition: background var(--dur) var(--ease); }
-.dash-eng:hover { background: var(--surface-3); }
-.dash-eng-en { font-size: 1.02rem; font-weight: var(--fw-bold); color: var(--text-strong); letter-spacing: -0.01em; }
-.dash-eng-ko { font-size: 0.86rem; color: var(--text); margin-top: 3px; }
-.dash-eng-foot { font-size: 0.76rem; color: var(--text-faint); margin-top: 9px; }
+/* 영어 홈 카드 (기능형) */
+.dash-eng { padding: 12px 14px; }
+.dash-eng-en { font-size: 1.05rem; font-weight: var(--fw-bold); color: var(--text-strong); letter-spacing: -0.01em; line-height: 1.35; }
+.dash-eng-ko { font-size: 0.88rem; color: var(--text); margin-top: 4px; }
+.dash-eng-note { font-size: 0.8rem; color: var(--text-meta); margin-top: 8px; line-height: 1.55; }
+.dash-eng-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-sm { padding: 6px 12px; font-size: 0.82rem; }
 
 .widget {
   background: var(--panel);
@@ -824,8 +825,6 @@ input, button, select, textarea { font: inherit; color: inherit; }
 }
 .widget:hover {
   border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lift);
 }
 .widget:has(.widget-empty) { min-height: auto; }
 .widget:has(.widget-empty) .widget-body { padding: 0; }

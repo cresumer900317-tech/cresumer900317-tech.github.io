@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=11" as="style" />
+  <link rel="preload" href="./me.css?v=12" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=11" as="script" />
+  <link rel="preload" href="./me.js?v=12" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=11" />
+  <link rel="stylesheet" href="./me.css?v=12" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -33,13 +33,11 @@
           <span class="brand-text">내 업무</span>
         </div>
         <nav class="nav-tabs" id="navTabs" role="tablist">
-          <button class="nav-tab is-active" data-tab="dashboard" role="tab">대시보드</button>
+          <button class="nav-tab is-active" data-tab="dashboard" role="tab">홈</button>
           <button class="nav-tab" data-tab="tasks" role="tab">할 일</button>
           <button class="nav-tab" data-tab="projects" role="tab">프로젝트</button>
-          <button class="nav-tab" data-tab="calendar" role="tab">달력</button>
-          <button class="nav-tab" data-tab="gantt" role="tab">간트</button>
-          <button class="nav-tab" data-tab="daily" role="tab">하루 로그</button>
-          <button class="nav-tab" data-tab="english" role="tab">영어</button>
+          <button class="nav-tab" data-tab="calendar" role="tab">캘린더</button>
+          <button class="nav-tab" data-tab="daily" role="tab">로그</button>
         </nav>
         <div class="topbar-actions">
           <button class="cmdk-trigger" id="cmdkTrigger" title="명령 팔레트 열기 (Cmd/Ctrl+K)">
@@ -163,7 +161,7 @@
           <!-- 최근 하루 로그 -->
           <div class="widget widget-logs">
             <div class="widget-head">
-              <h3>최근 하루 로그</h3>
+              <h3>최근 로그</h3>
             </div>
             <div class="widget-body" id="dashLogs"></div>
           </div>
@@ -350,7 +348,7 @@
       <!-- ═══════════════════════ 7) Daily Log ══════════════════════ -->
       <section class="page" id="pageDaily" hidden>
         <div class="page-header">
-          <h2>하루 로그</h2>
+          <h2>로그</h2>
           <input type="date" id="dailyDateInput" class="daily-date" />
         </div>
         <div class="daily-edit">
@@ -702,6 +700,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=11"></script>
+  <script src="./me.js?v=12"></script>
 </body>
 </html>
