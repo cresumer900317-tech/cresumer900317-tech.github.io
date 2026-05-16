@@ -2,23 +2,23 @@
   /* ── Surface layer (2026 refresh — warm off-black) ─────── */
   --bg: #0D0E13;              /* app bg — 차가운 블루블랙 → 따뜻한 오프블랙 */
   --surface-1: #15161D;       /* sunken / inputs */
-  --surface-2: #1B1D26;       /* cards / panels */
-  --surface-3: #252731;       /* hover / elevated */
-  --border: rgba(255,255,255,0.07);
-  --border-strong: rgba(255,255,255,0.14);
+  --surface-2: #1D1F29;       /* cards / panels — 배경과 분리되게 살짝 밝게 */
+  --surface-3: #282A36;       /* hover / elevated */
+  --border: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.19);
 
   /* Backwards-compatible aliases (used widely across me.css) */
   --bg-soft: var(--surface-1);
   --bg-elev: var(--surface-3);
   --panel: var(--surface-2);
 
-  /* ── Text ──────────────────────────────────────────────── */
-  --text-strong: #F1F5F9;
-  --text: rgba(255,255,255,0.82);
-  --text-meta: rgba(255,255,255,0.45);
+  /* ── Text (대비 강화 — 흐릿함 제거) ────────────────────── */
+  --text-strong: #F5F8FC;
+  --text: rgba(255,255,255,0.91);
+  --text-meta: rgba(255,255,255,0.62);
   /* legacy aliases */
-  --text-dim: #A3B1C6;
-  --text-faint: var(--text-meta);
+  --text-dim: #C5CFDD;
+  --text-faint: rgba(255,255,255,0.52);
 
   /* ── Brand & status ────────────────────────────────────── */
   --primary: #7C6CF2;         /* slightly muted indigo */
@@ -749,12 +749,67 @@ input, button, select, textarea { font: inherit; color: inherit; }
   font-weight: 500;
 }
 
-/* ── Dashboard widgets ─────────────────────────────────── */
+/* ── Dashboard widgets — Bento 위계 ────────────────────── */
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--sp-3);
+  grid-template-columns: 1.5fr 1fr;
+  gap: 14px;
+  align-items: start;
 }
+.widget-today    { grid-column: 1; grid-row: 1 / span 3; }
+.widget-upcoming { grid-column: 2; grid-row: 1; }
+.widget-week     { grid-column: 2; grid-row: 2; }
+.widget-projects { grid-column: 2; grid-row: 3; }
+.widget-english  { grid-column: 1; grid-row: 4; }
+.widget-logs     { grid-column: 2; grid-row: 4; }
+
+/* 오늘 할 일 — primary 카드 (시선이 멈추는 곳) */
+.widget-primary {
+  background:
+    radial-gradient(420px 200px at 100% 0%, rgba(124,108,242,0.13), transparent 70%),
+    var(--surface-2);
+  border-color: var(--border-strong);
+}
+.widget-primary .widget-head { padding: 14px 18px; }
+.widget-primary .widget-head h3 { font-size: 1.05rem; font-weight: var(--fw-bold); }
+.widget-primary .widget-body { padding: 8px; }
+.widget-primary .dash-item { font-size: 0.95rem; padding: 11px 14px; }
+
+/* 접어두는 보조 위젯 (AI 사용량 · 피드백) */
+.dash-more {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+.dash-more > summary {
+  cursor: pointer; padding: 13px 18px;
+  font-size: 0.86rem; color: var(--text-meta);
+  font-weight: var(--fw-medium);
+  list-style: none; display: flex; align-items: center; gap: 9px;
+  transition: color var(--dur) var(--ease);
+}
+.dash-more > summary:hover { color: var(--text); }
+.dash-more > summary::-webkit-details-marker { display: none; }
+.dash-more > summary::before {
+  content: "▸"; font-size: 0.75rem; color: var(--text-faint);
+  transition: transform var(--dur) var(--ease);
+}
+.dash-more[open] > summary::before { transform: rotate(90deg); }
+.dash-more-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px; padding: 2px 14px 14px;
+}
+
+/* 영어 위젯 미니 카드 */
+.dash-eng { cursor: pointer; padding: 12px 14px; border-radius: var(--radius-sm); transition: background var(--dur) var(--ease); }
+.dash-eng:hover { background: var(--surface-3); }
+.dash-eng-en { font-size: 1.02rem; font-weight: var(--fw-bold); color: var(--text-strong); letter-spacing: -0.01em; }
+.dash-eng-ko { font-size: 0.86rem; color: var(--text); margin-top: 3px; }
+.dash-eng-foot { font-size: 0.76rem; color: var(--text-faint); margin-top: 9px; }
+
 .widget {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1870,6 +1925,10 @@ input, button, select, textarea { font: inherit; color: inherit; }
   .filter-side input { flex: 1; }
   .app-main { padding: 14px; padding-bottom: 100px; }
   .widget-grid { grid-template-columns: 1fr; }
+  .widget-today, .widget-upcoming, .widget-week,
+  .widget-projects, .widget-english, .widget-logs {
+    grid-column: 1; grid-row: auto;
+  }
   .quick-capture { padding: 14px; }
   .quick-capture-form input[type=text] { font-size: 16px; /* iOS zoom 방지 */ }
   .inbox-item { grid-template-columns: 1fr; gap: 10px; }

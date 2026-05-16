@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=10" as="style" />
+  <link rel="preload" href="./me.css?v=11" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=10" as="script" />
+  <link rel="preload" href="./me.js?v=11" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=10" />
+  <link rel="stylesheet" href="./me.css?v=11" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -34,7 +34,6 @@
         </div>
         <nav class="nav-tabs" id="navTabs" role="tablist">
           <button class="nav-tab is-active" data-tab="dashboard" role="tab">대시보드</button>
-          <button class="nav-tab" data-tab="inbox" role="tab">받은 메모</button>
           <button class="nav-tab" data-tab="tasks" role="tab">할 일</button>
           <button class="nav-tab" data-tab="projects" role="tab">프로젝트</button>
           <button class="nav-tab" data-tab="calendar" role="tab">달력</button>
@@ -105,19 +104,19 @@
             <input
               type="text"
               id="quickCaptureInput"
-              placeholder="예: 내일 오후 3시 회의 / 6월 8일 신혼여행 출발 / 그냥 메모도 OK (피드백은 #friction / #unused / #automate / #repeat)"
+              placeholder="예: 내일 오후 3시 회의 / 6월 8일 신혼여행 출발 / 그냥 할 일도 OK (피드백은 #friction / #unused / #automate / #repeat)"
               maxlength="500"
               autocomplete="off"
             />
             <button type="submit" class="btn btn-primary">저장</button>
           </form>
           <div id="quickCapturePreview" class="quick-capture-preview" hidden></div>
-          <div class="quick-capture-hint">날짜·시간이 인식되면 할 일로, 아니면 메모(Inbox)로 저장돼요.</div>
+          <div class="quick-capture-hint">날짜·시간이 인식되면 일정으로, 아니면 그냥 할 일로 저장돼요.</div>
         </div>
 
         <div class="widget-grid">
-          <!-- 오늘 -->
-          <div class="widget">
+          <!-- 오늘 — primary -->
+          <div class="widget widget-primary widget-today">
             <div class="widget-head">
               <h3>오늘 해야 할 일</h3>
               <span class="widget-count" id="dashTodayCount">0</span>
@@ -126,7 +125,7 @@
           </div>
 
           <!-- 마감 임박 -->
-          <div class="widget">
+          <div class="widget widget-upcoming">
             <div class="widget-head">
               <h3>마감 임박 (D-3 이내)</h3>
               <span class="widget-count" id="dashUpcomingCount">0</span>
@@ -135,7 +134,7 @@
           </div>
 
           <!-- 이번 주 -->
-          <div class="widget">
+          <div class="widget widget-week">
             <div class="widget-head">
               <h3>이번 주 일정 (7일)</h3>
               <span class="widget-count" id="dashWeekCount">0</span>
@@ -144,7 +143,7 @@
           </div>
 
           <!-- 진행 중 프로젝트 -->
-          <div class="widget">
+          <div class="widget widget-projects">
             <div class="widget-head">
               <h3>진행 중 프로젝트</h3>
               <span class="widget-count" id="dashProjectsCount">0</span>
@@ -152,57 +151,63 @@
             <div class="widget-body" id="dashProjects"></div>
           </div>
 
-          <!-- Inbox 미처리 -->
-          <div class="widget">
+          <!-- 오늘의 영어 -->
+          <div class="widget widget-english">
             <div class="widget-head">
-              <h3>받은 메모 미처리</h3>
-              <span class="widget-count" id="dashInboxCount">0</span>
+              <h3>🗣 오늘의 영어</h3>
+              <span class="widget-count" id="dashEngStreak">0일</span>
             </div>
-            <div class="widget-body" id="dashInbox"></div>
+            <div class="widget-body" id="dashEnglish"></div>
           </div>
 
-          <!-- 최근 Daily Log -->
-          <div class="widget">
+          <!-- 최근 하루 로그 -->
+          <div class="widget widget-logs">
             <div class="widget-head">
               <h3>최근 하루 로그</h3>
             </div>
             <div class="widget-body" id="dashLogs"></div>
           </div>
-
-          <!-- 이번 주 피드백 카운트 (Phase 7) -->
-          <div class="widget" id="feedbackCountsWidget" hidden>
-            <div class="widget-head">
-              <h3>이번 주 피드백</h3>
-              <span class="widget-count" id="feedbackTotalCount">0</span>
-            </div>
-            <div class="widget-body">
-              <div class="feedback-counts" id="feedbackCounts"></div>
-            </div>
-          </div>
-
-          <!-- 💰 AI 사용량 (Phase 8) -->
-          <div class="widget aiu-widget" id="aiUsageWidget">
-            <div class="widget-head">
-              <h3>💰 AI 사용량</h3>
-              <div class="aiu-widget-actions">
-                <button class="aiu-icon-btn" id="aiUsageRefreshBtn" title="새로고침">↻</button>
-                <button class="aiu-icon-btn" id="aiUsageDetailBtn" title="자세히">📊</button>
-              </div>
-            </div>
-            <div class="widget-body">
-              <div class="aiu-cost-line">
-                <span class="aiu-cost-now" id="aiUsageCostNow">$0.00</span>
-                <span class="aiu-cost-sep">/</span>
-                <span class="aiu-cost-cap" id="aiUsageCostCap">$10.00</span>
-              </div>
-              <div class="aiu-bar" aria-label="월 한도 진행률">
-                <div class="aiu-bar-fill" id="aiUsageBarFill" style="width:0%"></div>
-              </div>
-              <div class="aiu-meta" id="aiUsageMeta">불러오는 중…</div>
-              <div class="aiu-meta aiu-meta-sub" id="aiUsageSub" hidden></div>
-            </div>
-          </div>
         </div>
+
+        <!-- 보조 위젯 — 평소엔 접어둠 -->
+        <details class="dash-more">
+          <summary>더보기 — 이번 주 피드백 · AI 사용량</summary>
+          <div class="dash-more-grid">
+            <!-- 이번 주 피드백 카운트 (Phase 7) -->
+            <div class="widget" id="feedbackCountsWidget" hidden>
+              <div class="widget-head">
+                <h3>이번 주 피드백</h3>
+                <span class="widget-count" id="feedbackTotalCount">0</span>
+              </div>
+              <div class="widget-body">
+                <div class="feedback-counts" id="feedbackCounts"></div>
+              </div>
+            </div>
+
+            <!-- 💰 AI 사용량 (Phase 8) -->
+            <div class="widget aiu-widget" id="aiUsageWidget">
+              <div class="widget-head">
+                <h3>💰 AI 사용량</h3>
+                <div class="aiu-widget-actions">
+                  <button class="aiu-icon-btn" id="aiUsageRefreshBtn" title="새로고침">↻</button>
+                  <button class="aiu-icon-btn" id="aiUsageDetailBtn" title="자세히">📊</button>
+                </div>
+              </div>
+              <div class="widget-body">
+                <div class="aiu-cost-line">
+                  <span class="aiu-cost-now" id="aiUsageCostNow">$0.00</span>
+                  <span class="aiu-cost-sep">/</span>
+                  <span class="aiu-cost-cap" id="aiUsageCostCap">$10.00</span>
+                </div>
+                <div class="aiu-bar" aria-label="월 한도 진행률">
+                  <div class="aiu-bar-fill" id="aiUsageBarFill" style="width:0%"></div>
+                </div>
+                <div class="aiu-meta" id="aiUsageMeta">불러오는 중…</div>
+                <div class="aiu-meta aiu-meta-sub" id="aiUsageSub" hidden></div>
+              </div>
+            </div>
+          </div>
+        </details>
       </section>
 
       <!-- ═══════════════════════ 2) Inbox ══════════════════════════ -->
@@ -697,6 +702,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=10"></script>
+  <script src="./me.js?v=11"></script>
 </body>
 </html>

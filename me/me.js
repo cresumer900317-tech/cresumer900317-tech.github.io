@@ -197,15 +197,7 @@ function setTab(name) {
   document.getElementById("newTaskBtn").hidden = name !== "tasks";
 
   // 탭별 진입 시 렌더
-  if (name === "dashboard") {
-    // Inbox 위젯이 항상 미처리만 보여주도록 강제 동기화
-    if (STATE.inboxFilter !== "active") {
-      STATE.inboxFilter = "active";
-      refreshInboxOnly().then(renderDashboard);
-    } else {
-      renderDashboard();
-    }
-  }
+  if (name === "dashboard") renderDashboard();
   else if (name === "inbox") renderInbox();
   else if (name === "tasks") renderTasks();
   else if (name === "projects") {
@@ -291,11 +283,6 @@ function renderDashboard() {
     "진행 중인 프로젝트가 없습니다."
   );
   fillWidget(
-    "dashInbox", "dashInboxCount", STATE.inbox.length,
-    STATE.inbox.slice(0, 8).map(i => dashInboxRow(i)),
-    "받은 메모가 비어있어요."
-  );
-  fillWidget(
     "dashLogs", null, null,
     STATE.dailyLogs.slice(0, 5).map(l => dashLogRow(l)),
     "아직 작성한 로그가 없어요."
@@ -312,16 +299,34 @@ function renderDashboard() {
       setTab("projects");
       setTimeout(() => openProjectModal(Number(el.dataset.id)), 50);
     }));
-  document.querySelectorAll("#dashInbox .dash-inbox-item")
-    .forEach(el => el.addEventListener("click", () => setTab("inbox")));
   document.querySelectorAll("#dashLogs .dash-log")
     .forEach(el => el.addEventListener("click", () => {
       STATE.dailyDate = el.dataset.date;
       setTab("daily");
     }));
 
+  // 오늘의 영어 위젯
+  renderDashEnglish();
+
   // Phase 7e: 피드백 카운트 위젯 갱신
   renderFeedbackCounts();
+}
+
+function renderDashEnglish() {
+  const body = document.getElementById("dashEnglish");
+  if (!body) return;
+  const ex = EXPRESSIONS[engDayIndex()];
+  const streakEl = document.getElementById("dashEngStreak");
+  if (streakEl) streakEl.textContent = engStreakCount() + "일";
+  const done = engData().done.includes(todayStr());
+  body.innerHTML = `
+    <div class="dash-eng" id="dashEngGo">
+      <div class="dash-eng-en">${escapeHtml(ex.en)}</div>
+      <div class="dash-eng-ko">${escapeHtml(ex.ko)}</div>
+      <div class="dash-eng-foot">${done ? "✓ 오늘 학습 완료" : "탭하면 학습하러 가기 →"}</div>
+    </div>`;
+  const go = document.getElementById("dashEngGo");
+  if (go) go.addEventListener("click", () => setTab("english"));
 }
 
 function fillWidget(bodyId, countId, count, items, emptyMsg) {
@@ -533,6 +538,23 @@ async function addInbox(content) {
     if (STATE.tab === "dashboard") renderDashboard();
     else if (STATE.tab === "inbox" && STATE.inboxFilter === "active") renderInbox();
     showToast("담아뒀어요");
+  } catch (e) { showToast(e.message, true); }
+}
+
+// 빠른 입력 — 날짜 없는 입력은 바로 '할 일(미분류)'로 (받은 메모 흡수)
+async function addQuickTask(rawText) {
+  const title = (rawText || "").trim();
+  if (!title) return;
+  const guessed = guessCategory(title);
+  try {
+    const created = await api("POST", "/api/me/tasks", {
+      title, due_date: null, status: "todo", priority: "medium",
+      category: guessed, project_id: null, tags: [], notes: "",
+    });
+    STATE.tasks.unshift(created);
+    if (STATE.tab === "dashboard") renderDashboard();
+    else if (STATE.tab === "tasks") renderTasks();
+    showToast(`할 일 추가 · ${title}${guessed ? ` · #${guessed}` : ""}`);
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -2160,7 +2182,7 @@ function bindEvents() {
       qcPreview.classList.add("is-task");
     } else if (val.trim()) {
       qcPreview.hidden = false;
-      qcPreview.textContent = "→ 메모(Inbox)로 저장됩니다";
+      qcPreview.textContent = "→ 할 일로 저장됩니다";
       qcPreview.classList.remove("is-task");
     } else {
       qcPreview.hidden = true;
@@ -2177,7 +2199,7 @@ function bindEvents() {
     if (parsed && parsed.type === "task") {
       addTaskFromNL(parsed);
     } else {
-      addInbox(val);
+      addQuickTask(val);
     }
   });
 
@@ -2514,7 +2536,7 @@ function buildCmdkResults(query) {
     const cmdMap = {
       t: { title: "새 할 일", icon: "📋", sub: rest || "제목을 입력하세요" },
       p: { title: "새 프로젝트", icon: "📁", sub: rest || "이름을 입력하세요" },
-      m: { title: "메모(Inbox)에 담기", icon: "📥", sub: rest || "내용을 입력하세요" },
+      m: { title: "할 일에 담기", icon: "✓", sub: rest || "내용을 입력하세요" },
       d: { title: "오늘 하루로그에 추가", icon: "📓", sub: rest || "내용을 입력하세요" },
     };
     if (cmdMap[cmd]) {
@@ -2548,7 +2570,7 @@ function buildCmdkResults(query) {
   // Navigation entries (always visible when no query)
   const navItems = [
     { kind: "nav", tab: "dashboard", title: "대시보드로 이동", icon: "🏠", sub: "위젯 모음 + 빠른 입력" },
-    { kind: "nav", tab: "inbox",     title: "받은 메모로 이동", icon: "📥", sub: "Inbox 모음" },
+    { kind: "nav", tab: "inbox",     title: "받은 메모 (이전 보관함)", icon: "📥", sub: "예전에 담아둔 메모" },
     { kind: "nav", tab: "tasks",     title: "할 일로 이동",     icon: "✓", sub: "리스트 / 칸반" },
     { kind: "nav", tab: "projects",  title: "프로젝트로 이동",  icon: "📁", sub: "프로젝트 카드" },
     { kind: "nav", tab: "calendar",  title: "달력으로 이동",    icon: "📅", sub: "월간 보기" },
@@ -2716,7 +2738,7 @@ async function executeCmdk() {
       }, 60);
     } else if (r.cmd === "m") {
       try {
-        await addInbox(text);
+        await addQuickTask(text);
         closeCmdk();
       } catch (e) { showToast(e.message, true); }
     } else if (r.cmd === "d") {
@@ -2969,7 +2991,7 @@ async function submitQuickMemo() {
   const val = (ta.value || "").trim();
   if (!val) { showToast("내용이 비어있어요", true); return; }
   closeQuickMemo();
-  await addInbox(val);
+  await addQuickTask(val);
 }
 
 function bindQuickMemo() {
