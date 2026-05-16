@@ -8,11 +8,11 @@
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="preload" href="./me.css?v=13" as="style" />
+  <link rel="preload" href="./me.css?v=14" as="style" />
   <link rel="preload" href="../assets/js/common.js?v=28" as="script" />
-  <link rel="preload" href="./me.js?v=13" as="script" />
+  <link rel="preload" href="./me.js?v=14" as="script" />
 
-  <link rel="stylesheet" href="./me.css?v=13" />
+  <link rel="stylesheet" href="./me.css?v=14" />
 </head>
 <body>
   <!-- 로그인 안 됐을 때 -->
@@ -310,6 +310,12 @@
           <button class="btn btn-primary" id="newProjectBtn">＋ 새 프로젝트</button>
         </div>
         <div class="project-grid" id="projectGrid"></div>
+      </section>
+
+      <!-- ═══════════════════ 4b) 프로젝트 상세 (워크스페이스) ═══════════ -->
+      <section class="page" id="pageProjectDetail" hidden>
+        <button class="detail-back" id="projectDetailBack" type="button">← 프로젝트</button>
+        <div id="projectDetailBody"></div>
       </section>
 
       <!-- ═══════════════════════ 5) Calendar ═══════════════════════ -->
@@ -700,6 +706,6 @@
   </div>
 
   <script src="../assets/js/common.js?v=28"></script>
-  <script src="./me.js?v=13"></script>
+  <script src="./me.js?v=14"></script>
 </body>
 </html>

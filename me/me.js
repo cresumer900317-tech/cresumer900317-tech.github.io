@@ -29,6 +29,7 @@ const STATE = {
   editingTaskId: null,
   editingProjectId: null,
   promotingInboxId: null,
+  detailProjectId: null,     // 프로젝트 상세 페이지에서 보고 있는 프로젝트
 
   // Calendar
   calCursor: null,           // Date — 표시 중인 달 (1일 기준)
@@ -76,6 +77,9 @@ const PROJECT_STATUS_LABEL = {
 };
 const COLOR_FALLBACK = "#6366f1";
 
+// 이 페이지에서 표시할 이름 — 인증 character_name 과 별개인 업무용 닉네임
+const OWNER_NAME = "Jett";
+
 // ── 부팅 ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const user = getUser();
@@ -84,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
   document.getElementById("app").hidden = false;
-  document.getElementById("userChip").textContent = user.character_name;
+  document.getElementById("userChip").textContent = OWNER_NAME;
 
   STATE.calCursor = startOfMonth(new Date());
   STATE.dailyDate = todayStr();
@@ -176,6 +180,7 @@ async function refreshDailyLogsList() {
 // ── 탭 전환 ──────────────────────────────────────────────
 function setTab(name) {
   STATE.tab = name;
+  STATE.detailProjectId = null;   // 탭 이동 시 프로젝트 상세 해제
   document.querySelectorAll(".nav-tab").forEach(b => {
     b.classList.toggle("is-active", b.dataset.tab === name);
   });
@@ -219,6 +224,12 @@ function setTab(name) {
 function renderAll() {
   renderCategoryOptions();
   renderProjectOptions();
+  // 프로젝트 상세 페이지가 열려있으면 그걸 갱신
+  const detailPage = document.getElementById("pageProjectDetail");
+  if (STATE.detailProjectId && detailPage && !detailPage.hidden) {
+    renderProjectDetail();
+    return;
+  }
   if (STATE.tab === "dashboard") renderDashboard();
   else if (STATE.tab === "inbox") renderInbox();
   else if (STATE.tab === "tasks") renderTasks();
@@ -1205,14 +1216,15 @@ function bindKanbanDnD() {
 }
 
 // ── Task 모달 ────────────────────────────────────────────
-function openTaskModal(taskId) {
+function openTaskModal(taskId, presetProjectId) {
   STATE.editingTaskId = taskId || null;
   const t = taskId ? STATE.tasks.find(x => x.id === taskId) : null;
   document.getElementById("taskModalTitle").textContent = t ? "할 일 편집" : "새 할 일";
   document.getElementById("taskId").value = t?.id || "";
   document.getElementById("taskTitle").value = t?.title || "";
   document.getElementById("taskCategory").value = t?.category || "";
-  document.getElementById("taskProject").value = t?.project_id ? String(t.project_id) : "";
+  document.getElementById("taskProject").value = t?.project_id ? String(t.project_id)
+    : (presetProjectId ? String(presetProjectId) : "");
   document.getElementById("taskStatus").value = t?.status || "todo";
   document.getElementById("taskPriority").value = t?.priority || "medium";
   document.getElementById("taskDueDate").value = t?.due_date || "";
@@ -1242,8 +1254,113 @@ function renderProjects() {
   }
   grid.innerHTML = STATE.projects.map(p => projectCardHtml(p)).join("");
   grid.querySelectorAll(".project-card").forEach(card => {
-    card.addEventListener("click", () => openProjectModal(Number(card.dataset.id)));
+    card.addEventListener("click", () => openProjectDetail(Number(card.dataset.id)));
   });
+}
+
+// ── 프로젝트 상세 페이지 (워크스페이스) ──────────────────────
+function openProjectDetail(id) {
+  STATE.detailProjectId = id;
+  document.querySelectorAll(".page").forEach(p => p.hidden = true);
+  document.getElementById("pageProjectDetail").hidden = false;
+  document.getElementById("newTaskBtn").hidden = true;
+  document.querySelectorAll(".nav-tab").forEach(b =>
+    b.classList.toggle("is-active", b.dataset.tab === "projects"));
+  renderProjectDetail();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function renderProjectDetail() {
+  const body = document.getElementById("projectDetailBody");
+  if (!body) return;
+  const p = STATE.projects.find(x => x.id === STATE.detailProjectId);
+  if (!p) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">📁</div>
+      <div>프로젝트를 찾을 수 없어요. 위 ← 버튼으로 돌아가세요.</div></div>`;
+    return;
+  }
+  const tasks = STATE.tasks.filter(t => t.project_id === p.id);
+  const open = tasks.filter(t => t.status !== "done")
+    .sort((a, b) => (a.due_date || "9999-99-99").localeCompare(b.due_date || "9999-99-99"));
+  const done = tasks.filter(t => t.status === "done");
+  const pct = (p.progress_pct ?? 0) > 0 ? p.progress_pct : (p.computed_progress ?? 0);
+  const dd = dDayInfo(p.end_date);
+  const color = p.color || COLOR_FALLBACK;
+  const dateRange = (p.start_date || p.end_date)
+    ? `${p.start_date || "?"} ~ ${p.end_date || "?"}` : "기간 미설정";
+
+  body.innerHTML = `
+    <header class="pd-head" style="--proj-color:${escapeAttr(color)}">
+      <div class="pd-title-row">
+        <span class="pd-dot"></span>
+        <h2 class="pd-name">${escapeHtml(p.name)}</h2>
+        <span class="pc-status s-${p.status}">${PROJECT_STATUS_LABEL[p.status] || p.status}</span>
+        ${dd ? `<span class="pc-dday ${dd.urgency}">${dd.label}</span>` : ""}
+        <button class="btn btn-outline btn-sm" id="pdEditBtn" type="button">편집</button>
+      </div>
+      ${p.description ? `<p class="pd-goal">${escapeHtml(p.description)}</p>` : ""}
+      <div class="pd-bar"><div class="pd-fill" style="width:${pct}%"></div></div>
+      <div class="pd-progress-meta">
+        <span><strong>${pct}%</strong></span>
+        <span>${done.length}/${tasks.length} 완료</span>
+        <span>${escapeHtml(dateRange)}</span>
+      </div>
+      ${p.notes ? `<div class="pd-notes">${escapeHtml(p.notes)}</div>` : ""}
+    </header>
+
+    <section class="pd-tasks">
+      <div class="pd-tasks-head">
+        <h3>작업 <span class="pd-count">${tasks.length}</span></h3>
+        <button class="btn btn-primary btn-sm" id="pdAddTaskBtn" type="button">＋ 작업 추가</button>
+      </div>
+      ${tasks.length === 0
+        ? `<div class="widget-empty">아직 작업이 없어요. "작업 추가"로 시작하세요.</div>`
+        : `<div class="pd-task-list">${open.map(t => pdTaskRow(t)).join("")
+            || `<div class="widget-empty">열린 작업이 없어요 🎉</div>`}</div>
+           ${done.length ? `<details class="pd-done">
+             <summary>완료한 작업 ${done.length}</summary>
+             <div class="pd-task-list">${done.map(t => pdTaskRow(t)).join("")}</div>
+           </details>` : ""}`}
+    </section>
+  `;
+
+  document.getElementById("pdEditBtn").addEventListener("click", () => openProjectModal(p.id));
+  document.getElementById("pdAddTaskBtn").addEventListener("click", () => openTaskModal(null, p.id));
+  body.querySelectorAll(".pd-task").forEach(row => {
+    const id = Number(row.dataset.id);
+    row.querySelector(".pd-check").addEventListener("click", e => {
+      e.stopPropagation();
+      togglePdTaskDone(id);
+    });
+    row.querySelector(".pd-task-title").addEventListener("click", () => openTaskModal(id));
+  });
+}
+
+function pdTaskRow(t) {
+  const cat = STATE.categories.find(c => c.name === t.category);
+  const dot = cat ? `<span class="di-cat-dot" style="background:${escapeAttr(cat.color)}"></span>` : "";
+  const due = dueDisplay(t.due_date);
+  const isDone = t.status === "done";
+  return `<div class="pd-task ${isDone ? "is-done" : ""}" data-id="${t.id}">
+    <button class="pd-check ${isDone ? "is-checked" : ""}" type="button" aria-label="완료 토글">${isDone ? "✓" : ""}</button>
+    ${dot}
+    <span class="pd-task-title">${escapeHtml(t.title)}</span>
+    <span class="pd-task-status">${STATUS_LABEL[t.status] || t.status}</span>
+    ${t.due_date ? `<span class="di-due ${due.urgency ? "is-" + due.urgency : ""}">${due.label}</span>` : ""}
+  </div>`;
+}
+
+async function togglePdTaskDone(id) {
+  const t = STATE.tasks.find(x => x.id === id);
+  if (!t) return;
+  const newStatus = t.status === "done" ? "todo" : "done";
+  try {
+    const updated = await api("PATCH", `/api/me/tasks/${id}`, { status: newStatus });
+    const idx = STATE.tasks.findIndex(x => x.id === id);
+    if (idx >= 0) STATE.tasks[idx] = updated;
+    renderProjectDetail();
+    refreshProjectsOnly();
+  } catch (e) { showToast(e.message, true); }
 }
 
 function projectCardHtml(p) {
@@ -2150,6 +2267,10 @@ function bindEvents() {
       setTab(btn.dataset.tab);
     });
   });
+
+  // 프로젝트 상세 — 뒤로가기
+  const pdBack = document.getElementById("projectDetailBack");
+  if (pdBack) pdBack.addEventListener("click", () => setTab("projects"));
 
   // Tasks 안의 list/kanban 토글
   document.querySelectorAll(".view-btn").forEach(btn => {
@@ -3542,8 +3663,7 @@ function renderHero() {
               : h < 18 ? "좋은 오후예요"
               : h < 22 ? "좋은 저녁이에요"
               :          "늦은 밤이에요";
-  const user = getUser();
-  const name = (user && user.character_name) ? user.character_name : "친구닷";
+  const name = OWNER_NAME;
   const wd = ["일","월","화","수","목","금","토"][now.getDay()];
 
   document.getElementById("heroDate").textContent =
