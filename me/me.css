@@ -2761,7 +2761,8 @@ input, button, select, textarea { font: inherit; color: inherit; }
   margin: 0; font-size: 1.4rem; font-weight: var(--fw-bold);
   letter-spacing: -0.02em; color: var(--text-strong);
 }
-.pd-title-row #pdEditBtn { margin-left: auto; }
+.pd-title-row #pdRetroBtn { margin-left: auto; }
+.pd-retro-btn { color: #c4bbff; }
 .pd-goal { margin: 14px 0 0; color: var(--text); font-size: 0.95rem; line-height: 1.6; }
 .pd-bar {
   height: 8px; border-radius: var(--radius-pill);
@@ -2968,6 +2969,32 @@ input, button, select, textarea { font: inherit; color: inherit; }
 .tl-lg { width: 22px; height: 10px; border-radius: 3px; display: inline-block; }
 .tl-lg-plan { background: transparent; border: 1.6px solid var(--primary); }
 .tl-lg-actual { background: var(--primary); }
+
+/* 프로젝트 AI 회고 패널 */
+.pd-retro {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 16px 20px 18px;
+  margin-bottom: 24px;
+}
+.pd-retro-loading { color: var(--text-meta); font-size: 0.9rem; }
+.pd-retro-err { color: var(--text-meta); font-size: 0.88rem; line-height: 1.6; }
+.pd-retro-head { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.pd-retro-title { font-weight: var(--fw-semibold); color: var(--text-strong); font-size: 0.95rem; }
+.pd-retro-cached { font-size: 0.72rem; color: var(--text-faint); }
+.pd-retro-refresh {
+  margin-left: auto; background: transparent; border: 0; cursor: pointer;
+  color: var(--text-meta); font-size: 0.95rem; padding: 2px 8px; border-radius: 6px;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.pd-retro-refresh:hover { color: var(--text); background: var(--surface-3); }
+.retro-h {
+  margin: 14px 0 5px; font-size: 0.85rem; font-weight: var(--fw-semibold); color: #b3a8ff;
+}
+.retro-h:first-child { margin-top: 6px; }
+.retro-ul { margin: 0 0 4px; padding-left: 18px; }
+.retro-ul li { font-size: 0.88rem; color: var(--text); line-height: 1.7; }
+.retro-p { font-size: 0.88rem; color: var(--text); line-height: 1.7; margin: 4px 0; }
 
 @media (max-width: 720px) {
   .pd-head { padding: 20px 16px; }

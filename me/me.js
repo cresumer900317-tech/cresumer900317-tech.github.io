@@ -1265,6 +1265,7 @@ function renderProjects() {
 
 // ── 프로젝트 상세 페이지 (워크스페이스) ──────────────────────
 function openProjectDetail(id) {
+  if (pdRetro && pdRetro.projectId !== id) pdRetro = null;
   STATE.detailProjectId = id;
   document.querySelectorAll(".page").forEach(p => p.hidden = true);
   document.getElementById("pageProjectDetail").hidden = false;
@@ -1276,6 +1277,8 @@ function openProjectDetail(id) {
 }
 
 let pdExpanded = new Set();   // 하위 작업이 펼쳐진 task id 들
+let pdRetro = null;           // { projectId, text, cached } 또는 { projectId, error }
+let pdRetroLoading = false;
 
 function renderProjectDetail() {
   const body = document.getElementById("projectDetailBody");
@@ -1303,6 +1306,7 @@ function renderProjectDetail() {
         <h2 class="pd-name">${escapeHtml(p.name)}</h2>
         <span class="pc-status s-${p.status}">${PROJECT_STATUS_LABEL[p.status] || p.status}</span>
         ${dd ? `<span class="pc-dday ${dd.urgency}">${dd.label}</span>` : ""}
+        <button class="btn btn-outline btn-sm pd-retro-btn" id="pdRetroBtn" type="button">✨ AI 회고</button>
         <button class="btn btn-outline btn-sm" id="pdEditBtn" type="button">편집</button>
       </div>
       ${p.description ? `<p class="pd-goal">${escapeHtml(p.description)}</p>` : ""}
@@ -1314,6 +1318,8 @@ function renderProjectDetail() {
       </div>
       ${p.notes ? `<div class="pd-notes">${escapeHtml(p.notes)}</div>` : ""}
     </header>
+
+    ${pdRetroHtml()}
 
     <section class="pd-tasks">
       <div class="pd-tasks-head">
@@ -1339,6 +1345,9 @@ function renderProjectDetail() {
 
   document.getElementById("pdEditBtn").addEventListener("click", () => openProjectModal(p.id));
   document.getElementById("pdAddTaskBtn").addEventListener("click", () => openTaskModal(null, p.id));
+  document.getElementById("pdRetroBtn").addEventListener("click", () => loadProjectRetro(false));
+  const retroRefresh = document.getElementById("pdRetroRefresh");
+  if (retroRefresh) retroRefresh.addEventListener("click", () => loadProjectRetro(true));
   body.querySelectorAll(".pd-view-btn").forEach(btn => {
     btn.addEventListener("click", () => { STATE.pdView = btn.dataset.pdview; renderProjectDetail(); });
   });
@@ -1349,6 +1358,70 @@ function renderProjectDetail() {
   } else {
     bindPdTaskBlocks(body);
   }
+}
+
+// 프로젝트 상세 — AI 회고
+function pdRetroHtml() {
+  if (pdRetroLoading) {
+    return `<div class="pd-retro"><div class="pd-retro-loading">✨ AI가 회고를 작성 중…</div></div>`;
+  }
+  if (!pdRetro || pdRetro.projectId !== STATE.detailProjectId) return "";
+  if (pdRetro.error) {
+    return `<div class="pd-retro"><div class="pd-retro-err">${escapeHtml(pdRetro.error)}</div></div>`;
+  }
+  return `<div class="pd-retro">
+    <div class="pd-retro-head">
+      <span class="pd-retro-title">✨ AI 회고</span>
+      ${pdRetro.cached ? `<span class="pd-retro-cached">캐시됨</span>` : ""}
+      <button class="pd-retro-refresh" id="pdRetroRefresh" type="button" title="다시 생성">↻</button>
+    </div>
+    <div class="pd-retro-body">${renderRetroText(pdRetro.text)}</div>
+  </div>`;
+}
+
+function renderRetroText(text) {
+  const lines = (text || "").split("\n");
+  let html = "", inList = false;
+  const closeList = () => { if (inList) { html += "</ul>"; inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.trim();
+    if (!line) { closeList(); return; }
+    if (line.startsWith("#")) {
+      closeList();
+      html += `<h4 class="retro-h">${escapeHtml(line.replace(/^#+\s*/, ""))}</h4>`;
+    } else if (line.startsWith("-") || line.startsWith("•") || line.startsWith("*")) {
+      if (!inList) { html += `<ul class="retro-ul">`; inList = true; }
+      html += `<li>${escapeHtml(line.replace(/^[-•*]\s*/, ""))}</li>`;
+    } else {
+      closeList();
+      html += `<p class="retro-p">${escapeHtml(line)}</p>`;
+    }
+  });
+  closeList();
+  return html || `<p class="retro-p">회고 내용이 비어있어요.</p>`;
+}
+
+async function loadProjectRetro(force) {
+  if (pdRetroLoading) return;
+  const pid = STATE.detailProjectId;
+  pdRetroLoading = true;
+  renderProjectDetail();
+  try {
+    const data = await api("POST",
+      `/api/me/projects/${pid}/retrospective${force ? "?force=true" : ""}`);
+    pdRetroLoading = false;
+    if (data.ai_enabled === false) {
+      pdRetro = { projectId: pid, error: "AI 기능이 꺼져 있어요. 서버에 ANTHROPIC_API_KEY 설정이 필요해요." };
+    } else if (data.empty) {
+      pdRetro = { projectId: pid, error: "회고할 작업이 없어요. 작업을 먼저 추가하세요." };
+    } else {
+      pdRetro = { projectId: pid, text: data.text || "", cached: !!data.cached };
+    }
+  } catch (e) {
+    pdRetroLoading = false;
+    showToast(e.message, true);
+  }
+  renderProjectDetail();
 }
 
 // 프로젝트 상세 — 타임라인(간트) 뷰. 막대는 % 좌표로 컨테이너 폭에 맞춤.
