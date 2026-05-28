@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>박기백 · 박지은 — 웨딩 사진 갤러리</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
+  <link rel="stylesheet" href="./wedding.css?v=1" />
+  <link rel="stylesheet" href="./gallery.css?v=1" />
+</head>
+<body data-page="gallery">
+  <!-- 권한 없음 -->
+  <main class="wp-shell" id="gate" hidden>
+    <header class="wp-hero">
+      <div class="wp-hero-deco" aria-hidden="true"><span class="wp-heart">🔒</span></div>
+      <h1 class="wp-title">비공개 페이지</h1>
+      <p class="wp-subtitle">접근 권한이 없습니다.</p>
+    </header>
+  </main>
+
+  <!-- 갤러리 본체 -->
+  <div class="wg-shell" id="app" hidden>
+    <header class="wg-header">
+      <div class="wg-header-inner">
+        <div class="wg-title">
+          <h1>박기백 <span class="wp-and">&amp;</span> 박지은</h1>
+          <p class="wg-sub">웨딩 사진 갤러리 · 총 <strong id="totalCount">0</strong>장</p>
+        </div>
+        <div class="wg-controls">
+          <div class="wg-sort" role="group" aria-label="정렬">
+            <button class="wg-sort-btn is-active" data-sort="time">시간순</button>
+            <button class="wg-sort-btn" data-sort="name">이름순</button>
+          </div>
+          <button class="wp-btn wp-btn-primary wg-zip-btn" id="zipBtn">
+            <span class="wp-btn-label">전체 ZIP 다운로드</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wg-main" id="grid">
+      <div class="wg-empty" id="empty" hidden>
+        <div class="wp-done-icon">📷</div>
+        <h2>아직 사진이 없습니다</h2>
+        <p>하객 분들이 사진을 올리시면 여기에 표시됩니다.</p>
+      </div>
+    </main>
+
+    <div class="wg-loading" id="loading">불러오는 중…</div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="wg-lightbox" id="lightbox" hidden>
+    <button class="wg-lb-close" type="button" id="lbClose" aria-label="닫기">×</button>
+    <button class="wg-lb-nav wg-lb-prev" type="button" id="lbPrev" aria-label="이전">‹</button>
+    <button class="wg-lb-nav wg-lb-next" type="button" id="lbNext" aria-label="다음">›</button>
+    <figure class="wg-lb-figure">
+      <img id="lbImg" alt="" />
+      <figcaption id="lbCap"></figcaption>
+    </figure>
+  </div>
+
+  <script src="./gallery.js?v=1"></script>
+</body>
+</html>

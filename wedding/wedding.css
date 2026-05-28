@@ -1,0 +1,325 @@
+/* 박기백·박지은 웨딩 — 업로드 페이지
+   따뜻한 파스텔 베이지/세이지 톤. /me 의 다크 톤과 의도적으로 다르게. */
+
+:root {
+  --wp-bg:        #faf6f0;
+  --wp-bg-soft:   #f7eee5;
+  --wp-card:      #ffffff;
+  --wp-card-edge: #efe4d4;
+  --wp-text:      #4a3a2a;
+  --wp-text-soft: #8a7765;
+  --wp-accent:    #c98a7d;          /* 따뜻한 로즈 */
+  --wp-accent-2:  #a7b89a;          /* 세이지 */
+  --wp-accent-dk: #a6695e;
+  --wp-shadow:    0 8px 28px rgba(160, 110, 80, .12);
+  --wp-shadow-lg: 0 16px 48px rgba(160, 110, 80, .18);
+  --wp-radius:    18px;
+  --wp-font: ui-rounded, -apple-system, "Apple SD Gothic Neo", "Pretendard",
+             "Noto Sans KR", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: linear-gradient(170deg, var(--wp-bg-soft) 0%, var(--wp-bg) 60%, #fdf9f3 100%);
+  color: var(--wp-text);
+  font-family: var(--wp-font);
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wp-shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 18px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ── Hero ───────────────────────────── */
+.wp-hero {
+  text-align: center;
+  padding: 28px 8px 8px;
+  position: relative;
+}
+.wp-hero-deco {
+  display: flex; justify-content: center;
+  margin-bottom: 14px;
+}
+.wp-heart {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--wp-accent);
+  font-size: 28px;
+  box-shadow: var(--wp-shadow);
+  animation: wp-beat 2.2s ease-in-out infinite;
+}
+@keyframes wp-beat {
+  0%, 100% { transform: scale(1); }
+  20%      { transform: scale(1.12); }
+  40%      { transform: scale(1); }
+  60%      { transform: scale(1.07); }
+}
+.wp-title {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  letter-spacing: -.5px;
+  color: var(--wp-text);
+}
+.wp-title .wp-and {
+  color: var(--wp-accent);
+  font-weight: 400;
+  margin: 0 6px;
+  font-style: italic;
+}
+.wp-subtitle {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--wp-text-soft);
+  margin: 0;
+}
+
+/* ── Card ───────────────────────────── */
+.wp-card {
+  background: var(--wp-card);
+  border: 1px solid var(--wp-card-edge);
+  border-radius: var(--wp-radius);
+  padding: 22px;
+  box-shadow: var(--wp-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wp-field { display: flex; flex-direction: column; gap: 6px; }
+.wp-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wp-text-soft);
+}
+.wp-optional {
+  font-weight: 400;
+  color: #b9a896;
+  font-size: 12px;
+}
+.wp-input {
+  height: 44px;
+  border: 1px solid var(--wp-card-edge);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--wp-text);
+  background: #fdfaf5;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.wp-input:focus {
+  border-color: var(--wp-accent);
+  box-shadow: 0 0 0 3px rgba(201, 138, 125, .15);
+}
+
+/* ── Drop zone ──────────────────────── */
+.wp-drop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 2px dashed var(--wp-card-edge);
+  border-radius: 14px;
+  padding: 20px 18px;
+  background: #fdfaf4;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.wp-drop:hover, .wp-drop.is-drag {
+  border-color: var(--wp-accent);
+  background: #fdf3ec;
+  transform: translateY(-1px);
+}
+.wp-drop-icon {
+  font-size: 34px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(160, 110, 80, .1);
+  flex: 0 0 auto;
+}
+.wp-drop-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wp-drop-text strong {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--wp-text);
+}
+.wp-drop-text span {
+  font-size: 12.5px;
+  color: var(--wp-text-soft);
+}
+
+/* ── Previews ───────────────────────── */
+.wp-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.wp-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0e7da;
+  border: 1px solid var(--wp-card-edge);
+}
+.wp-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.wp-thumb-status {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .9);
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.wp-thumb.is-done .wp-thumb-status { color: var(--wp-accent-2); }
+.wp-thumb.is-fail .wp-thumb-status { color: #c44; }
+.wp-thumb.is-uploading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(1px);
+}
+.wp-thumb-remove {
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.wp-thumb-remove:hover { background: rgba(0, 0, 0, .75); }
+
+/* ── Buttons ────────────────────────── */
+.wp-btn {
+  height: 52px;
+  border-radius: 14px;
+  border: none;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.wp-btn-primary {
+  background: var(--wp-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(201, 138, 125, .3);
+}
+.wp-btn-primary:hover:not(:disabled) {
+  background: var(--wp-accent-dk);
+  transform: translateY(-1px);
+}
+.wp-btn-primary:disabled {
+  background: #d8c8b9;
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.wp-btn-ghost {
+  background: transparent;
+  color: var(--wp-accent-dk);
+  border: 1px solid var(--wp-card-edge);
+}
+.wp-btn-ghost:hover {
+  background: var(--wp-bg-soft);
+}
+
+/* ── Status / progress ──────────────── */
+.wp-status {
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fdf3ec;
+  color: var(--wp-accent-dk);
+}
+.wp-status.is-error {
+  background: #fbecec;
+  color: #b04a4a;
+}
+.wp-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wp-progress-bar {
+  height: 8px;
+  background: var(--wp-card-edge);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.wp-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--wp-accent), var(--wp-accent-2));
+  transition: width .25s;
+}
+.wp-progress-text {
+  font-size: 12px;
+  color: var(--wp-text-soft);
+  text-align: center;
+}
+
+/* ── Done card ──────────────────────── */
+.wp-done {
+  text-align: center;
+  align-items: center;
+}
+.wp-done-icon { font-size: 48px; }
+.wp-done h2 { margin: 0; font-size: 22px; color: var(--wp-accent-dk); }
+.wp-done p { margin: 0; color: var(--wp-text-soft); font-size: 14.5px; line-height: 1.6; }
+
+/* ── Footer ─────────────────────────── */
+.wp-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #b9a896;
+  margin-top: 12px;
+}
+
+/* ── Small screens / tablets ────────── */
+@media (max-width: 380px) {
+  .wp-title { font-size: 26px; }
+  .wp-drop { padding: 16px 14px; }
+  .wp-drop-icon { width: 48px; height: 48px; font-size: 28px; }
+}
+
+@media (min-width: 640px) {
+  .wp-shell { padding-top: 40px; }
+  .wp-title { font-size: 36px; }
+}
