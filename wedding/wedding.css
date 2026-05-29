@@ -112,7 +112,7 @@ html, body {
 /* ── 첫 화면 (갤러리 입장) ────────────── */
 .wp-hero {
   text-align: center;
-  padding: clamp(48px, 13vh, 110px) 10px 18px;
+  padding: clamp(34px, 8vh, 78px) 10px 18px;
   position: relative;
 }
 .wp-eyebrow {
@@ -142,10 +142,10 @@ html, body {
 }
 .wp-date {
   font-family: var(--wp-serif);
-  font-size: 17px;
+  font-size: 16px;
   letter-spacing: .28em;
   color: var(--wp-accent-dk);
-  margin: 12px 0 0;
+  margin: 2px 0 0;
   padding-left: .28em;
 }
 .wp-ornament {
@@ -155,7 +155,7 @@ html, body {
   gap: 14px;
   color: var(--wp-gold);
   font-size: 14px;
-  margin: 20px 0 18px;
+  margin: 18px 0 14px;
 }
 .wp-ornament span {
   display: block;
@@ -166,10 +166,10 @@ html, body {
 .wp-invite {
   font-family: var(--wp-serif);
   font-style: italic;
-  font-size: clamp(19px, 5.4vw, 24px);
-  color: #5a4632;
-  margin: 0 0 10px;
-  line-height: 1.4;
+  font-size: clamp(20px, 5.8vw, 26px);
+  color: #4f3c29;
+  margin: 22px 0 0;
+  line-height: 1.45;
 }
 .wp-invite-sub {
   font-size: 14px;
@@ -346,13 +346,21 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 .wp-btn-primary {
-  background: linear-gradient(135deg, var(--wp-accent) 0%, var(--wp-accent-dk) 100%);
+  background: linear-gradient(135deg, #c27f72 0%, #9a5247 100%);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(166, 105, 94, .34);
-  letter-spacing: .02em;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-shadow: 0 1px 2px rgba(80, 30, 25, .28);   /* 흰 글씨 가독성 보장 */
+  box-shadow: 0 10px 24px rgba(150, 85, 72, .4);
 }
-.wp-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(166,105,94,.4); }
-.wp-btn-primary:disabled { background: #dccbbb; color: #fff; cursor: not-allowed; box-shadow: none; }
+.wp-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(150, 85, 72, .46); }
+.wp-btn-primary:disabled {
+  background: #e6dacb;
+  color: #9a8a78;            /* 흰색 대신 읽히는 톤 */
+  text-shadow: none;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .wp-btn-ghost {
   background: rgba(255,255,255,.6);
   color: var(--wp-accent-dk);
@@ -468,6 +476,14 @@ html, body {
   color: var(--wp-text);
 }
 .wp-brand-ver { color: var(--wp-gold); font-size: 12px; letter-spacing: .1em; }
+.wp-brand-cta {
+  margin-top: 5px;
+  font-size: 12px;
+  letter-spacing: .08em;
+  font-weight: 600;
+  color: var(--wp-accent-dk);
+}
+.wp-brand:hover .wp-brand-cta { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── 기술 스택 모달 ─────────────────── */
 .wp-modal {
