@@ -13,8 +13,8 @@
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./wedding.css?v=8" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./wedding.css?v=9" />
 </head>
 <body>
   <!-- 시네마틱 배경 / 필름 그레인 / 꽃잎 -->
@@ -25,13 +25,19 @@
   <main class="wp-shell">
     <!-- ── 첫 화면: 갤러리 입장 ── -->
     <header class="wp-hero">
+      <div class="wp-hero-photos" aria-hidden="true">
+        <div class="wp-hero-layer" style="background-image:url('hero-1.jpg')"></div>
+        <div class="wp-hero-layer" style="background-image:url('hero-2.jpg')"></div>
+        <div class="wp-hero-layer" style="background-image:url('hero-3.jpg')"></div>
+      </div>
       <p class="wp-eyebrow">THE WEDDING OF</p>
       <h1 class="wp-names">
         <span class="wp-name">박기백</span> <span class="wp-amp">&amp;</span> <span class="wp-name">박지은</span>
       </h1>
+      <p class="wp-slogan">One Day, Forever</p>
       <p class="wp-invite">오늘 하루는 지나가지만,<br/>당신이 담아주신 순간은 평생 남습니다.</p>
       <div class="wp-ornament" aria-hidden="true"><span></span>❀<span></span></div>
-      <p class="wp-date">2026 · 06 · 06</p>
+      <p class="wp-date">2026. 06. 06</p>
       <p class="wp-invite-sub">여러분의 시선으로 완성되는 결혼식.<br/>오늘의 사진과 영상을 함께 모아주세요 🤍</p>
       <p class="wp-livecount" id="liveCount" hidden>지금 <b id="liveNum">0</b>개의 순간이 모이고 있어요</p>
       <div class="wp-scroll-hint" aria-hidden="true">아래에서 사진·영상 담기 ↓</div>
@@ -84,7 +90,7 @@
       <button type="button" class="wp-brand" id="brandBtn" aria-haspopup="dialog">
         <span class="wp-brand-made">Made with <span class="wp-brand-heart">❤</span> by <b>박기백</b></span>
         <span class="wp-brand-name">Wedding Memory Cloud</span>
-        <span class="wp-brand-tag">Built for our wedding <span class="wp-brand-cta">· View Project →</span></span>
+        <span class="wp-brand-tag">for 박기백 &amp; 박지은</span>
       </button>
     </footer>
   </main>
@@ -95,8 +101,7 @@
       <button type="button" class="wp-modal-close" id="techClose" aria-label="닫기">×</button>
       <p class="wp-modal-eyebrow">A PRODUCT BY 박기백</p>
       <h3 class="wp-modal-title" id="techTitle">Wedding Memory Cloud</h3>
-      <p class="wp-modal-tagline">One Day, Forever <span>· by 박기백</span></p>
-      <p class="wp-modal-desc">하객이 QR 한 번으로, 로그인·입력 없이 사진·영상을 올리고<br/>신랑신부가 실시간 갤러리·슬라이드쇼로 보는 웨딩 미디어 서비스.</p>
+      <p class="wp-modal-desc">여러분의 시선으로 완성되는<br/>우리의 결혼식 기록.</p>
 
       <div class="wp-stack">
         <div class="wp-stack-row">
@@ -109,6 +114,11 @@
             <span class="wp-feat">원본 자동 백업</span>
           </span>
         </div>
+      </div>
+
+      <p class="wp-modal-story">사랑하는 사람과의 단 하루를 더 오래 남기고 싶어서,<br/>신랑이 직접 설계하고 개발했습니다.</p>
+
+      <div class="wp-stack wp-stack-tech">
         <div class="wp-stack-row">
           <span class="wp-stack-key">Built with</span>
           <span class="wp-stack-val">Vanilla JS <em>(no framework, 직접 제작)</em> · FastAPI · Supabase</span>
@@ -118,7 +128,6 @@
           <span class="wp-stack-val wp-arch">Frontend <i>→</i> API <i>→</i> Storage</span>
         </div>
       </div>
-
       <details class="wp-tech-more">
         <summary>기술 상세 보기</summary>
         <div class="wp-tech-more-body">
@@ -128,11 +137,10 @@
         </div>
       </details>
 
-      <p class="wp-modal-story">사랑하는 사람과의 단 하루를 더 오래 남기고 싶어서,<br/>신랑이 직접 설계하고 개발했습니다.</p>
       <p class="wp-modal-foot">© 2026 박기백 · for 박기백 &amp; 박지은</p>
     </div>
   </div>
 
-  <script src="./wedding.js?v=5"></script>
+  <script src="./wedding.js?v=9"></script>
 </body>
 </html>

@@ -117,21 +117,38 @@ html, body {
   position: relative;
   isolation: isolate;
 }
-/* 베스트컷을 은은하게 배경으로 — 위는 아이보리 베일, 아래로 갈수록 페이지색으로 자연스럽게 */
+/* 베스트컷 3장 크로스페이드 (배경, 8~9초 간격) */
+.wp-hero-photos { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.wp-hero-layer {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center 40%;
+  opacity: 0;
+  animation: wp-heroswap 27s infinite;
+}
+.wp-hero-layer:nth-child(1) { animation-delay: 0s; }
+.wp-hero-layer:nth-child(2) { animation-delay: 9s; }
+.wp-hero-layer:nth-child(3) { animation-delay: 18s; }
+@keyframes wp-heroswap {
+  0%   { opacity: 0; }
+  3%   { opacity: 1; }
+  30%  { opacity: 1; }
+  36%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+/* 아이보리 베일 — 사진 위, 텍스트 아래. 글씨가 주인공, 사진은 분위기 */
 .wp-hero::before {
   content: "";
   position: absolute;
   left: 0; right: 0; top: 0; bottom: 0;
   z-index: -1;
-  background:
-    linear-gradient(to bottom,
-      rgba(247, 240, 230, .74) 0%,
-      rgba(246, 238, 227, .80) 45%,
-      rgba(244, 235, 223, .93) 80%,
-      #f3e9dc 100%),
-    url("hero.jpg") center 40% / cover no-repeat;
+  background: linear-gradient(to bottom,
+    rgba(247, 240, 230, .74) 0%,
+    rgba(246, 238, 227, .80) 45%,
+    rgba(244, 235, 223, .93) 80%,
+    #f3e9dc 100%);
 }
-.wp-hero > * { position: relative; }
+.wp-hero > *:not(.wp-hero-photos) { position: relative; }
 /* 글씨가 주인공 — 사진은 분위기. 텍스트엔 아주 옅은 화이트 그림자만 */
 .wp-eyebrow, .wp-names, .wp-date { text-shadow: 0 1px 2px rgba(255, 253, 248, .6); }
 .wp-invite { text-shadow: 0 1px 2px rgba(255, 255, 255, .55); }
@@ -161,17 +178,30 @@ html, body {
 .wp-names .wp-amp {
   font-family: "Cormorant Garamond", serif;
   font-style: italic;
-  font-weight: 500;
+  font-weight: 300;
+  font-size: 1.15em;
+  opacity: .85;
   color: var(--wp-accent);
-  margin: 0 .14em;
+  margin: 0 .36em;          /* 이름 둘 사이 넉넉한 간격 */
+  vertical-align: -.02em;
+}
+.wp-slogan {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 15px;
+  letter-spacing: .16em;
+  color: var(--wp-sage-dk);
+  margin: 9px 0 0;
+  padding-left: .16em;
+  text-shadow: 0 1px 2px rgba(255, 253, 248, .6);
 }
 .wp-date {
   font-family: var(--wp-serif);
   font-size: 16px;
-  letter-spacing: .28em;
+  letter-spacing: .18em;
   color: var(--wp-accent-dk);
   margin: 2px 0 0;
-  padding-left: .28em;
+  padding-left: .18em;
 }
 .wp-ornament {
   display: flex;
@@ -516,21 +546,13 @@ html, body {
 }
 .wp-brand-ver { color: var(--wp-gold); font-size: 12px; letter-spacing: .1em; }
 .wp-brand-tag {
-  margin-top: 4px;
+  margin-top: 5px;
   font-family: var(--wp-serif);
-  font-style: italic;
-  font-size: 13px;
+  font-size: 13.5px;
+  letter-spacing: .02em;
   color: var(--wp-text-soft);
 }
-.wp-brand-cta {
-  font-style: normal;
-  font-family: var(--wp-font);
-  font-size: 11.5px;
-  letter-spacing: .04em;
-  font-weight: 600;
-  color: var(--wp-accent-dk);
-}
-.wp-brand:hover .wp-brand-cta { text-decoration: underline; text-underline-offset: 3px; }
+.wp-brand:hover .wp-brand-name { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── 기술 스택 모달 ─────────────────── */
 .wp-modal {
@@ -609,6 +631,9 @@ html, body {
 /* Architecture 흐름 */
 .wp-arch { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
 .wp-arch i { color: var(--wp-gold); font-style: normal; font-weight: 700; }
+/* 기술 블록은 맨 아래에서 살짝 차분하게 */
+.wp-stack-tech { margin-top: 16px; }
+.wp-stack-tech .wp-stack-val { color: var(--wp-text-soft); }
 
 /* 기술 상세 토글 */
 .wp-tech-more { margin-top: 14px; }
@@ -648,6 +673,9 @@ html, body {
 /* ── 모션 최소화 선호 ────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .wp-petals { display: none; }
-  .wp-scroll-hint, .wp-check-circle, .wp-check-mark, .wp-thumb.is-done .wp-thumb-status { animation: none; }
+  .wp-scroll-hint, .wp-check-circle, .wp-check-mark, .wp-thumb.is-done .wp-thumb-status,
+  .wp-livecount::before { animation: none; }
   .wp-check-circle, .wp-check-mark { stroke-dashoffset: 0; }
+  .wp-hero-layer { animation: none; opacity: 0; }
+  .wp-hero-layer:nth-child(1) { opacity: 1; }
 }

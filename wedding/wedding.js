@@ -91,7 +91,7 @@
   function refreshUploadBtn() {
     const pending = queue.filter(q => q.status === "idle" || q.status === "fail").length;
     $upload.disabled = pending === 0;
-    $upload.querySelector(".wp-btn-label").textContent = pending > 0 ? `${pending}개 올리기` : "우리의 순간 담기";
+    $upload.querySelector(".wp-btn-label").textContent = pending > 0 ? `${pending}개 올리기` : "사진 · 영상 올리기";
     $previews.hidden = queue.length === 0;
   }
   function setStatus(msg, isError) {
