@@ -112,9 +112,30 @@ html, body {
 /* ── 첫 화면 (갤러리 입장) ────────────── */
 .wp-hero {
   text-align: center;
-  padding: clamp(34px, 8vh, 78px) 10px 18px;
+  padding: clamp(40px, 9vh, 86px) 14px 30px;
   position: relative;
+  isolation: isolate;
 }
+/* 베스트컷을 은은하게 배경으로 — 위는 아이보리 베일, 아래로 갈수록 페이지색으로 자연스럽게 */
+.wp-hero::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom,
+      rgba(244, 235, 222, .40) 0%,
+      rgba(244, 235, 222, .58) 40%,
+      rgba(243, 233, 220, .86) 78%,
+      #f3e9dc 100%),
+    url("hero.jpg") center 42% / cover no-repeat;
+}
+.wp-hero > * { position: relative; }
+/* 사진 위 텍스트 가독성 (은은한 화이트 글로우) */
+.wp-eyebrow, .wp-names, .wp-invite, .wp-date {
+  text-shadow: 0 1px 2px rgba(255, 252, 247, .7), 0 2px 20px rgba(255, 250, 242, .9);
+}
+.wp-invite-sub { text-shadow: 0 1px 12px rgba(255, 250, 242, .85); }
 .wp-eyebrow {
   font-family: var(--wp-serif);
   letter-spacing: .42em;
