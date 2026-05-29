@@ -181,10 +181,24 @@ html, body {
   background: #f0e7da;
   border: 1px solid var(--wp-card-edge);
 }
-.wp-thumb img {
+.wp-thumb img,
+.wp-thumb video {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
+}
+.wp-thumb-play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .5);
+  color: #fff;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  padding-left: 2px;
+  pointer-events: none;
 }
 .wp-thumb-status {
   position: absolute;
@@ -303,6 +317,53 @@ html, body {
 .wp-done-icon { font-size: 48px; }
 .wp-done h2 { margin: 0; font-size: 22px; color: var(--wp-accent-dk); }
 .wp-done p { margin: 0; color: var(--wp-text-soft); font-size: 14.5px; line-height: 1.6; }
+
+/* 방금 올린 사진·영상 미리보기 (업로드 확인용) */
+.wp-done-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.wp-done-grid:empty { display: none; }
+.wp-done-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0e7da;
+  border: 1px solid var(--wp-card-edge);
+}
+.wp-done-cell img,
+.wp-done-cell video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.wp-done-check {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--wp-accent-2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.wp-done-play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .5);
+  color: #fff;
+  font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  padding-left: 2px;
+  pointer-events: none;
+}
 
 /* ── Footer ─────────────────────────── */
 .wp-footer {

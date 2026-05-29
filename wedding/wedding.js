@@ -1,7 +1,8 @@
-/* 박기백·박지은 결혼식 — 하객 사진 업로드 클라이언트.
-   - 클라이언트단 압축 (Canvas, max 1920px long edge, JPEG q0.85)
+/* 박기백·박지은 결혼식 — 하객 사진·영상 업로드 클라이언트.
+   - 사진: 클라이언트 압축 (Canvas, max 1920px long edge, JPEG q0.85)
+   - 동영상: 원본 그대로 업로드 (압축 안 함)
    - 병렬 업로드 동시 3개 제한
-   - 익명 식별: localStorage uuid */
+   - 익명 식별: localStorage uuid (이름 입력은 없음) */
 
 (function () {
   "use strict";
@@ -10,8 +11,19 @@
   const MAX_DIMENSION = 1920;
   const JPEG_QUALITY = 0.85;
   const MAX_PARALLEL = 3;
+  const VIDEO_RE = /^video\//i;
+  const VIDEO_EXT_RE = /\.(mp4|mov|webm|m4v|3gp)$/i;
+  const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|heic|heif)$/i;
 
-  // ── UUID (재방문 식별) ─────────────────────────
+  function isVideo(file) {
+    return VIDEO_RE.test(file.type) || VIDEO_EXT_RE.test(file.name || "");
+  }
+  function isAccepted(file) {
+    return /^image\//i.test(file.type) || isVideo(file) ||
+           IMAGE_EXT_RE.test(file.name || "") || VIDEO_EXT_RE.test(file.name || "");
+  }
+
+  // ── UUID (재방문 식별, 화면에 노출 안 함) ───────
   function getUuid() {
     try {
       let v = localStorage.getItem("wedding_uploader_uuid");
@@ -27,7 +39,6 @@
   }
 
   // ── DOM ───────────────────────────────────────
-  const $name = document.getElementById("uploaderName");
   const $file = document.getElementById("fileInput");
   const $drop = document.getElementById("dropZone");
   const $previews = document.getElementById("previews");
@@ -38,23 +49,19 @@
   const $progressText = document.getElementById("progressText");
   const $uploadCard = document.getElementById("uploadCard");
   const $doneCard = document.getElementById("doneCard");
+  const $doneTitle = document.getElementById("doneTitle");
+  const $doneGrid = document.getElementById("doneGrid");
   const $moreBtn = document.getElementById("moreBtn");
 
-  // 저장된 이름 복원
-  try {
-    const savedName = localStorage.getItem("wedding_uploader_name");
-    if (savedName) $name.value = savedName;
-  } catch (_) {}
-
   // ── 큐 ────────────────────────────────────────
-  /** @type {{id:string, file:File, thumb:HTMLElement, status:'idle'|'uploading'|'done'|'fail'}[]} */
+  /** @type {{id:string, file:File, video:boolean, url:string, thumb:HTMLElement, status:'idle'|'uploading'|'done'|'fail'}[]} */
   const queue = [];
 
   function refreshUploadBtn() {
     const pending = queue.filter(q => q.status === "idle" || q.status === "fail").length;
     $upload.disabled = pending === 0;
     $upload.querySelector(".wp-btn-label").textContent =
-      pending > 0 ? `사진 ${pending}장 업로드` : "사진 업로드";
+      pending > 0 ? `${pending}개 업로드` : "사진 업로드";
     $previews.hidden = queue.length === 0;
   }
 
@@ -75,27 +82,39 @@
 
   // ── 파일 추가 ─────────────────────────────────
   function addFiles(files) {
-    const items = Array.from(files || []).filter(f => /^image\//i.test(f.type) || /\.(jpg|jpeg|png|webp|heic|heif)$/i.test(f.name));
+    const items = Array.from(files || []).filter(isAccepted);
     if (!items.length) return;
 
     items.forEach(file => {
       const id = "q-" + Math.random().toString(36).slice(2);
+      const video = isVideo(file);
+      const url = URL.createObjectURL(file);
+
       const thumb = document.createElement("div");
-      thumb.className = "wp-thumb";
+      thumb.className = "wp-thumb" + (video ? " is-video" : "");
       thumb.dataset.id = id;
-      thumb.innerHTML = `
-        <img alt="" />
-        <button class="wp-thumb-remove" type="button" aria-label="제거">×</button>
-        <span class="wp-thumb-status" aria-hidden="true"></span>
-      `;
-      const $img = thumb.querySelector("img");
-      const reader = new FileReader();
-      reader.onload = e => { $img.src = e.target.result; };
-      reader.readAsDataURL(file);
+
+      if (video) {
+        thumb.innerHTML = `
+          <video muted playsinline preload="metadata"></video>
+          <span class="wp-thumb-play" aria-hidden="true">▶</span>
+          <button class="wp-thumb-remove" type="button" aria-label="제거">×</button>
+          <span class="wp-thumb-status" aria-hidden="true"></span>
+        `;
+        thumb.querySelector("video").src = url;
+      } else {
+        thumb.innerHTML = `
+          <img alt="" />
+          <button class="wp-thumb-remove" type="button" aria-label="제거">×</button>
+          <span class="wp-thumb-status" aria-hidden="true"></span>
+        `;
+        thumb.querySelector("img").src = url;
+      }
 
       thumb.querySelector(".wp-thumb-remove").addEventListener("click", () => {
         const idx = queue.findIndex(q => q.id === id);
         if (idx >= 0 && queue[idx].status !== "uploading") {
+          try { URL.revokeObjectURL(queue[idx].url); } catch (_) {}
           queue.splice(idx, 1);
           thumb.remove();
           refreshUploadBtn();
@@ -103,14 +122,14 @@
       });
 
       $previews.appendChild(thumb);
-      queue.push({ id, file, thumb, status: "idle" });
+      queue.push({ id, file, video, url, thumb, status: "idle" });
     });
 
     refreshUploadBtn();
     setStatus("");
   }
 
-  // ── 압축 ──────────────────────────────────────
+  // ── 압축 (사진만) ─────────────────────────────
   function loadImage(file) {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
@@ -122,18 +141,15 @@
   }
 
   function canvasToBlob(canvas, type, quality) {
-    return new Promise(resolve => {
-      canvas.toBlob(b => resolve(b), type, quality);
-    });
+    return new Promise(resolve => { canvas.toBlob(b => resolve(b), type, quality); });
   }
 
   async function compressImage(file) {
-    // HEIC/HEIF 같이 브라우저가 못 그리는 포맷이면 원본 그대로 전송
     let img;
     try {
       img = await loadImage(file);
     } catch (_) {
-      return file;
+      return file; // HEIC 등 브라우저가 못 그리면 원본 전송
     }
 
     const longEdge = Math.max(img.naturalWidth, img.naturalHeight);
@@ -145,17 +161,14 @@
 
     const canvas = document.createElement("canvas");
     canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, w, h);
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
 
     const blob = await canvasToBlob(canvas, "image/jpeg", JPEG_QUALITY);
     if (!blob) return file;
 
-    // 압축 결과가 원본보다 크면 원본 사용
     if (blob.size >= file.size && /\.jpe?g$/i.test(file.name)) {
       return Object.assign(file, { _w: w, _h: h });
     }
-
     const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
     const compressed = new File([blob], newName, { type: "image/jpeg" });
     compressed._w = w; compressed._h = h;
@@ -169,20 +182,15 @@
     item.thumb.querySelector(".wp-thumb-status").textContent = "…";
 
     try {
-      const compressed = await compressImage(item.file);
+      const payload = item.video ? item.file : await compressImage(item.file);
 
       const fd = new FormData();
-      fd.append("file", compressed, compressed.name);
-      fd.append("uploader_name", ($name.value || "").trim().slice(0, 40));
+      fd.append("file", payload, payload.name);
       fd.append("uploader_uuid", getUuid());
-      if (compressed._w) fd.append("width", String(compressed._w));
-      if (compressed._h) fd.append("height", String(compressed._h));
+      if (payload._w) fd.append("width", String(payload._w));
+      if (payload._h) fd.append("height", String(payload._h));
 
-      const res = await fetch(`${API_BASE}/api/wedding/upload`, {
-        method: "POST",
-        body: fd,
-      });
-
+      const res = await fetch(`${API_BASE}/api/wedding/upload`, { method: "POST", body: fd });
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         throw new Error(`서버 오류 (${res.status}) ${txt.slice(0, 120)}`);
@@ -202,22 +210,36 @@
     }
   }
 
+  function showDone(items) {
+    // 방금 올린 사진/영상 미리보기 — "정말 올라갔구나" 확신을 주기 위함
+    $doneGrid.innerHTML = "";
+    items.forEach(it => {
+      const cell = document.createElement("div");
+      cell.className = "wp-done-cell";
+      if (it.video) {
+        cell.innerHTML = `<video muted playsinline preload="metadata"></video><span class="wp-done-play">▶</span><span class="wp-done-check">✓</span>`;
+        cell.querySelector("video").src = it.url;
+      } else {
+        cell.innerHTML = `<img alt="" /><span class="wp-done-check">✓</span>`;
+        cell.querySelector("img").src = it.url;
+      }
+      $doneGrid.appendChild(cell);
+    });
+    const n = items.length;
+    $doneTitle.textContent = `${n}개 올렸어요! ✓`;
+    $uploadCard.hidden = true;
+    $doneCard.hidden = false;
+  }
+
   async function uploadAll() {
     const targets = queue.filter(q => q.status === "idle" || q.status === "fail");
     if (!targets.length) return;
 
-    // fail 재시도용 초기화
     targets.forEach(t => {
       t.status = "idle";
       t.thumb.classList.remove("is-fail");
       t.thumb.querySelector(".wp-thumb-status").textContent = "";
     });
-
-    // 이름 저장
-    try {
-      const n = ($name.value || "").trim();
-      if (n) localStorage.setItem("wedding_uploader_name", n);
-    } catch (_) {}
 
     $upload.disabled = true;
     setStatus("");
@@ -226,7 +248,6 @@
     let done = 0;
     setProgress(0, total);
 
-    // 동시 MAX_PARALLEL 개 worker
     let cursor = 0;
     async function worker() {
       while (cursor < targets.length) {
@@ -237,47 +258,37 @@
       }
     }
     const workers = [];
-    for (let i = 0; i < Math.min(MAX_PARALLEL, targets.length); i++) {
-      workers.push(worker());
-    }
+    for (let i = 0; i < Math.min(MAX_PARALLEL, targets.length); i++) workers.push(worker());
     await Promise.all(workers);
 
+    const succeededItems = queue.filter(q => q.status === "done");
     const failed = queue.filter(q => q.status === "fail").length;
-    const succeeded = queue.filter(q => q.status === "done").length;
 
     if (failed === 0) {
-      // 전부 성공 — 완료 화면으로
-      $uploadCard.hidden = true;
-      $doneCard.hidden = false;
-      // 다음을 위해 큐 비우기
+      showDone(succeededItems.slice());
+      // 큐 비우기 (미리보기는 done 화면에 별도 렌더됨)
       queue.length = 0;
       $previews.innerHTML = "";
       $previews.hidden = true;
       setProgress(0, 0);
     } else {
-      setStatus(`${succeeded}장 성공 · ${failed}장 실패. 다시 시도하기 버튼을 눌러주세요.`, true);
+      setStatus(`${succeededItems.length}개 성공 · ${failed}개 실패. 아래 버튼으로 다시 시도해 주세요.`, true);
       $upload.disabled = false;
-      $upload.querySelector(".wp-btn-label").textContent = `실패 ${failed}장 다시 시도`;
+      $upload.querySelector(".wp-btn-label").textContent = `실패 ${failed}개 다시 시도`;
     }
   }
 
   // ── 이벤트 ────────────────────────────────────
   $file.addEventListener("change", e => {
     addFiles(e.target.files);
-    e.target.value = "";  // 같은 파일 재선택 가능하게
+    e.target.value = "";
   });
 
   ["dragenter", "dragover"].forEach(t => {
-    $drop.addEventListener(t, e => {
-      e.preventDefault();
-      $drop.classList.add("is-drag");
-    });
+    $drop.addEventListener(t, e => { e.preventDefault(); $drop.classList.add("is-drag"); });
   });
   ["dragleave", "drop"].forEach(t => {
-    $drop.addEventListener(t, e => {
-      e.preventDefault();
-      $drop.classList.remove("is-drag");
-    });
+    $drop.addEventListener(t, e => { e.preventDefault(); $drop.classList.remove("is-drag"); });
   });
   $drop.addEventListener("drop", e => {
     if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
@@ -288,15 +299,12 @@
   $moreBtn.addEventListener("click", () => {
     $doneCard.hidden = true;
     $uploadCard.hidden = false;
+    $doneGrid.innerHTML = "";
     refreshUploadBtn();
   });
 
-  // 페이지 떠날 때 업로드 중이면 확인
   window.addEventListener("beforeunload", e => {
-    if (queue.some(q => q.status === "uploading")) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
+    if (queue.some(q => q.status === "uploading")) { e.preventDefault(); e.returnValue = ""; }
   });
 
   refreshUploadBtn();

@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
-  <link rel="stylesheet" href="./wedding.css?v=1" />
-  <link rel="stylesheet" href="./gallery.css?v=1" />
+  <link rel="stylesheet" href="./wedding.css?v=2" />
+  <link rel="stylesheet" href="./gallery.css?v=2" />
 </head>
 <body data-page="gallery">
   <!-- 권한 없음 -->
@@ -26,13 +26,10 @@
       <div class="wg-header-inner">
         <div class="wg-title">
           <h1>박기백 <span class="wp-and">&amp;</span> 박지은</h1>
-          <p class="wg-sub">웨딩 사진 갤러리 · 총 <strong id="totalCount">0</strong>장</p>
+          <p class="wg-sub">웨딩 사진 갤러리 · 총 <strong id="totalCount">0</strong>개</p>
         </div>
         <div class="wg-controls">
-          <div class="wg-sort" role="group" aria-label="정렬">
-            <button class="wg-sort-btn is-active" data-sort="time">시간순</button>
-            <button class="wg-sort-btn" data-sort="name">이름순</button>
-          </div>
+          <button class="wp-btn wp-btn-ghost wg-slide-btn" id="slideBtn">▶︎ 슬라이드쇼</button>
           <button class="wp-btn wp-btn-primary wg-zip-btn" id="zipBtn">
             <span class="wp-btn-label">전체 ZIP 다운로드</span>
           </button>
@@ -57,11 +54,18 @@
     <button class="wg-lb-nav wg-lb-prev" type="button" id="lbPrev" aria-label="이전">‹</button>
     <button class="wg-lb-nav wg-lb-next" type="button" id="lbNext" aria-label="다음">›</button>
     <figure class="wg-lb-figure">
-      <img id="lbImg" alt="" />
+      <div class="wg-lb-stage" id="lbStage"></div>
       <figcaption id="lbCap"></figcaption>
     </figure>
   </div>
 
-  <script src="./gallery.js?v=1"></script>
+  <!-- Slideshow (식장 스크린용 자동 재생) -->
+  <div class="wg-slideshow" id="slideshow" hidden>
+    <div class="wg-ss-stage" id="ssStage"></div>
+    <div class="wg-ss-caption" id="ssCaption"></div>
+    <button class="wg-ss-close" type="button" id="ssClose" aria-label="닫기">×</button>
+  </div>
+
+  <script src="./gallery.js?v=2"></script>
 </body>
 </html>

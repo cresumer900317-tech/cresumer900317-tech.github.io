@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>박기백 · 박지은 결혼식 — 사진 업로드</title>
-  <meta name="description" content="박기백·박지은 결혼식 사진 업로드" />
+  <title>박기백 · 박지은 결혼식 — 사진·영상 업로드</title>
+  <meta name="description" content="박기백·박지은 결혼식 사진·영상 업로드" />
   <meta name="theme-color" content="#f7eee5" />
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
   <link rel="dns-prefetch" href="https://guild-backend-production-75a6.up.railway.app" />
-  <link rel="stylesheet" href="./wedding.css?v=1" />
+  <link rel="stylesheet" href="./wedding.css?v=2" />
 </head>
 <body>
   <main class="wp-shell">
@@ -18,21 +18,16 @@
         <span class="wp-heart">❤</span>
       </div>
       <h1 class="wp-title">박기백 <span class="wp-and">&amp;</span> 박지은</h1>
-      <p class="wp-subtitle">결혼식에서 찍어주신 사진을 올려주세요.<br/>신랑·신부에게 큰 선물이 됩니다 🎉</p>
+      <p class="wp-subtitle">결혼식에서 찍어주신 사진·영상을 올려주세요.<br/>신랑·신부에게 큰 선물이 됩니다 🎉</p>
     </header>
 
     <section class="wp-card" id="uploadCard">
-      <div class="wp-field">
-        <label for="uploaderName" class="wp-label">이름 <span class="wp-optional">(선택)</span></label>
-        <input id="uploaderName" type="text" class="wp-input" placeholder="예: 김친구" maxlength="40" autocomplete="name" />
-      </div>
-
       <label class="wp-drop" id="dropZone" for="fileInput">
-        <input id="fileInput" type="file" accept="image/*" multiple hidden />
+        <input id="fileInput" type="file" accept="image/*,video/*" multiple hidden />
         <div class="wp-drop-icon" aria-hidden="true">📷</div>
         <div class="wp-drop-text">
-          <strong>사진 올리기</strong>
-          <span>탭하거나 끌어다 놓기 · 여러 장 OK</span>
+          <strong>사진·영상 올리기</strong>
+          <span>탭하거나 끌어다 놓기 · 여러 개 OK · 동영상도 가능</span>
         </div>
       </label>
 
@@ -51,9 +46,10 @@
 
     <section class="wp-card wp-done" id="doneCard" hidden>
       <div class="wp-done-icon">🎉</div>
-      <h2>감사합니다!</h2>
-      <p>좋은 추억 만들어주셔서 정말 감사합니다.<br/>박기백 · 박지은의 결혼을 축복해 주세요 💕</p>
-      <button type="button" class="wp-btn wp-btn-ghost" id="moreBtn">더 올리기</button>
+      <h2 id="doneTitle">업로드 완료!</h2>
+      <p id="doneMsg">올려주신 사진·영상이 신랑·신부에게 잘 전달됐어요 💕</p>
+      <div class="wp-done-grid" id="doneGrid" aria-label="방금 올린 사진"></div>
+      <button type="button" class="wp-btn wp-btn-ghost" id="moreBtn">사진 더 올리기</button>
     </section>
 
     <footer class="wp-footer">
@@ -61,6 +57,6 @@
     </footer>
   </main>
 
-  <script src="./wedding.js?v=1"></script>
+  <script src="./wedding.js?v=2"></script>
 </body>
 </html>
