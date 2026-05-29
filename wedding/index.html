@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./wedding.css?v=3" />
+  <link rel="stylesheet" href="./wedding.css?v=4" />
 </head>
 <body>
   <!-- 시네마틱 배경 / 필름 그레인 / 꽃잎 -->
@@ -94,31 +94,40 @@
       <button type="button" class="wp-modal-close" id="techClose" aria-label="닫기">×</button>
       <p class="wp-modal-eyebrow">A PRODUCT BY 박기백</p>
       <h3 class="wp-modal-title" id="techTitle">Wedding Memory Cloud</h3>
+      <p class="wp-modal-tagline">One Day, Forever <span>· by 박기백</span></p>
       <p class="wp-modal-desc">하객이 QR 한 번으로, 로그인·입력 없이 사진·영상을 올리고<br/>신랑신부가 실시간 갤러리·슬라이드쇼로 보는 웨딩 미디어 서비스.</p>
 
       <div class="wp-stack">
         <div class="wp-stack-row">
-          <span class="wp-stack-key">Frontend</span>
-          <span class="wp-stack-val">Vanilla JS · HTML/CSS <em>(no framework, 직접 제작)</em></span>
-        </div>
-        <div class="wp-stack-row">
-          <span class="wp-stack-key">Backend</span>
-          <span class="wp-stack-val">Python · FastAPI</span>
-        </div>
-        <div class="wp-stack-row">
-          <span class="wp-stack-key">Storage</span>
-          <span class="wp-stack-val">Supabase (Postgres + Object Storage)</span>
-        </div>
-        <div class="wp-stack-row">
-          <span class="wp-stack-key">Hosting</span>
-          <span class="wp-stack-val">GitHub Pages · Railway</span>
-        </div>
-        <div class="wp-stack-row">
           <span class="wp-stack-key">Features</span>
-          <span class="wp-stack-val">클라이언트 이미지 압축 · 병렬 업로드 · 실시간 갤러리 · 슬라이드쇼 · ZIP 백업</span>
+          <span class="wp-stack-val wp-feats">
+            <span class="wp-feat">QR 즉시 업로드</span>
+            <span class="wp-feat">로그인 없음</span>
+            <span class="wp-feat">실시간 갤러리</span>
+            <span class="wp-feat">슬라이드쇼</span>
+            <span class="wp-feat">원본 자동 백업</span>
+          </span>
+        </div>
+        <div class="wp-stack-row">
+          <span class="wp-stack-key">Built with</span>
+          <span class="wp-stack-val">Vanilla JS <em>(no framework, 직접 제작)</em> · FastAPI · Supabase</span>
+        </div>
+        <div class="wp-stack-row">
+          <span class="wp-stack-key">Architecture</span>
+          <span class="wp-stack-val wp-arch">Frontend <i>→</i> API <i>→</i> Storage</span>
         </div>
       </div>
 
+      <details class="wp-tech-more">
+        <summary>기술 상세 보기</summary>
+        <div class="wp-tech-more-body">
+          <p>Hosting · GitHub Pages(정적) + Railway(FastAPI)</p>
+          <p>Storage · Supabase Postgres + Object Storage(퍼블릭 버킷)</p>
+          <p>업로드 · 클라이언트 이미지 압축(1920px) · 동시 3개 병렬 전송</p>
+        </div>
+      </details>
+
+      <p class="wp-modal-story">사랑하는 사람과의 단 하루를 더 오래 남기고 싶어서,<br/>신랑이 직접 설계하고 개발했습니다.</p>
       <p class="wp-modal-foot">© 2026 박기백 · for 박기백 &amp; 박지은</p>
     </div>
   </div>
