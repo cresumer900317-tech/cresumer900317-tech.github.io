@@ -12,6 +12,7 @@
   --wp-text-soft: #8a7765;
   --wp-accent:    #c98a7d;          /* 로즈 */
   --wp-accent-2:  #a7b89a;          /* 세이지 */
+  --wp-sage-dk:   #6f8466;          /* 진한 세이지 — 포인트 컬러 */
   --wp-accent-dk: #a6695e;
   --wp-gold:      #c5a368;          /* 샴페인 골드 */
   --wp-shadow:    0 8px 28px rgba(160, 110, 80, .12);
@@ -124,18 +125,17 @@ html, body {
   z-index: -1;
   background:
     linear-gradient(to bottom,
-      rgba(244, 235, 222, .40) 0%,
-      rgba(244, 235, 222, .58) 40%,
-      rgba(243, 233, 220, .86) 78%,
+      rgba(247, 240, 230, .74) 0%,
+      rgba(246, 238, 227, .80) 45%,
+      rgba(244, 235, 223, .93) 80%,
       #f3e9dc 100%),
-    url("hero.jpg") center 42% / cover no-repeat;
+    url("hero.jpg") center 40% / cover no-repeat;
 }
 .wp-hero > * { position: relative; }
-/* 사진 위 텍스트 가독성 (은은한 화이트 글로우) */
-.wp-eyebrow, .wp-names, .wp-invite, .wp-date {
-  text-shadow: 0 1px 2px rgba(255, 252, 247, .7), 0 2px 20px rgba(255, 250, 242, .9);
-}
-.wp-invite-sub { text-shadow: 0 1px 12px rgba(255, 250, 242, .85); }
+/* 글씨가 주인공 — 사진은 분위기. 텍스트엔 아주 옅은 화이트 그림자만 */
+.wp-eyebrow, .wp-names, .wp-date { text-shadow: 0 1px 2px rgba(255, 253, 248, .6); }
+.wp-invite { text-shadow: 0 1px 2px rgba(255, 255, 255, .55); }
+.wp-invite-sub { text-shadow: 0 1px 2px rgba(255, 253, 248, .5); }
 .wp-eyebrow {
   font-family: var(--wp-serif);
   letter-spacing: .42em;
@@ -149,11 +149,11 @@ html, body {
 .wp-names {
   font-family: "Cormorant Garamond", "Gowun Batang", "Nanum Myeongjo", serif;
   font-weight: 700;
-  font-size: clamp(34px, 10vw, 54px);
+  font-size: clamp(30px, 9vw, 50px);
   line-height: 1.15;
-  letter-spacing: .01em;
+  letter-spacing: .005em;
   margin: 0;
-  color: #3c2e20;
+  color: #38291b;
   word-break: keep-all;          /* 한글이 음절 단위로 끊기지 않게 */
   overflow-wrap: normal;
 }
@@ -178,23 +178,24 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  color: var(--wp-gold);
+  color: var(--wp-sage-dk);
   font-size: 14px;
   margin: 18px 0 14px;
 }
 .wp-ornament span {
   display: block;
   width: 46px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--wp-gold));
+  background: linear-gradient(90deg, transparent, var(--wp-sage-dk));
 }
-.wp-ornament span:last-child { background: linear-gradient(90deg, var(--wp-gold), transparent); }
+.wp-ornament span:last-child { background: linear-gradient(90deg, var(--wp-sage-dk), transparent); }
 .wp-invite {
-  font-family: var(--wp-serif);
-  font-style: italic;
-  font-size: clamp(20px, 5.8vw, 26px);
-  color: #4f3c29;
-  margin: 22px 0 0;
-  line-height: 1.45;
+  font-family: "Gowun Batang", "Nanum Myeongjo", serif;
+  font-weight: 700;
+  font-size: clamp(19px, 5.3vw, 25px);
+  color: #34271a;
+  margin: 20px 0 0;
+  line-height: 1.55;
+  letter-spacing: -.01em;
 }
 .wp-invite-sub {
   font-size: 14px;
@@ -203,18 +204,31 @@ html, body {
   margin: 0;
 }
 .wp-livecount {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   margin: 20px auto 0;
-  padding: 7px 16px;
+  padding: 7px 16px 7px 13px;
   border-radius: 999px;
-  background: rgba(255,255,255,.7);
-  border: 1px solid var(--wp-card-edge);
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(167,184,154,.55);
   backdrop-filter: blur(6px);
   font-size: 13px;
   color: var(--wp-text-soft);
   animation: wp-fadein .8s ease both;
 }
-.wp-livecount b { color: var(--wp-accent-dk); font-weight: 700; }
+.wp-livecount::before {
+  content: "";
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--wp-sage-dk);
+  box-shadow: 0 0 0 0 rgba(111,132,102,.5);
+  animation: wp-livedot 2s ease-in-out infinite;
+}
+@keyframes wp-livedot {
+  0%,100% { box-shadow: 0 0 0 0 rgba(111,132,102,.45); }
+  70% { box-shadow: 0 0 0 6px rgba(111,132,102,0); }
+}
+.wp-livecount b { color: var(--wp-sage-dk); font-weight: 700; }
 .wp-scroll-hint {
   margin-top: 26px;
   font-size: 12.5px;
@@ -501,10 +515,18 @@ html, body {
   color: var(--wp-text);
 }
 .wp-brand-ver { color: var(--wp-gold); font-size: 12px; letter-spacing: .1em; }
+.wp-brand-tag {
+  margin-top: 4px;
+  font-family: var(--wp-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--wp-text-soft);
+}
 .wp-brand-cta {
-  margin-top: 5px;
-  font-size: 12px;
-  letter-spacing: .08em;
+  font-style: normal;
+  font-family: var(--wp-font);
+  font-size: 11.5px;
+  letter-spacing: .04em;
   font-weight: 600;
   color: var(--wp-accent-dk);
 }
