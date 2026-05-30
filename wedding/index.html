@@ -14,13 +14,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./wedding.css?v=10" />
+  <link rel="stylesheet" href="./wedding.css?v=14" />
 </head>
 <body>
   <!-- 시네마틱 배경 / 필름 그레인 / 꽃잎 -->
   <div class="wp-bg" aria-hidden="true"></div>
   <div class="wp-grain" aria-hidden="true"></div>
   <div class="wp-petals" id="petals" aria-hidden="true"></div>
+  <div class="wp-confetti" id="confetti" aria-hidden="true"></div>
 
   <main class="wp-shell">
     <!-- ── 첫 화면: 갤러리 입장 ── -->
@@ -60,6 +61,11 @@
         <span class="wp-film-perf wp-film-perf-bottom" aria-hidden="true"></span>
       </label>
 
+      <p class="wp-reassure">
+        <span aria-hidden="true">🔒</span>
+        올려주신 사진·영상은 <b>신랑·신부만</b> 볼 수 있어요. 외부에 공개되지 않아요.
+      </p>
+
       <div class="wp-previews" id="previews" hidden></div>
 
       <button id="uploadBtn" type="button" class="wp-btn wp-btn-primary" disabled>
@@ -82,8 +88,13 @@
       <p class="wp-done-rank" id="doneRank" hidden></p>
       <div class="wp-done-grid" id="doneGrid" aria-label="방금 올린 사진"></div>
       <p class="wp-done-thanks">신랑·신부가 평생 간직할게요.<br/>소중한 순간 나눠주셔서 감사합니다 💕</p>
-      <p class="wp-maker">이 페이지는 신랑 <b>박기백</b>이 두 사람을 위해 직접 만들었어요.</p>
-      <button type="button" class="wp-btn wp-btn-ghost" id="moreBtn">한 장 더 담기</button>
+      <p class="wp-maker">이 페이지는 신랑 <b>박기백</b>이 오늘 하루를 위해 직접 만들었어요.</p>
+      <div class="wp-done-actions">
+        <button type="button" class="wp-btn wp-btn-ghost" id="moreBtn">한 장 더 담기</button>
+        <button type="button" class="wp-btn wp-btn-share" id="shareBtnDone">
+          <span aria-hidden="true">💌</span> 친구에게 공유하기
+        </button>
+      </div>
     </section>
 
     <footer class="wp-footer">
@@ -137,10 +148,19 @@
         </div>
       </details>
 
+      <div class="wp-modal-contact">
+        <p class="wp-modal-contact-q">이런 걸 만들어보고 싶으세요?</p>
+        <a class="wp-modal-contact-link" id="contactLink" href="https://open.kakao.com/me/jettpak" target="_blank" rel="noopener">
+          <span class="wp-modal-contact-ico" aria-hidden="true">💬</span>
+          <span>제작자에게 가볍게 물어보기</span>
+          <span class="wp-modal-contact-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+
       <p class="wp-modal-foot">© 2026 박기백 · for 박기백 &amp; 박지은</p>
     </div>
   </div>
 
-  <script src="./wedding.js?v=9"></script>
+  <script src="./wedding.js?v=12"></script>
 </body>
 </html>

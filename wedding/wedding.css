@@ -660,10 +660,100 @@ html, body {
   font-size: 14.5px; line-height: 1.6;
   color: var(--wp-text);
 }
+/* 거래 경로 — 점잖게, 모달 안쪽에만 */
+.wp-modal-contact {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--wp-card-edge);
+  text-align: center;
+}
+.wp-modal-contact-q {
+  margin: 0 0 9px;
+  font-size: 12.5px;
+  color: var(--wp-text-soft);
+  letter-spacing: .01em;
+}
+.wp-modal-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.6);
+  border: 1px solid rgba(197,163,104,.32);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wp-accent-dk);
+  text-decoration: none;
+  transition: background .15s, transform .15s, box-shadow .15s;
+}
+.wp-modal-contact-link:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(180,140,70,.18);
+}
+.wp-modal-contact-ico { font-size: 14px; }
+.wp-modal-contact-arrow { color: var(--wp-gold); transition: transform .15s; }
+.wp-modal-contact-link:hover .wp-modal-contact-arrow { transform: translateX(3px); }
+
 .wp-modal-foot {
-  text-align: center; margin: 12px 0 0;
+  text-align: center; margin: 14px 0 0;
   font-family: var(--wp-serif); font-style: italic;
   font-size: 12px; color: #b9a896;
+}
+
+/* ── 업로드 안심 문구 ───────────────── */
+.wp-reassure {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--wp-text-soft);
+  letter-spacing: -.005em;
+}
+.wp-reassure b { color: var(--wp-sage-dk); font-weight: 700; }
+
+/* ── 완료: 공유 버튼 / 액션 묶음 ─────── */
+.wp-done-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.wp-done-actions .wp-btn { flex: 1; }
+.wp-btn-share {
+  background: linear-gradient(135deg, #cdab6c 0%, #b08a4d 100%);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-shadow: 0 1px 2px rgba(90, 65, 20, .28);
+  box-shadow: 0 8px 20px rgba(180, 140, 70, .34);
+}
+.wp-btn-share:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(180, 140, 70, .42); }
+.wp-btn-share.is-copied { background: linear-gradient(135deg, #8aa07e, #6f8466); box-shadow: 0 8px 20px rgba(111,132,102,.34); }
+
+/* ── 컨페티 버스트 (업로드 성공 연출) ── */
+.wp-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  pointer-events: none;
+  overflow: hidden;
+}
+.wp-confetti-piece {
+  position: absolute;
+  top: 40%; left: 50%;
+  width: 11px; height: 9px;
+  border-radius: 76% 24% 70% 30% / 70% 30% 70% 30%;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: wp-burst var(--wp-bd, 1.5s) cubic-bezier(.16,.62,.4,1) forwards;
+  animation-delay: var(--wp-bdelay, 0s);
+}
+@keyframes wp-burst {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(.3); opacity: 0; }
+  12%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--wp-bx, 0), var(--wp-by, 60vh)) rotate(var(--wp-br, 540deg)) scale(1); opacity: 0; }
 }
 
 /* ── 반응형 ─────────────────────────── */
@@ -673,7 +763,7 @@ html, body {
 
 /* ── 모션 최소화 선호 ────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .wp-petals { display: none; }
+  .wp-petals, .wp-confetti { display: none; }
   .wp-scroll-hint, .wp-check-circle, .wp-check-mark, .wp-thumb.is-done .wp-thumb-status,
   .wp-livecount::before { animation: none; }
   .wp-check-circle, .wp-check-mark { stroke-dashoffset: 0; }

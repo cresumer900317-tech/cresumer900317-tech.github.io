@@ -49,6 +49,65 @@
   const $liveCount = $("liveCount");
   const $liveNum = $("liveNum");
 
+  const prefersReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ── 컨페티 버스트 (완료 연출) ─────────────────
+  const CONFETTI_COLORS = [
+    "linear-gradient(120% 120% at 30% 20%, #f6d9d0, #d99e90)", // 블러시
+    "linear-gradient(120% 120% at 30% 20%, #f2e2bc, #c5a368)", // 골드
+    "linear-gradient(120% 120% at 30% 20%, #d9e3cf, #a7b89a)", // 세이지
+    "linear-gradient(120% 120% at 30% 20%, #fff4e6, #efd8bf)"  // 아이보리
+  ];
+  function burstConfetti() {
+    const layer = $("confetti");
+    if (!layer || prefersReduce) return;
+    layer.innerHTML = "";
+    const N = 36;
+    for (let i = 0; i < N; i++) {
+      const p = document.createElement("div");
+      p.className = "wp-confetti-piece";
+      const ang = (Math.PI * 2 * i) / N + (Math.random() * 0.5 - 0.25);
+      const dist = 90 + Math.random() * 190;          // 퍼지는 거리
+      const x = Math.cos(ang) * dist;
+      const y = Math.sin(ang) * dist - 40 + Math.random() * 200; // 살짝 아래로 흩날림
+      p.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      p.style.setProperty("--wp-bx", x.toFixed(0) + "px");
+      p.style.setProperty("--wp-by", y.toFixed(0) + "px");
+      p.style.setProperty("--wp-br", (Math.random() * 720 - 360).toFixed(0) + "deg");
+      p.style.setProperty("--wp-bd", (1.2 + Math.random() * 0.9).toFixed(2) + "s");
+      p.style.setProperty("--wp-bdelay", (Math.random() * 0.18).toFixed(2) + "s");
+      const s = 0.7 + Math.random() * 0.9;
+      p.style.width = (11 * s).toFixed(0) + "px";
+      p.style.height = (9 * s).toFixed(0) + "px";
+      layer.appendChild(p);
+    }
+    setTimeout(() => { layer.innerHTML = ""; }, 2600);
+  }
+
+  // ── 공유 (Web Share → 링크 복사 폴백) ─────────
+  async function sharePage(btn) {
+    const url = location.origin + location.pathname;
+    const data = {
+      title: "박기백 ♥ 박지은 결혼식",
+      text: "오늘의 순간을 사진·영상으로 함께 담아주세요 💕",
+      url
+    };
+    if (navigator.share) {
+      try { await navigator.share(data); return; } catch (_) { /* 취소 시 폴백 안 함 */ return; }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      if (btn) {
+        const label = btn.textContent;
+        btn.classList.add("is-copied");
+        btn.textContent = "링크 복사됨 ✓";
+        setTimeout(() => { btn.classList.remove("is-copied"); btn.textContent = label; }, 1800);
+      }
+    } catch (_) {
+      window.prompt("아래 링크를 복사해 공유해 주세요", url);
+    }
+  }
+
   // ── 꽃잎 ──────────────────────────────────────
   (function initPetals() {
     const layer = $("petals");
@@ -215,6 +274,7 @@
     $uploadCard.hidden = true;
     $doneCard.hidden = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
+    burstConfetti();
 
     // 모인 전체 수를 다시 받아 감정 카피로
     fetchCount().then(c => {
@@ -280,6 +340,10 @@
     if (queue.some(q => q.status === "uploading")) { e.preventDefault(); e.returnValue = ""; }
   });
 
+  // ── 공유 버튼 ─────────────────────────────────
+  const $shareDone = $("shareBtnDone");
+  if ($shareDone) $shareDone.addEventListener("click", () => sharePage($shareDone));
+
   // ── 제작자 / 기술 스택 모달 ───────────────────
   const $brand = $("brandBtn");
   const $modal = $("techModal");
@@ -291,6 +355,16 @@
     $modalClose.addEventListener("click", close);
     $modal.addEventListener("click", e => { if (e.target === $modal) close(); });
     document.addEventListener("keydown", e => { if (!$modal.hidden && e.key === "Escape") close(); });
+  }
+
+  // 거래 경로 링크: URL 미설정(#/빈값)이면 줄째로 숨김 — 깨진 링크 노출 방지
+  const $contact = $("contactLink");
+  if ($contact) {
+    const href = ($contact.getAttribute("href") || "").trim();
+    if (!href || href === "#") {
+      const box = $contact.closest(".wp-modal-contact");
+      if (box) box.hidden = true;
+    }
   }
 
   refreshUploadBtn();
