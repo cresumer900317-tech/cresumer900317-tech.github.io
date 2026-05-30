@@ -241,7 +241,8 @@
       if (payload._h) fd.append("height", String(payload._h));
       const res = await fetch(`${API_BASE}/api/wedding/upload`, { method: "POST", body: fd });
       if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error(`서버 오류 (${res.status}) ${t.slice(0,120)}`); }
-      await res.json().catch(() => ({}));
+      const json = await res.json().catch(() => ({}));
+      item.serverId = json && json.id != null ? json.id : null;   // 회수용 photo id
       item.status = "done";
       item.thumb.classList.remove("is-uploading");
       item.thumb.classList.add("is-done");
@@ -255,18 +256,44 @@
     }
   }
 
+  // ── 회수 (본인 uuid 로만 삭제) ────────────────
+  async function recallPhoto(it, cell) {
+    if (it.serverId == null) {
+      alert("이 사진은 회수 정보가 없어 신랑·신부에게 말씀해 주세요.");
+      return;
+    }
+    if (!confirm("이 사진을 회수할까요?\n올라간 사진이 삭제되고 되돌릴 수 없어요.")) return;
+    const btn = cell.querySelector(".wp-done-recall");
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/wedding/${encodeURIComponent(it.serverId)}?uuid=${encodeURIComponent(getUuid())}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error("회수 실패 " + res.status);
+      cell.classList.add("is-removed");
+      setTimeout(() => { cell.remove(); if (!$doneGrid.children.length) $doneGrid.classList.add("is-empty"); }, 260);
+    } catch (e) {
+      console.error("[wedding recall]", e);
+      if (btn) { btn.disabled = false; btn.textContent = "×"; }
+      alert("회수에 실패했어요. 잠시 후 다시 시도하거나 신랑·신부에게 말씀해 주세요.");
+    }
+  }
+
   function showDone(items) {
     $doneGrid.innerHTML = "";
+    $doneGrid.classList.remove("is-empty");
     items.forEach(it => {
       const cell = document.createElement("div");
       cell.className = "wp-done-cell";
       if (it.video) {
-        cell.innerHTML = `<video muted playsinline preload="metadata"></video><span class="wp-done-play">▶</span><span class="wp-done-check">✓</span>`;
+        cell.innerHTML = `<video muted playsinline preload="metadata"></video><span class="wp-done-play">▶</span><span class="wp-done-check">✓</span><button type="button" class="wp-done-recall" aria-label="회수">×</button>`;
         cell.querySelector("video").src = it.url;
       } else {
-        cell.innerHTML = `<img alt="" /><span class="wp-done-check">✓</span>`;
+        cell.innerHTML = `<img alt="" /><span class="wp-done-check">✓</span><button type="button" class="wp-done-recall" aria-label="회수">×</button>`;
         cell.querySelector("img").src = it.url;
       }
+      cell.querySelector(".wp-done-recall").addEventListener("click", () => recallPhoto(it, cell));
       $doneGrid.appendChild(cell);
     });
     $doneTitle.textContent = `추억 ${items.length}개, 전달됐어요! 🎉`;

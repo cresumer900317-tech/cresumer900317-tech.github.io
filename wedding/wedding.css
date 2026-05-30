@@ -511,6 +511,29 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   padding-left: 2px; pointer-events: none;
 }
+/* 회수 버튼 (완료 셀 위) */
+.wp-done-recall {
+  position: absolute; top: 4px; left: 4px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(0,0,0,.55); color: #fff; border: none; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .15s;
+}
+.wp-done-recall:hover { background: rgba(180,60,50,.9); transform: scale(1.08); }
+.wp-done-recall:disabled { opacity: .6; cursor: default; }
+.wp-done-cell.is-removed { animation: wp-cell-out .26s ease forwards; }
+@keyframes wp-cell-out { to { opacity: 0; transform: scale(.7); } }
+
+.wp-done-recall-hint {
+  font-size: 12px;
+  color: var(--wp-text-soft);
+  margin: 0;
+  opacity: .85;
+}
+.wp-done-recall-hint b { color: var(--wp-accent-dk); font-weight: 700; }
+.wp-done-grid.is-empty + .wp-done-recall-hint { display: none; }
+
 .wp-done-thanks { font-size: 14.5px; }
 .wp-maker {
   margin-top: 4px;
