@@ -35,8 +35,18 @@
   const $ssCaption = document.getElementById("ssCaption");
   const $ssClose = document.getElementById("ssClose");
 
+  // 선택 삭제
+  const $selectBtn = document.getElementById("selectBtn");
+  const $selBar = document.getElementById("selBar");
+  const $selCount = document.getElementById("selCount");
+  const $selAllBtn = document.getElementById("selAllBtn");
+  const $selCancelBtn = document.getElementById("selCancelBtn");
+  const $selDelBtn = document.getElementById("selDelBtn");
+
   let photos = [];
   let lbIdx = 0;
+  let selectMode = false;
+  const selected = new Set();   // 선택된 photo id
 
   if (!KEY) { $gate.hidden = false; return; }
   $app.hidden = false;
@@ -88,18 +98,19 @@
     if (!list.length) return;
 
     const grid = document.createElement("div");
-    grid.className = "wg-grid";
+    grid.className = "wg-grid" + (selectMode ? " is-selectmode" : "");
 
     list.forEach((p, idx) => {
       const card = document.createElement("article");
-      card.className = "wg-card";
+      card.className = "wg-card" + (selected.has(p.id) ? " is-selected" : "");
+      card.dataset.id = p.id;
       const time = fmtTime(p.created_at);
       const media = isVideo(p)
         ? `<video src="${escapeHtml(p.public_url)}#t=0.1" muted playsinline preload="metadata"></video><span class="wg-play">▶</span>`
         : `<img loading="lazy" src="${escapeHtml(p.public_url)}" alt="결혼식 사진" />`;
 
       card.innerHTML = `
-        <div class="wg-card-img" data-idx="${idx}">${media}</div>
+        <div class="wg-card-img" data-idx="${idx}">${media}<span class="wg-card-check" aria-hidden="true">✓</span></div>
         <div class="wg-card-meta">
           <span class="wg-card-time">${time}</span>
           <div class="wg-card-actions">
@@ -108,12 +119,89 @@
           </div>
         </div>
       `;
-      card.querySelector(".wg-card-img").addEventListener("click", () => openLb(idx));
+      card.querySelector(".wg-card-img").addEventListener("click", () => {
+        if (selectMode) toggleSelect(p.id, card);
+        else openLb(idx);
+      });
       card.querySelector(".wg-card-del").addEventListener("click", () => onDelete(p.id));
       grid.appendChild(card);
     });
 
     $grid.appendChild(grid);
+  }
+
+  // ── 선택 모드 ──────────────────────────────
+  function updateSelBar() {
+    const n = selected.size;
+    $selCount.textContent = String(n);
+    $selDelBtn.disabled = n === 0;
+    $selDelBtn.textContent = n > 0 ? `선택 삭제 (${n})` : "선택 삭제";
+  }
+  function toggleSelect(id, card) {
+    if (selected.has(id)) { selected.delete(id); card.classList.remove("is-selected"); }
+    else { selected.add(id); card.classList.add("is-selected"); }
+    updateSelBar();
+  }
+  function enterSelectMode() {
+    selectMode = true;
+    selected.clear();
+    $selBar.hidden = false;
+    $selectBtn.classList.add("is-active");
+    $selectBtn.textContent = "선택 종료";
+    updateSelBar();
+    render();
+  }
+  function exitSelectMode() {
+    selectMode = false;
+    selected.clear();
+    $selBar.hidden = true;
+    $selectBtn.classList.remove("is-active");
+    $selectBtn.textContent = "선택";
+    render();
+  }
+  function selectAll() {
+    const all = sorted();
+    const allSelected = all.length > 0 && all.every(p => selected.has(p.id));
+    selected.clear();
+    if (!allSelected) all.forEach(p => selected.add(p.id));   // 토글: 전체선택 ↔ 전체해제
+    updateSelBar();
+    render();
+  }
+  async function deleteSelected() {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`선택한 ${ids.length}개를 삭제하시겠습니까?\n복구 불가능합니다.`)) return;
+    $selDelBtn.disabled = true;
+    $selDelBtn.textContent = `삭제 중… 0/${ids.length}`;
+
+    let done = 0, failed = 0;
+    const CONCURRENCY = 4;
+    let cursor = 0;
+    async function worker() {
+      while (cursor < ids.length) {
+        const id = ids[cursor++];
+        try {
+          const res = await fetch(`${API_BASE}/api/wedding/${id}?key=${encodeURIComponent(KEY)}`, { method: "DELETE" });
+          if (!res.ok && res.status !== 404) throw new Error(String(res.status));
+          photos = photos.filter(p => p.id !== id);
+          selected.delete(id);
+        } catch (e) { failed++; console.error("[wedding bulk del]", id, e); }
+        done++;
+        $selDelBtn.textContent = `삭제 중… ${done}/${ids.length}`;
+      }
+    }
+    const workers = [];
+    for (let i = 0; i < Math.min(CONCURRENCY, ids.length); i++) workers.push(worker());
+    await Promise.all(workers);
+
+    $total.textContent = String(photos.length);
+    if (failed > 0) {
+      alert(`${ids.length - failed}개 삭제됨 · ${failed}개 실패`);
+      updateSelBar();
+      render();
+    } else {
+      exitSelectMode();
+    }
   }
 
   // ── 삭제 ───────────────────────────────────
@@ -222,10 +310,19 @@
   $slideBtn.addEventListener("click", startSlideshow);
   $ssClose.addEventListener("click", stopSlideshow);
 
+  // ── 선택 모드 버튼 ─────────────────────────
+  $selectBtn.addEventListener("click", () => { selectMode ? exitSelectMode() : enterSelectMode(); });
+  $selAllBtn.addEventListener("click", selectAll);
+  $selCancelBtn.addEventListener("click", exitSelectMode);
+  $selDelBtn.addEventListener("click", deleteSelected);
+
   // ── 키보드 ─────────────────────────────────
   document.addEventListener("keydown", e => {
     if (!$ss.hidden) { if (e.key === "Escape") stopSlideshow(); return; }
-    if ($lb.hidden) return;
+    if ($lb.hidden) {
+      if (selectMode && e.key === "Escape") exitSelectMode();
+      return;
+    }
     if (e.key === "Escape") closeLb();
     else if (e.key === "ArrowLeft") lbStep(-1);
     else if (e.key === "ArrowRight") lbStep(1);

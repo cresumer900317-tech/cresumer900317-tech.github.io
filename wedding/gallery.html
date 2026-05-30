@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
 
   <link rel="preconnect" href="https://guild-backend-production-75a6.up.railway.app" crossorigin />
-  <link rel="stylesheet" href="./wedding.css?v=5" />
-  <link rel="stylesheet" href="./gallery.css?v=2" />
+  <link rel="stylesheet" href="./wedding.css?v=15" />
+  <link rel="stylesheet" href="./gallery.css?v=3" />
 </head>
 <body data-page="gallery">
   <!-- 권한 없음 -->
@@ -29,6 +29,7 @@
           <p class="wg-sub">웨딩 사진 갤러리 · 총 <strong id="totalCount">0</strong>개</p>
         </div>
         <div class="wg-controls">
+          <button class="wp-btn wp-btn-ghost wg-select-btn" id="selectBtn">선택</button>
           <button class="wp-btn wp-btn-ghost wg-slide-btn" id="slideBtn">▶︎ 슬라이드쇼</button>
           <button class="wp-btn wp-btn-primary wg-zip-btn" id="zipBtn">
             <span class="wp-btn-label">전체 ZIP 다운로드</span>
@@ -46,6 +47,16 @@
     </main>
 
     <div class="wg-loading" id="loading">불러오는 중…</div>
+
+    <!-- 선택 삭제 액션 바 (선택 모드일 때만) -->
+    <div class="wg-selbar" id="selBar" hidden>
+      <span class="wg-selbar-count"><strong id="selCount">0</strong>개 선택됨</span>
+      <div class="wg-selbar-actions">
+        <button type="button" class="wg-selbar-btn" id="selAllBtn">전체 선택</button>
+        <button type="button" class="wg-selbar-btn wg-selbar-cancel" id="selCancelBtn">취소</button>
+        <button type="button" class="wg-selbar-btn wg-selbar-del" id="selDelBtn" disabled>선택 삭제</button>
+      </div>
+    </div>
   </div>
 
   <!-- Lightbox -->
@@ -66,6 +77,6 @@
     <button class="wg-ss-close" type="button" id="ssClose" aria-label="닫기">×</button>
   </div>
 
-  <script src="./gallery.js?v=2"></script>
+  <script src="./gallery.js?v=3"></script>
 </body>
 </html>

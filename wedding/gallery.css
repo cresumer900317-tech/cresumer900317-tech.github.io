@@ -299,6 +299,88 @@
 .wg-slide-btn { height: 40px; padding: 0 16px; font-size: 14px; border-radius: 11px; }
 @media (max-width: 560px) { .wg-slide-btn { width: 100%; } }
 
+/* ── 선택 삭제 모드 ─────────────────── */
+.wg-select-btn { height: 40px; padding: 0 16px; font-size: 14px; border-radius: 11px; }
+.wg-select-btn.is-active {
+  background: var(--wp-sage-dk);
+  color: #fff;
+  border-color: var(--wp-sage-dk);
+}
+@media (max-width: 560px) { .wg-select-btn { width: 100%; } }
+
+/* 카드 체크 배지 — 선택 모드에서만 표시 */
+.wg-card-check {
+  position: absolute;
+  top: 10px; left: 10px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .8);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .28);
+  color: transparent;
+  font-size: 15px; font-weight: 800;
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 2;
+}
+.wg-grid.is-selectmode .wg-card-check { display: flex; }
+.wg-grid.is-selectmode .wg-card-img { cursor: pointer; }
+.wg-grid.is-selectmode .wg-card:hover { transform: none; }   /* 선택 모드에선 hover 들썩임 끔 */
+.wg-card.is-selected { outline: 3px solid var(--wp-sage-dk); outline-offset: -3px; }
+.wg-card.is-selected .wg-card-check { background: var(--wp-sage-dk); border-color: #fff; color: #fff; }
+.wg-card.is-selected .wg-card-img::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(111, 132, 102, .2);
+  pointer-events: none;
+}
+.wg-grid.is-selectmode { margin-bottom: 84px; }   /* 하단 바에 안 가리게 */
+
+/* 하단 액션 바 */
+.wg-selbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 90;
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--wp-card-edge);
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  box-shadow: 0 -6px 20px rgba(160, 110, 80, .12);
+  animation: wg-selbar-in .2s ease;
+}
+@keyframes wg-selbar-in { from { transform: translateY(100%); } to { transform: none; } }
+.wg-selbar[hidden] { display: none; }
+.wg-selbar-count { font-size: 14px; color: var(--wp-text); white-space: nowrap; }
+.wg-selbar-count strong { color: var(--wp-accent-dk); font-size: 16px; }
+.wg-selbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.wg-selbar-btn {
+  height: 40px; padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid var(--wp-card-edge);
+  background: #fdfaf4;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--wp-text-soft);
+  cursor: pointer;
+  transition: all .15s;
+}
+.wg-selbar-btn:hover { background: #fff; border-color: var(--wp-accent); color: var(--wp-accent-dk); }
+.wg-selbar-del {
+  background: linear-gradient(135deg, #c27f72, #9a5247);
+  color: #fff; border: none;
+  text-shadow: 0 1px 2px rgba(80, 30, 25, .28);
+}
+.wg-selbar-del:not(:disabled):hover { color: #fff; box-shadow: 0 6px 16px rgba(150, 85, 72, .35); }
+.wg-selbar-del:disabled { background: #e6dacb; color: #9a8a78; cursor: not-allowed; text-shadow: none; }
+@media (max-width: 560px) {
+  .wg-selbar { padding-left: 14px; padding-right: 14px; }
+  .wg-selbar-btn { padding: 0 12px; font-size: 13px; }
+}
+
 /* ── Slideshow (식장 스크린용 자동 재생) ─────── */
 .wg-slideshow {
   position: fixed;
