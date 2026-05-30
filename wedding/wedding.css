@@ -143,14 +143,16 @@ html, body {
   left: 0; right: 0; top: 0; bottom: 0;
   z-index: -1;
   background: linear-gradient(to bottom,
-    rgba(247, 240, 230, .74) 0%,
-    rgba(246, 238, 227, .80) 45%,
+    rgba(247, 240, 230, .82) 0%,
+    rgba(246, 238, 227, .84) 45%,
     rgba(244, 235, 223, .93) 80%,
     #f3e9dc 100%);
 }
 .wp-hero > *:not(.wp-hero-photos) { position: relative; }
 /* 글씨가 주인공 — 사진은 분위기. 텍스트엔 아주 옅은 화이트 그림자만 */
-.wp-eyebrow, .wp-names, .wp-date { text-shadow: 0 1px 2px rgba(255, 253, 248, .6); }
+.wp-names, .wp-date { text-shadow: 0 1px 2px rgba(255, 253, 248, .6); }
+/* 얇은 글씨(아이브로·슬로건)는 사진 위에서 묻히기 쉬워 화이트 글로우로 또렷하게 */
+.wp-eyebrow { text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 12px rgba(255,250,242,.85); }
 .wp-invite { text-shadow: 0 1px 2px rgba(255, 255, 255, .55); }
 .wp-invite-sub { text-shadow: 0 1px 2px rgba(255, 253, 248, .5); }
 .wp-eyebrow {
@@ -191,10 +193,10 @@ html, body {
   font-weight: 500;
   font-size: 16px;
   letter-spacing: .18em;
-  color: #5d7155;            /* 기존보다 10~15% 진하게 — 보일 듯 말 듯 → 또렷하게 */
+  color: #54684c;            /* 사진 위에서도 또렷하게 살짝 더 진한 세이지 */
   margin: 9px 0 0;
   padding-left: .18em;
-  text-shadow: 0 1px 2px rgba(255, 253, 248, .6);
+  text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 12px rgba(255,250,242,.85);
 }
 .wp-date {
   font-family: var(--wp-serif);
@@ -222,12 +224,14 @@ html, body {
 .wp-invite {
   font-family: "Gowun Batang", "Nanum Myeongjo", serif;
   font-weight: 700;
-  font-size: clamp(19px, 5.3vw, 25px);
+  /* 화면 폭에 맞춰 글자크기가 자동 조절돼 항상 정확히 2줄로 고정 (320px도 여유) */
+  font-size: clamp(13px, 4.2vw, 24px);
   color: #34271a;
   margin: 20px 0 0;
   line-height: 1.55;
   letter-spacing: -.01em;
 }
+.wp-invite-l { display: block; white-space: nowrap; }   /* 각 줄은 절대 안 쪼개짐 → 항상 2줄 */
 .wp-invite-sub {
   font-size: 14px;
   line-height: 1.75;
