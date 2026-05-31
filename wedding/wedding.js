@@ -150,7 +150,7 @@
   function refreshUploadBtn() {
     const pending = queue.filter(q => q.status === "idle" || q.status === "fail").length;
     $upload.disabled = pending === 0;
-    $upload.querySelector(".wp-btn-label").textContent = pending > 0 ? `${pending}개 올리기` : "사진 · 영상 올리기";
+    $upload.querySelector(".wp-btn-label").textContent = pending > 0 ? `${pending}개 올리기` : "사진을 선택해 주세요";
     $previews.hidden = queue.length === 0;
   }
   function setStatus(msg, isError) {
@@ -158,11 +158,42 @@
     $status.hidden = false; $status.textContent = msg;
     $status.classList.toggle("is-error", !!isError);
   }
-  function setProgress(done, total) {
-    if (!total) { $progressWrap.hidden = true; return; }
+  let progTargets = null;   // 진행 중 항목들 (바이트 단위 진행률 집계)
+  function renderProgress() {
+    if (!progTargets || !progTargets.length) { $progressWrap.hidden = true; return; }
+    const total = progTargets.length;
+    let frac = 0, doneCount = 0, videoUploading = false;
+    progTargets.forEach(t => {
+      if (t.status === "done") { frac += 1; doneCount++; }
+      else if (t.status === "fail") { doneCount++; }
+      else {
+        frac += (t.progress || 0);
+        if (t.status === "uploading" && t.video) videoUploading = true;
+      }
+    });
     $progressWrap.hidden = false;
-    $progressFill.style.width = Math.round((done / total) * 100) + "%";
-    $progressText.textContent = `${done} / ${total}`;
+    $progressFill.style.width = Math.round((frac / total) * 100) + "%";
+    $progressText.textContent = `${doneCount} / ${total}` + (videoUploading ? " · 영상 업로드 중…" : "");
+  }
+  // XHR 업로드 — 진행률(onprogress)을 받기 위해 fetch 대신 사용 (영상도 바가 실시간으로 움직임)
+  function xhrUpload(url, formData, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      xhr.timeout = 180000;
+      xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let json = {}; try { json = JSON.parse(xhr.responseText); } catch (_) {}
+          resolve(json);
+        } else {
+          reject(new Error(`서버 오류 (${xhr.status}) ${String(xhr.responseText || "").slice(0, 120)}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("네트워크 오류"));
+      xhr.ontimeout = () => reject(new Error("시간 초과"));
+      xhr.send(formData);
+    });
   }
 
   function addFiles(files) {
@@ -230,6 +261,7 @@
   // ── 업로드 ────────────────────────────────────
   async function uploadOne(item) {
     item.status = "uploading";
+    item.progress = 0;
     item.thumb.classList.add("is-uploading");
     item.thumb.querySelector(".wp-thumb-status").textContent = "…";
     try {
@@ -239,21 +271,24 @@
       fd.append("uploader_uuid", getUuid());
       if (payload._w) fd.append("width", String(payload._w));
       if (payload._h) fd.append("height", String(payload._h));
-      const res = await fetch(`${API_BASE}/api/wedding/upload`, { method: "POST", body: fd });
-      if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error(`서버 오류 (${res.status}) ${t.slice(0,120)}`); }
-      const json = await res.json().catch(() => ({}));
+      const json = await xhrUpload(`${API_BASE}/api/wedding/upload`, fd, frac => {
+        item.progress = frac; renderProgress();
+      });
       item.serverId = json && json.id != null ? json.id : null;   // 회수용 photo id
+      item.progress = 1;
       item.status = "done";
       item.thumb.classList.remove("is-uploading");
       item.thumb.classList.add("is-done");
       item.thumb.querySelector(".wp-thumb-status").textContent = "✓";
     } catch (e) {
       console.error("[wedding upload]", e);
+      item.progress = 0;
       item.status = "fail";
       item.thumb.classList.remove("is-uploading");
       item.thumb.classList.add("is-fail");
       item.thumb.querySelector(".wp-thumb-status").textContent = "!";
     }
+    renderProgress();
   }
 
   // ── 회수 (본인 uuid 로만 삭제) ────────────────
@@ -321,16 +356,13 @@
     targets.forEach(t => { t.status = "idle"; t.thumb.classList.remove("is-fail"); t.thumb.querySelector(".wp-thumb-status").textContent = ""; });
     $upload.disabled = true;
     setStatus("");
-    const total = targets.length;
-    let done = 0;
-    setProgress(0, total);
+    targets.forEach(t => { t.progress = 0; });
+    progTargets = targets;
+    renderProgress();
     let cursor = 0;
     async function worker() {
       while (cursor < targets.length) {
-        const my = targets[cursor++];
-        await uploadOne(my);
-        done++;
-        setProgress(done, total);
+        await uploadOne(targets[cursor++]);
       }
     }
     const workers = [];
@@ -339,12 +371,13 @@
 
     const succeeded = queue.filter(q => q.status === "done");
     const failed = queue.filter(q => q.status === "fail").length;
+    progTargets = null;
+    $progressWrap.hidden = true;
     if (failed === 0) {
       showDone(succeeded.slice());
       queue.length = 0;
       $previews.innerHTML = "";
       $previews.hidden = true;
-      setProgress(0, 0);
     } else {
       setStatus(`${succeeded.length}개 성공 · ${failed}개 실패. 아래 버튼으로 다시 시도해 주세요.`, true);
       $upload.disabled = false;
@@ -376,12 +409,29 @@
   const $modal = $("techModal");
   const $modalClose = $("techClose");
   if ($brand && $modal) {
-    const open = () => { $modal.hidden = false; document.body.style.overflow = "hidden"; };
-    const close = () => { $modal.hidden = true; document.body.style.overflow = ""; };
+    let lastFocused = null;
+    const open = () => {
+      lastFocused = document.activeElement;
+      $modal.hidden = false; document.body.style.overflow = "hidden";
+      if ($modalClose && $modalClose.focus) $modalClose.focus();
+    };
+    const close = () => {
+      $modal.hidden = true; document.body.style.overflow = "";
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    };
     $brand.addEventListener("click", open);
     $modalClose.addEventListener("click", close);
     $modal.addEventListener("click", e => { if (e.target === $modal) close(); });
     document.addEventListener("keydown", e => { if (!$modal.hidden && e.key === "Escape") close(); });
+    // 포커스 트랩 — 모달 밖으로 탭 안 빠지게
+    $modal.addEventListener("keydown", e => {
+      if (e.key !== "Tab") return;
+      const f = $modal.querySelectorAll('button, a[href], summary, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   }
 
   // 거래 경로 링크: URL 미설정(#/빈값)이면 줄째로 숨김 — 깨진 링크 노출 방지

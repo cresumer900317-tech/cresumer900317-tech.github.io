@@ -9,7 +9,7 @@
   --wp-card:      #fffdf9;
   --wp-card-edge: #e7d8c3;
   --wp-text:      #46382a;
-  --wp-text-soft: #8a7765;
+  --wp-text-soft: #6e5c4b;          /* 보조 텍스트 — 아이보리 위 대비 ↑ (WCAG AA 근접, 어르신 가독성) */
   --wp-accent:    #c98a7d;          /* 로즈 */
   --wp-accent-2:  #a7b89a;          /* 세이지 */
   --wp-sage-dk:   #6f8466;          /* 진한 세이지 — 포인트 컬러 */
@@ -404,6 +404,8 @@ html, body {
   display: flex; align-items: center; justify-content: center;
 }
 .wp-thumb-remove:hover { background: rgba(0,0,0,.75); }
+/* 보이는 원은 작게, 탭 영역만 넓게 (손가락 오탭 방지) */
+.wp-thumb-remove::after { content: ""; position: absolute; inset: -11px; border-radius: 50%; }
 
 /* ── Buttons ────────────────────────── */
 .wp-btn {
@@ -526,6 +528,7 @@ html, body {
 }
 .wp-done-recall:hover { background: rgba(180,60,50,.9); transform: scale(1.08); }
 .wp-done-recall:disabled { opacity: .6; cursor: default; }
+.wp-done-recall::after { content: ""; position: absolute; inset: -11px; border-radius: 50%; }
 .wp-done-cell.is-removed { animation: wp-cell-out .26s ease forwards; }
 @keyframes wp-cell-out { to { opacity: 0; transform: scale(.7); } }
 
