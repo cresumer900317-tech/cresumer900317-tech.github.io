@@ -171,9 +171,11 @@
         if (t.status === "uploading" && t.video) videoUploading = true;
       }
     });
+    const pct = Math.round((frac / total) * 100);
     $progressWrap.hidden = false;
-    $progressFill.style.width = Math.round((frac / total) * 100) + "%";
-    $progressText.textContent = `${doneCount} / ${total}` + (videoUploading ? " · 영상 업로드 중…" : "");
+    $progressFill.style.width = pct + "%";
+    const what = videoUploading ? "영상" : "사진";
+    $progressText.textContent = `${what} 올리는 중 · ${pct}%` + (total > 1 ? `  (${doneCount}/${total})` : "");
   }
   // XHR 업로드 — 진행률(onprogress)을 받기 위해 fetch 대신 사용 (영상도 바가 실시간으로 움직임)
   function xhrUpload(url, formData, onProgress) {
