@@ -38,13 +38,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const user = getUser();
     const contribMonth = new Date().toISOString().slice(0, 7);
-    const [summary, members, monthlyRes, visitorRes, contribRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, contribRes, guildRanksRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
       fetch(`${API_BASE}/api/contributions?month=${contribMonth}`, { cache: "no-store" }).then(r => r.ok ? r.json() : { rows: [] }),
+      fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
     ]);
+    // 길드명 → 서버 길드순위 (스카니아11)
+    const guildRankMap = {};
+    (Array.isArray(guildRanksRes) ? guildRanksRes : []).forEach((g) => { guildRankMap[g.guildName] = g; });
     const contribRows = (contribRes && contribRes.rows) || [];
     const visitorStats = visitorRes || {};
     const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
@@ -353,6 +357,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="guild-board-stat-label">합산 전투력</div>
                     <div class="guild-board-stat-val">${formatCompactPower(totalPower)}</div>
                   </div>
+                  ${guildRankMap[guild] && guildRankMap[guild].serverRank ? `
+                  <div class="guild-board-stat">
+                    <div class="guild-board-stat-label">서버 순위</div>
+                    <div class="guild-board-stat-val accent">🏆 ${formatNumber(guildRankMap[guild].serverRank)}위</div>
+                  </div>` : ""}
                   ${guildDesc[guild] ? `<div class="guild-board-desc">${guildDesc[guild]}</div>` : ""}
                   <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "모집 중"}</div>
                   <div class="guild-board-more">자세히 보기 →</div>

@@ -104,6 +104,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `
         <div class="rk-tab-bar">
           <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">전투력</button>
+          <button class="rk-tab-btn${active === "boss" ? " rk-tab-active" : ""}" data-tab="boss">토벌전</button>
+          <button class="rk-tab-btn${active === "wboss" ? " rk-tab-active" : ""}" data-tab="wboss">월드보스</button>
           <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">인기도</button>
         </div>
       `;
@@ -260,6 +262,100 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
+    // ── 토벌전 / 월드보스 (구조 동일 → 설정으로 일반화) ──
+    const BOSS = {
+      boss:  { key: "boss",  scoreKey: "bossScore",  rankKey: "bossRank",  label: "토벌전",  emoji: "🔥", color: "#dc2626" },
+      wboss: { key: "wboss", scoreKey: "wbossScore", rankKey: "wbossRank", label: "월드보스", emoji: "🌎", color: "#7c3aed" },
+    };
+
+    function sortedBossList(cfg) {
+      return [...rows]
+        .filter(m => m[cfg.scoreKey] != null && Number(m[cfg.scoreKey]) > 0)
+        .sort((a, b) => Number(b[cfg.scoreKey] || 0) - Number(a[cfg.scoreKey] || 0));
+    }
+
+    function renderBossPodium(sorted, cfg) {
+      if (sorted.length === 0) return "";
+      const [first, second, third] = sorted;
+      function heroCard(item, rank, center) {
+        if (!item) return `<div></div>`;
+        const score = formatCompactPower(item[cfg.scoreKey]);
+        return `
+          <div class="rk-hero-card${center ? " rk-hero-center" : ""}">
+            <div class="rk-hero-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</div>
+            <div class="rk-hero-avatar-wrap">${characterAvatarHtml(item)}</div>
+            <div class="rk-hero-name">${escapeHtml(item.name || "-")}</div>
+            <div class="rk-hero-guild">${guildBadgeHtml(item.guild || "길드 없음")}</div>
+            <div class="rk-hero-power" style="color:${cfg.color};">${cfg.emoji} ${score}</div>
+            ${item[cfg.rankKey] ? `<div class="rk-hero-server">서버 ${cfg.label} ${formatNumber(item[cfg.rankKey])}위</div>` : ""}
+          </div>
+        `;
+      }
+      return `
+        <div class="rk-hero-wrap">
+          <div class="rk-hero-grid">
+            ${heroCard(second, 2, false)}
+            ${heroCard(first, 1, true)}
+            ${heroCard(third, 3, false)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBossCard(item, rank, cfg) {
+      const score = formatCompactPower(item[cfg.scoreKey]);
+      let cardCls = "rk-compact-card";
+      if (rank <= 3) cardCls += " rk-top3-card";
+      return `
+        <div class="${cardCls}" data-${cfg.key}-row="${escapeHtml(String(item.name || "").toLowerCase())}">
+          <div class="rk-c-rank">
+            ${rank <= 3
+              ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
+              : `<span class="rk-c-num">${rank}</span>`
+            }
+          </div>
+          <div class="rk-c-avatar">${characterAvatarHtml(item)}</div>
+          <div class="rk-c-info">
+            <div class="rk-c-name">${escapeHtml(item.name || "-")}</div>
+            <div class="rk-c-sub">
+              ${guildBadgeHtml(item.guild || "길드 없음")}
+              <span class="rk-c-job">${escapeHtml(item.job || "-")} · Lv ${item.level || "-"}</span>
+            </div>
+          </div>
+          <div class="rk-c-right">
+            <div style="font-size:1.05rem;font-weight:900;color:${cfg.color};white-space:nowrap;">${cfg.emoji} ${score}</div>
+            <div class="rk-c-server">${item[cfg.rankKey] ? "서버 " + formatNumber(item[cfg.rankKey]) + "위" : "-"}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBossContent(cfg) {
+      const sorted = sortedBossList(cfg);
+      if (sorted.length === 0) {
+        return `<div class="rk-empty-wrap">${createEmptyBox(cfg.label + " 데이터가 없습니다.")}</div>`;
+      }
+      const podiumHtml = renderBossPodium(sorted, cfg);
+      const allHtml = sorted.map((item, i) => renderBossCard(item, i + 1, cfg)).join("");
+      return `
+        <div id="${cfg.key}Content">
+          <div class="rk-meta">${cfg.label} 점수 기준 · ${formatNumber(sorted.length)}명 · Scania 11</div>
+          ${podiumHtml}
+          ${allHtml ? `
+            <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
+              <label class="search-field">
+                <span>🔎</span>
+                <input id="${cfg.key}SearchInput" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+              </label>
+              <button id="${cfg.key}ResetButton" class="ghost-btn" type="button">초기화</button>
+              <button class="ghost-btn rk-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP ↑</button>
+            </div>
+            <div class="rk-list" id="${cfg.key}CardList">${allHtml}</div>
+          ` : ""}
+        </div>
+      `;
+    }
+
     // ── 탭별 콘텐츠 ──
     function renderPowerContent() {
       const heroHtml = renderPowerHero(sortedPower);
@@ -315,7 +411,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ── 페이지 렌더 ──
     function renderPage(tab) {
-      const content = tab === "power" ? renderPowerContent() : renderPopularityContent();
+      const content =
+        tab === "power" ? renderPowerContent()
+        : tab === "boss" ? renderBossContent(BOSS.boss)
+        : tab === "wboss" ? renderBossContent(BOSS.wboss)
+        : renderPopularityContent();
       document.querySelector("main").innerHTML = `
         <div class="page-card">
           <div class="container">
@@ -356,6 +456,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (tab === "popularity") {
         bindCardSearch("popSearchInput", "popResetButton", "popCardList", "data-pop-row");
+      }
+      if (tab === "boss") {
+        bindCardSearch("bossSearchInput", "bossResetButton", "bossCardList", "data-boss-row");
+      }
+      if (tab === "wboss") {
+        bindCardSearch("wbossSearchInput", "wbossResetButton", "wbossCardList", "data-wboss-row");
       }
     }
 

@@ -1509,7 +1509,7 @@ main { padding: 0 0 48px; }
 @media (max-width: 600px) {
   .rk-pod-grid { grid-template-columns: 1fr 1.25fr 1fr; gap: 8px; }
   .rk-pod-wrap { padding: 24px 12px 0; }
-  .rk-tab-btn { font-size: 0.85rem; padding: 9px 0; }
+  .rk-tab-btn { font-size: 0.8rem; padding: 9px 2px; letter-spacing: 0; white-space: nowrap; }
 }
 
 /* TOP3 히어로 영역 */
