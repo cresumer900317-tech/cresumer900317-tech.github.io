@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const CUT = 30;
     let currentTab = "power";
+    let lastFamilyMetric = "power";   // 친구패밀리 스코프로 돌아올 때 마지막 지표 복원
 
     // 배치 기준일 (매달 마지막 수요일 22시)
     const cutlineDate = (() => {
@@ -99,16 +100,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `<span class="${cls}-main">${escapeHtml(getPowerDisplay(item))}</span>`;
     }
 
-    // 탭 바
+    // 탭 바 — 스코프(친구패밀리/서버전체/길드비교) + 친구패밀리일 때만 지표 드롭다운
+    const FAMILY_METRICS = ["power", "boss", "wboss", "popularity"];
+    const METRIC_LABEL = { power: "전투력", boss: "토벌전", wboss: "월드보스", popularity: "인기도" };
     function tabBarHtml(active) {
+      const isFamily = FAMILY_METRICS.includes(active);
+      const scope = isFamily ? "family" : active;
+      const scopeBtn = (key, label) =>
+        `<button class="rk-tab-btn${scope === key ? " rk-tab-active" : ""}" data-scope="${key}">${label}</button>`;
+      const metricOpts = FAMILY_METRICS
+        .map(m => `<option value="${m}"${active === m ? " selected" : ""}>${METRIC_LABEL[m]}</option>`)
+        .join("");
       return `
-        <div class="rk-tab-bar" style="flex-wrap:wrap;">
-          <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">전투력</button>
-          <button class="rk-tab-btn${active === "boss" ? " rk-tab-active" : ""}" data-tab="boss">토벌전</button>
-          <button class="rk-tab-btn${active === "wboss" ? " rk-tab-active" : ""}" data-tab="wboss">월드보스</button>
-          <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">인기도</button>
-          <button class="rk-tab-btn${active === "server" ? " rk-tab-active" : ""}" data-tab="server">서버전체</button>
-          <button class="rk-tab-btn${active === "guildcmp" ? " rk-tab-active" : ""}" data-tab="guildcmp">길드비교</button>
+        <div class="rk-tab-bar" style="flex-wrap:wrap;align-items:center;gap:8px;">
+          ${scopeBtn("family", "친구패밀리")}
+          ${scopeBtn("server", "서버전체")}
+          ${scopeBtn("guildcmp", "길드비교")}
+          ${isFamily ? `
+            <label style="display:inline-flex;align-items:center;gap:6px;margin-left:4px;font-size:0.82rem;color:#718096;">
+              지표
+              <select id="metricSelect" style="padding:8px 12px;border:1px solid #cbd5e0;border-radius:10px;font-weight:700;font-size:0.95rem;background:#fff;color:#2d3748;cursor:pointer;">
+                ${metricOpts}
+              </select>
+            </label>` : ""}
         </div>
       `;
     }
@@ -455,7 +469,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div class="rk-c-right">
             <div class="rk-c-power">${powerHtml}</div>
-            <div class="rk-c-server">${item.popularity ? "♥ " + formatNumber(item.popularity) : "-"}</div>
+            <div class="rk-c-server">${item.popularity ? `<span style="color:#e5377b;font-weight:800;">♥ ${formatNumber(item.popularity)}</span>` : "-"}</div>
           </div>
         </div>
       `;
@@ -642,14 +656,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         </footer>
       `;
 
-      // 탭 전환
-      document.querySelectorAll(".rk-tab-btn").forEach(btn => {
+      // 스코프 전환 (친구패밀리/서버전체/길드비교)
+      document.querySelectorAll("[data-scope]").forEach(btn => {
         btn.addEventListener("click", () => {
-          currentTab = btn.dataset.tab;
+          const scope = btn.dataset.scope;
+          currentTab = scope === "family" ? lastFamilyMetric : scope;
           renderPage(currentTab);
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       });
+      // 친구패밀리 지표 드롭다운
+      const metricSel = document.getElementById("metricSelect");
+      if (metricSel) {
+        metricSel.addEventListener("change", () => {
+          currentTab = metricSel.value;
+          lastFamilyMetric = currentTab;
+          renderPage(currentTab);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
 
       if (tab === "power") {
         bindCardSearch("rankingSearchInput", "rankingResetButton", "rankingCardList", "data-character-row");

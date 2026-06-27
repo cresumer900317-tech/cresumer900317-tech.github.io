@@ -37,19 +37,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const contribMonth = new Date().toISOString().slice(0, 7);
-    const [summary, members, monthlyRes, visitorRes, contribRes, guildRanksRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
-      fetch(`${API_BASE}/api/contributions?month=${contribMonth}`, { cache: "no-store" }).then(r => r.ok ? r.json() : { rows: [] }),
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
     ]);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
     (Array.isArray(guildRanksRes) ? guildRanksRes : []).forEach((g) => { guildRankMap[g.guildName] = g; });
-    const contribRows = (contribRes && contribRes.rows) || [];
     const visitorStats = visitorRes || {};
     const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
 
@@ -231,7 +228,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="kpi-card"><div class="kpi-label">이달 성장</div><div class="kpi-value kpi-value-up">+1,200억</div></div>
                   <div class="kpi-card"><div class="kpi-label">패밀리 순위</div><div class="kpi-value dark">15위</div></div>
                   <div class="kpi-card"><div class="kpi-label">인기도</div><div class="kpi-value kpi-value-pink">3,200</div></div>
-                  <div class="kpi-card"><div class="kpi-label">공헌도</div><div class="kpi-value dark">5,400</div></div>
                   <div class="kpi-card"><div class="kpi-label">TOP 30</div><div class="kpi-value kpi-value-up">+800억 여유</div></div>
                 </div>
                 <div class="dashboard-login-overlay">
@@ -264,8 +260,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const myFamilyRank = sortedRanking.findIndex(r => r.name === myName) + 1;
         const myMonthlyDiff = myMonthly ? Number(myMonthly.monthlyDiff || 0) : 0;
         const myPopularity = formatNumber(Number(me.popularity || 0));
-        const myContrib = contribRows.find(r => r.member_name === myName);
-        const myContribVal = myContrib ? formatNumber(myContrib.contribution) : "-";
         const cutItem = sortedRanking[29];
         const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
         const cutDiff = myPower - cutPower;
@@ -311,10 +305,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="kpi-card">
                   <div class="kpi-label">인기도</div>
                   <div class="kpi-value kpi-value-pink">${myPopularity}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">공헌도</div>
-                  <div class="kpi-value dark">${myContribVal}</div>
                 </div>
                 <div class="kpi-card">
                   <div class="kpi-label">TOP 30 ${cutlineDDayText ? `<span class="kpi-dday">${cutlineDDayText}</span>` : ''}</div>
