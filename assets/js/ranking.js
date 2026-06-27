@@ -504,30 +504,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
       if (totalEl) totalEl.textContent = formatNumber(data.length) + "명";
-      let shown = SERVER_PAGE;
-      let kw = "";
       const moreWrap = document.getElementById("serverMoreWrap");
-      function paint() {
-        if (kw) {
-          const matches = data.filter(d => String(d.nickname || "").toLowerCase().includes(kw));
-          listEl.innerHTML = matches.length
-            ? `<div class="rk-meta">검색결과 ${formatNumber(matches.length)}명</div>` + matches.slice(0, 300).map(renderServerCard).join("")
-            : createEmptyBox(`"${kw}" 검색 결과가 없습니다.`);
-          moreWrap.innerHTML = matches.length > 300 ? `<div class="rk-meta">상위 300명만 표시</div>` : "";
+      let shown = 0;
+      let kw = "";
+      let observer = null;
+
+      function teardownObserver() { if (observer) { observer.disconnect(); observer = null; } }
+
+      // 무한 스크롤 — 아래로 내리면 다음 100명 자동 이어붙임(append, 전체 재렌더 X)
+      function appendNext(reset) {
+        if (reset) { listEl.innerHTML = ""; shown = 0; }
+        const next = data.slice(shown, shown + SERVER_PAGE);
+        listEl.insertAdjacentHTML("beforeend", next.map(renderServerCard).join(""));
+        shown += next.length;
+        if (shown >= data.length) {
+          teardownObserver();
+          moreWrap.innerHTML = `<div class="rk-meta">전체 ${formatNumber(data.length)}명 표시 완료</div>`;
         } else {
-          listEl.innerHTML = data.slice(0, shown).map(renderServerCard).join("");
-          if (shown < data.length) {
-            moreWrap.innerHTML = `<button class="ghost-btn" id="serverMoreBtn" type="button">더보기 (${formatNumber(shown)}/${formatNumber(data.length)})</button>`;
-            document.getElementById("serverMoreBtn").addEventListener("click", () => { shown = Math.min(shown + SERVER_PAGE, data.length); paint(); });
-          } else {
-            moreWrap.innerHTML = `<div class="rk-meta">전체 ${formatNumber(data.length)}명 표시 완료</div>`;
-          }
+          moreWrap.innerHTML = `<div id="serverSentinel" class="rk-meta" style="padding:14px;">${formatNumber(shown)} / ${formatNumber(data.length)} · 아래로 내리면 더 표시 ↓</div>`;
+          observeSentinel();
         }
       }
+      function observeSentinel() {
+        teardownObserver();
+        const sentinel = document.getElementById("serverSentinel");
+        if (!sentinel) return;
+        observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && !kw) appendNext(false);
+        }, { rootMargin: "600px" });   // 바닥 도달 전 미리 로드
+        observer.observe(sentinel);
+      }
+
+      // 검색 — 전체 3000명 대상, 무한스크롤 끄고 결과만 표시
+      function renderSearch() {
+        teardownObserver();
+        const matches = data.filter(d => String(d.nickname || "").toLowerCase().includes(kw));
+        listEl.innerHTML = matches.length
+          ? `<div class="rk-meta">검색결과 ${formatNumber(matches.length)}명</div>` + matches.slice(0, 500).map(renderServerCard).join("")
+          : createEmptyBox(`"${kw}" 검색 결과가 없습니다.`);
+        moreWrap.innerHTML = matches.length > 500 ? `<div class="rk-meta">상위 500명만 표시</div>` : "";
+      }
+
       const input = document.getElementById("serverSearchInput");
-      input.addEventListener("input", () => { kw = input.value.trim().toLowerCase(); paint(); });
-      document.getElementById("serverResetButton").addEventListener("click", () => { input.value = ""; kw = ""; shown = SERVER_PAGE; paint(); input.focus(); });
-      paint();
+      input.addEventListener("input", () => {
+        kw = input.value.trim().toLowerCase();
+        if (kw) renderSearch();
+        else appendNext(true);
+      });
+      document.getElementById("serverResetButton").addEventListener("click", () => {
+        input.value = ""; kw = ""; appendNext(true); input.focus();
+      });
+
+      appendNext(true);
     }
 
     // ════════ 길드별 비교 대시보드 ════════
