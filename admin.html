@@ -126,48 +126,10 @@
   <div class="top-bar">
     <h1>😊 친구패밀리 · 어드민</h1>
     <div class="top-bar-right">
-      <button class="section-tab active" id="tabContrib" onclick="showSection('contribution')">📊 공헌도</button>
-      <button class="section-tab" id="tabUsers" onclick="showSection('users')">👥 유저 관리</button>
+      <button class="section-tab active" id="tabUsers" onclick="showSection('users')">👥 유저 관리</button>
       <button class="section-tab" id="tabTemp" onclick="showSection('temp')">🆕 임시등록</button>
       <a href="./">← 홈</a>
       <button class="lock-out-btn" onclick="lockOut()">🔒 잠금</button>
-    </div>
-  </div>
-
-  <!-- 공헌도 섹션 -->
-  <div id="contributionSection">
-    <div class="container">
-      <div class="month-bar">
-        <label>📅 대상 월</label>
-        <input type="month" id="monthInput" />
-        <button onclick="loadData()">불러오기</button>
-      </div>
-      <div class="tab-bar" id="guildTabBar">
-        <button class="tab-btn active" data-guild="친구들" onclick="selectGuild('친구들', this)">친구들</button>
-        <button class="tab-btn" data-guild="친구둘" onclick="selectGuild('친구둘', this)">친구둘</button>
-        <button class="tab-btn" data-guild="친구삼" onclick="selectGuild('친구삼', this)">친구삼</button>
-        <button class="tab-btn" data-guild="친구넷" onclick="selectGuild('친구넷', this)">친구넷</button>
-        <button class="tab-btn" data-guild="친구닷" onclick="selectGuild('친구닷', this)">친구닷</button>
-      </div>
-      <div class="input-section">
-        <h2>➕ 공헌도 입력</h2>
-        <div class="input-row">
-          <div><label>캐릭터명</label><select id="memberSelect"><option value="">-- 선택 --</option></select></div>
-          <div><label>공헌도</label><input type="number" id="contribInput" placeholder="숫자 입력" min="0" /></div>
-          <button class="add-btn" onclick="addContribution()">추가</button>
-        </div>
-      </div>
-      <div class="list-section">
-        <div class="list-header">
-          <h2 id="listTitle">친구들 공헌도</h2>
-          <div class="list-header-right">
-            <span class="total-chip" id="totalChip">합계: 0</span>
-            <button class="save-all-btn" onclick="saveAll()">💾 전체 저장</button>
-            <button class="del-all-btn" onclick="deleteAll()">🗑️ 전체 삭제</button>
-          </div>
-        </div>
-        <div id="memberList"><div class="empty-box">데이터를 불러오는 중...</div></div>
-      </div>
     </div>
   </div>
 
@@ -216,10 +178,6 @@
 
 <script>
 const API = "https://guild-backend-production-75a6.up.railway.app";
-let currentGuild = "친구들";
-let currentMonth = "";
-let allRows = [];
-let guildMembers = {};
 
 // ── 관리자 로그인 ──
 async function checkPw() {
@@ -261,151 +219,15 @@ if (sessionStorage.getItem("admin_ok") === "1" && sessionStorage.getItem("token"
 }
 
 function showSection(sec) {
-  document.getElementById("contributionSection").style.display = sec === "contribution" ? "block" : "none";
   document.getElementById("userSection").style.display = sec === "users" ? "block" : "none";
   document.getElementById("tempSection").style.display = sec === "temp" ? "block" : "none";
-  document.getElementById("tabContrib").classList.toggle("active", sec === "contribution");
   document.getElementById("tabUsers").classList.toggle("active", sec === "users");
   document.getElementById("tabTemp").classList.toggle("active", sec === "temp");
   if (sec === "users") loadUsers("pending");
 }
 
 async function init() {
-  const now = new Date();
-  const m = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById("monthInput").value = m;
-  currentMonth = m;
-  await loadGuildMembers();
-  await loadData();
-}
-
-// ── 길드원 목록 ──
-async function loadGuildMembers() {
-  try {
-    const res = await fetch(`${API}/api/members`);
-    const data = await res.json();
-    const members = Array.isArray(data) ? data : [];
-    ["친구들","친구둘","친구삼","친구넷","친구닷"].forEach(g => {
-      guildMembers[g] = members.filter(m => m.guild === g)
-        .sort((a,b) => (b.power||0) - (a.power||0)).map(m => m.name);
-    });
-    updateMemberSelect();
-  } catch(e) { console.error(e); }
-}
-function updateMemberSelect() {
-  const sel = document.getElementById("memberSelect");
-  sel.innerHTML = `<option value="">-- 선택 --</option>` +
-    (guildMembers[currentGuild]||[]).map(n => `<option value="${n}">${n}</option>`).join("");
-}
-
-// ── 공헌도 로드 ──
-async function loadData() {
-  currentMonth = document.getElementById("monthInput").value;
-  if (!currentMonth) return;
-  try {
-    const res = await fetch(`${API}/api/contributions?month=${currentMonth}`);
-    const data = await res.json();
-    allRows = data.rows || [];
-    renderList();
-  } catch { showToast("로드 실패", false); }
-}
-
-function selectGuild(guild, btn) {
-  currentGuild = guild;
-  document.querySelectorAll("#guildTabBar .tab-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  updateMemberSelect();
-  renderList();
-}
-
-function renderList() {
-  const rows = allRows.filter(r => r.guild_name === currentGuild).sort((a,b) => b.contribution - a.contribution);
-  const total = rows.reduce((s,r) => s + r.contribution, 0);
-  document.getElementById("listTitle").textContent = `${currentGuild} 공헌도`;
-  document.getElementById("totalChip").textContent = `합계: ${total.toLocaleString()}`;
-  const el = document.getElementById("memberList");
-  if (!rows.length) { el.innerHTML = `<div class="empty-box">아직 입력된 공헌도가 없어요</div>`; return; }
-  el.innerHTML = rows.map((r, i) => `
-    <div class="member-row">
-      <span class="member-rank">${i+1}</span>
-      <span class="member-name">${r.member_name}</span>
-      <input class="edit-input" type="number" value="${r.contribution}" id="edit_${encodeURIComponent(r.member_name)}" />
-      <div class="row-btns">
-        <button class="save-btn" onclick="saveEdit('${r.member_name}')">저장</button>
-        <button class="del-btn" onclick="deleteRow('${r.member_name}')">삭제</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function addContribution() {
-  const name = document.getElementById("memberSelect").value;
-  const contrib = parseInt(document.getElementById("contribInput").value);
-  if (!name) { showToast("캐릭터를 선택해주세요", false); return; }
-  if (isNaN(contrib) || contrib < 0) { showToast("공헌도를 입력해주세요", false); return; }
-  await upsert(name, contrib);
-  document.getElementById("memberSelect").value = "";
-  document.getElementById("contribInput").value = "";
-}
-
-async function saveEdit(memberName) {
-  const el = document.getElementById("edit_" + encodeURIComponent(memberName));
-  const val = parseInt(el.value);
-  if (isNaN(val)) return;
-  await upsert(memberName, val);
-}
-
-async function upsert(memberName, contribution) {
-  try {
-    await fetch(`${API}/api/contributions`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: memberName, contribution }),
-    });
-    const idx = allRows.findIndex(r => r.guild_name === currentGuild && r.member_name === memberName);
-    if (idx >= 0) allRows[idx].contribution = contribution;
-    else allRows.push({ guild_name: currentGuild, member_name: memberName, contribution, month: currentMonth });
-    renderList();
-    showToast(`${memberName} 저장 ✓`);
-  } catch { showToast("저장 실패", false); }
-}
-
-async function saveAll() {
-  const rows = allRows.filter(r => r.guild_name === currentGuild);
-  if (!rows.length) { showToast("저장할 데이터가 없어요", false); return; }
-  let ok = 0;
-  for (const r of rows) {
-    const el = document.getElementById("edit_" + encodeURIComponent(r.member_name));
-    const val = el ? parseInt(el.value) : r.contribution;
-    if (isNaN(val)) continue;
-    try {
-      await fetch(`${API}/api/contributions`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month: currentMonth, guild_name: currentGuild, member_name: r.member_name, contribution: val }),
-      });
-      r.contribution = val; ok++;
-    } catch {}
-  }
-  renderList(); showToast(`${ok}명 전체 저장 완료 ✓`);
-}
-
-async function deleteAll() {
-  const rows = allRows.filter(r => r.guild_name === currentGuild);
-  if (!rows.length) { showToast("삭제할 데이터가 없어요", false); return; }
-  if (!confirm(`${currentGuild} 공헌도 전체(${rows.length}명)를 삭제할까요?`)) return;
-  for (const r of rows) {
-    try { await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(r.member_name)}`, { method: "DELETE", headers: { "Authorization": "Bearer " + sessionStorage.getItem("token") } }); } catch {}
-  }
-  allRows = allRows.filter(r => r.guild_name !== currentGuild);
-  renderList(); showToast(`전체 삭제 완료`);
-}
-
-async function deleteRow(memberName) {
-  if (!confirm(`${memberName} 공헌도를 삭제할까요?`)) return;
-  try {
-    await fetch(`${API}/api/contributions?month=${currentMonth}&guild_name=${encodeURIComponent(currentGuild)}&member_name=${encodeURIComponent(memberName)}`, { method: "DELETE", headers: { "Authorization": "Bearer " + sessionStorage.getItem("token") } });
-    allRows = allRows.filter(r => !(r.guild_name === currentGuild && r.member_name === memberName));
-    renderList(); showToast(`${memberName} 삭제 완료`);
-  } catch { showToast("삭제 실패", false); }
+  showSection("users");
 }
 
 // ── 유저 관리 ──
@@ -555,8 +377,6 @@ async function addTempMember() {
     if (!res.ok) throw new Error(data.detail || "등록 실패");
     showToast(`${name} 임시 등록 완료 (${guild})`);
     document.getElementById("tempName").value = "";
-    // 길드원 목록 갱신 (공헌도 셀렉트에도 반영)
-    await loadGuildMembers();
   } catch (e) { showToast(e.message || "등록 실패", false); }
 }
 
