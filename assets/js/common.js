@@ -127,6 +127,7 @@ function renderShell() {
     ${navLink("./notice", "notice", "공지", page)}
     ${navLink("./tips", "tips", "팁", page)}
     ${navLink("./free", "free", "자유", page)}
+    ${navLink("./rivals", "rivals", "라이벌", page)}
     ${navLink("./points", "points", "포인트", page)}
     ${navLink("./download", "download", "매크로", page)}
   `;
