@@ -28,6 +28,8 @@ const getRankingData = () => fetchLocalJson("ranking.json");
 const getWeeklyData = () => fetchLocalJson("weekly.json");
 const getGuildsData = () => fetchLocalJson("members.json");
 const getNoticeData = () => fetchLocalJson("notices.json");
+const getServerRanking = () => fetchLocalJson("server-ranking.json");
+const getGuildRanks = () => fetchLocalJson("guild-ranks.json");
 const getTipsData = async () => ({ posts: [] });
 
 function escapeHtml(value) {
@@ -122,8 +124,6 @@ function renderShell() {
     ${navLink("./ranking", "ranking", "랭킹", page)}
     ${navLink("./members", "members", "길드원", page)}
     ${navLink("./weekly", "weekly", "월간성장", page)}
-    ${navLink("./rivals", "rivals", "라이벌전", page)}
-    ${navLink("./civil", "civil", "내전", page)}
     ${navLink("./notice", "notice", "공지", page)}
     ${navLink("./tips", "tips", "팁", page)}
     ${navLink("./free", "free", "자유", page)}
@@ -337,7 +337,7 @@ function authHeaders() {
 
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["members", "weekly", "rivals", "civil", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "free", "free-view", "free-write", "download"];
+  const restricted = ["members", "weekly", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "free", "free-view", "free-write", "download"];
   if (restricted.includes(page) && !getUser()) {
     const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page.startsWith("free") ? "free" : page;
     location.href = `./login?redirect=./${base}`;

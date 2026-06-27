@@ -102,11 +102,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 탭 바
     function tabBarHtml(active) {
       return `
-        <div class="rk-tab-bar">
+        <div class="rk-tab-bar" style="flex-wrap:wrap;">
           <button class="rk-tab-btn${active === "power" ? " rk-tab-active" : ""}" data-tab="power">전투력</button>
           <button class="rk-tab-btn${active === "boss" ? " rk-tab-active" : ""}" data-tab="boss">토벌전</button>
           <button class="rk-tab-btn${active === "wboss" ? " rk-tab-active" : ""}" data-tab="wboss">월드보스</button>
           <button class="rk-tab-btn${active === "popularity" ? " rk-tab-active" : ""}" data-tab="popularity">인기도</button>
+          <button class="rk-tab-btn${active === "server" ? " rk-tab-active" : ""}" data-tab="server">서버전체</button>
+          <button class="rk-tab-btn${active === "guildcmp" ? " rk-tab-active" : ""}" data-tab="guildcmp">길드비교</button>
         </div>
       `;
     }
@@ -409,12 +411,210 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }
 
+    // ════════ 서버 전체 랭킹 (전투력순 ~3000명, 인기도 포함) ════════
+    const FRIENDS = new Set(["친구들", "친구둘", "친구삼", "친구넷", "친구닷"]);
+    const SERVER_PAGE = 100;
+    let serverCache = null;
+
+    async function loadServerRanking() {
+      if (serverCache) return serverCache;
+      const d = await getServerRanking();
+      serverCache = Array.isArray(d) ? d : [];
+      return serverCache;
+    }
+
+    function serverGuildBadge(guild) {
+      const g = String(guild || "").trim();
+      if (FRIENDS.has(g)) return guildBadgeHtml(g);
+      if (!g) return `<span class="guild-badge guild-none">길드 없음</span>`;
+      return `<span class="guild-badge" style="background:#edf2f7;color:#4a5568;">${escapeHtml(g)}</span>`;
+    }
+
+    function renderServerCard(item) {
+      const isFriend = FRIENDS.has(String(item.guild || "").trim());
+      const rank = Number(item.serverRank || 0);
+      let cardCls = "rk-compact-card";
+      if (rank <= 3) cardCls += " rk-top3-card";
+      if (isFriend) cardCls += " rk-friend-card";
+      const pt = String(item.powerText || "").trim().split(/\s+/).filter(Boolean);
+      const powerHtml = pt.length >= 2
+        ? `<span class="rk-power-md-main">${escapeHtml(pt[0])}</span><span class="rk-power-sep">|</span><span class="rk-power-md-sub">${escapeHtml(pt[1])}</span>`
+        : `<span class="rk-power-md-main">${escapeHtml(item.powerText || formatCompactPower(item.power))}</span>`;
+      return `
+        <div class="${cardCls}"${isFriend ? ' style="outline:2px solid var(--brand,#3182ce);outline-offset:-2px;"' : ''} data-server-row="${escapeHtml(String(item.nickname || "").toLowerCase())}">
+          <div class="rk-c-rank">
+            ${rank <= 3 ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>` : `<span class="rk-c-num">${formatNumber(rank)}</span>`}
+          </div>
+          <div class="rk-c-avatar">${characterAvatarHtml({ name: item.nickname })}</div>
+          <div class="rk-c-info">
+            <div class="rk-c-name">${escapeHtml(item.nickname || "-")}${isFriend ? ` <span style="font-size:0.68rem;font-weight:700;color:var(--brand,#3182ce);">친구패밀리</span>` : ""}</div>
+            <div class="rk-c-sub">
+              ${serverGuildBadge(item.guild)}
+              <span class="rk-c-job">${escapeHtml(item.job || "-")}${item.level ? " · Lv " + item.level : ""}</span>
+            </div>
+          </div>
+          <div class="rk-c-right">
+            <div class="rk-c-power">${powerHtml}</div>
+            <div class="rk-c-server">${item.popularity ? "♥ " + formatNumber(item.popularity) : "-"}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderServerContent() {
+      return `
+        <div id="serverContent">
+          <div class="rk-meta">스카니아11 서버 전체 전투력 랭킹 · 상위 <span id="serverTotal">…</span> · ♥는 인기도</div>
+          <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
+            <label class="search-field"><span>🔎</span>
+              <input id="serverSearchInput" type="text" placeholder="서버 전체에서 캐릭터명 검색" autocomplete="off" />
+            </label>
+            <button id="serverResetButton" class="ghost-btn" type="button">초기화</button>
+            <button class="ghost-btn rk-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP ↑</button>
+          </div>
+          <div class="rk-list" id="serverCardList"><div class="loading-box">서버 전체 랭킹 불러오는 중…</div></div>
+          <div id="serverMoreWrap" style="text-align:center;margin-top:16px;"></div>
+        </div>
+      `;
+    }
+
+    async function initServerTab() {
+      const listEl = document.getElementById("serverCardList");
+      const totalEl = document.getElementById("serverTotal");
+      let data;
+      try { data = await loadServerRanking(); }
+      catch (e) { listEl.innerHTML = createEmptyBox("서버 랭킹을 불러오지 못했습니다."); return; }
+      if (!data.length) {
+        if (totalEl) totalEl.textContent = "준비 중";
+        listEl.innerHTML = createEmptyBox("서버 전체 랭킹 데이터가 아직 준비되지 않았어요. 잠시 후 다시 확인해 주세요.");
+        return;
+      }
+      if (totalEl) totalEl.textContent = formatNumber(data.length) + "명";
+      let shown = SERVER_PAGE;
+      let kw = "";
+      const moreWrap = document.getElementById("serverMoreWrap");
+      function paint() {
+        if (kw) {
+          const matches = data.filter(d => String(d.nickname || "").toLowerCase().includes(kw));
+          listEl.innerHTML = matches.length
+            ? `<div class="rk-meta">검색결과 ${formatNumber(matches.length)}명</div>` + matches.slice(0, 300).map(renderServerCard).join("")
+            : createEmptyBox(`"${kw}" 검색 결과가 없습니다.`);
+          moreWrap.innerHTML = matches.length > 300 ? `<div class="rk-meta">상위 300명만 표시</div>` : "";
+        } else {
+          listEl.innerHTML = data.slice(0, shown).map(renderServerCard).join("");
+          if (shown < data.length) {
+            moreWrap.innerHTML = `<button class="ghost-btn" id="serverMoreBtn" type="button">더보기 (${formatNumber(shown)}/${formatNumber(data.length)})</button>`;
+            document.getElementById("serverMoreBtn").addEventListener("click", () => { shown = Math.min(shown + SERVER_PAGE, data.length); paint(); });
+          } else {
+            moreWrap.innerHTML = `<div class="rk-meta">전체 ${formatNumber(data.length)}명 표시 완료</div>`;
+          }
+        }
+      }
+      const input = document.getElementById("serverSearchInput");
+      input.addEventListener("input", () => { kw = input.value.trim().toLowerCase(); paint(); });
+      document.getElementById("serverResetButton").addEventListener("click", () => { input.value = ""; kw = ""; shown = SERVER_PAGE; paint(); input.focus(); });
+      paint();
+    }
+
+    // ════════ 길드별 비교 대시보드 ════════
+    let guildRanksCache = null;
+    async function loadGuildRanks() {
+      if (guildRanksCache) return guildRanksCache;
+      const d = await getGuildRanks();
+      guildRanksCache = Array.isArray(d) ? d : [];
+      return guildRanksCache;
+    }
+
+    function renderGuildcmpContent() {
+      return `<div id="guildcmpContent"><div class="rk-list"><div class="loading-box">길드 비교 데이터 불러오는 중…</div></div></div>`;
+    }
+
+    async function initGuildcmpTab() {
+      const wrap = document.getElementById("guildcmpContent");
+      let ranks;
+      try { ranks = await loadGuildRanks(); }
+      catch (e) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 데이터를 불러오지 못했습니다.")}</div>`; return; }
+
+      const order = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"];
+      const rankMap = {};
+      ranks.forEach(r => { rankMap[r.guildName] = r; });
+      const byG = {};
+      rows.forEach(m => { const g = m.guild; if (FRIENDS.has(g)) (byG[g] ||= []).push(m); });
+
+      const cards = order.map(g => {
+        const r = rankMap[g] || {};
+        const members = (byG[g] || []).slice().sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
+        const tracked = members.length;
+        const avg = tracked ? members.reduce((s, m) => s + Number(m.power || 0), 0) / tracked : 0;
+        return {
+          g, serverRank: r.serverRank, level: r.guildLevel,
+          memberCount: r.memberCount, totalPower: Number(r.totalPower || 0),
+          avg, top: members[0], tracked,
+        };
+      }).filter(c => c.serverRank || c.totalPower || c.tracked);
+
+      if (!cards.length) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 비교 데이터가 아직 없습니다.")}</div>`; return; }
+
+      const sorted = cards.slice().sort((a, b) => b.totalPower - a.totalPower);
+      const maxTotal = Math.max(...sorted.map(c => c.totalPower), 1);
+      const familyPower = sorted.reduce((s, c) => s + c.totalPower, 0);
+      const familyMembers = sorted.reduce((s, c) => s + Number(c.memberCount || 0), 0);
+
+      const cardsHtml = sorted.map((c, i) => {
+        const pct = Math.max(4, Math.round(c.totalPower / maxTotal * 100));
+        return `
+          <div class="gc-card">
+            <div class="gc-head">
+              <span class="gc-rank">${i === 0 ? "👑" : (i + 1) + "위"}</span>
+              ${guildBadgeHtml(c.g)}
+              <span class="gc-srank">${c.serverRank ? "서버 길드 " + formatNumber(c.serverRank) + "위" : ""}</span>
+            </div>
+            <div class="gc-bar"><div class="gc-bar-fill" style="width:${pct}%"></div></div>
+            <div class="gc-stats">
+              <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(c.totalPower)}</b></div>
+              <div class="gc-stat"><span>평균 전투력</span><b>${formatCompactPower(c.avg)}</b></div>
+              <div class="gc-stat"><span>인원</span><b>${c.memberCount || "-"}명</b></div>
+              <div class="gc-stat"><span>길드 레벨</span><b>Lv ${c.level || "-"}</b></div>
+              <div class="gc-stat"><span>최강 멤버</span><b>${c.top ? escapeHtml(c.top.name) : "-"}</b></div>
+            </div>
+          </div>`;
+      }).join("");
+
+      wrap.innerHTML = `
+        <style>
+          .gc-summary{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 18px;}
+          .gc-summary>div{flex:1;min-width:120px;background:linear-gradient(135deg,#ebf8ff,#fff);border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;}
+          .gc-summary .gc-s-label{font-size:0.78rem;color:#718096;}
+          .gc-summary .gc-s-val{font-size:1.25rem;font-weight:900;color:#2d3748;margin-top:2px;}
+          .gc-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 12px rgba(0,0,0,0.04);}
+          .gc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+          .gc-rank{font-weight:900;font-size:1.05rem;color:#4a5568;min-width:34px;}
+          .gc-srank{margin-left:auto;font-size:0.8rem;color:#718096;font-weight:600;}
+          .gc-bar{height:10px;background:#edf2f7;border-radius:6px;overflow:hidden;margin-bottom:12px;}
+          .gc-bar-fill{height:100%;background:linear-gradient(90deg,#3182ce,#63b3ed);border-radius:6px;}
+          .gc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;}
+          .gc-stat{display:flex;flex-direction:column;}
+          .gc-stat span{font-size:0.72rem;color:#a0aec0;}
+          .gc-stat b{font-size:0.95rem;color:#2d3748;font-weight:800;margin-top:2px;}
+        </style>
+        <div class="rk-meta">친구패밀리 길드 비교 · 총전투력 기준 · Scania 11</div>
+        <div class="gc-summary">
+          <div><div class="gc-s-label">길드 수</div><div class="gc-s-val">${sorted.length}개</div></div>
+          <div><div class="gc-s-label">합산 인원</div><div class="gc-s-val">${familyMembers ? formatNumber(familyMembers) + "명" : "-"}</div></div>
+          <div><div class="gc-s-label">합산 전투력</div><div class="gc-s-val">${formatCompactPower(familyPower)}</div></div>
+        </div>
+        ${cardsHtml}
+      `;
+    }
+
     // ── 페이지 렌더 ──
     function renderPage(tab) {
       const content =
         tab === "power" ? renderPowerContent()
         : tab === "boss" ? renderBossContent(BOSS.boss)
         : tab === "wboss" ? renderBossContent(BOSS.wboss)
+        : tab === "server" ? renderServerContent()
+        : tab === "guildcmp" ? renderGuildcmpContent()
         : renderPopularityContent();
       document.querySelector("main").innerHTML = `
         <div class="page-card">
@@ -462,6 +662,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (tab === "wboss") {
         bindCardSearch("wbossSearchInput", "wbossResetButton", "wbossCardList", "data-wboss-row");
+      }
+      if (tab === "server") {
+        initServerTab();
+      }
+      if (tab === "guildcmp") {
+        initGuildcmpTab();
       }
     }
 
