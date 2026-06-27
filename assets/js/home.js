@@ -37,12 +37,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/api/notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/free`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/tips`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
@@ -88,6 +91,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     const bestServerRank = membersWithRank.length ? Math.min(...membersWithRank.map((r) => Number(r.serverRank))) : 0;
     const guildServerRanks = Object.values(guildRankMap).map((g) => Number(g.serverRank || 0)).filter((n) => n > 0);
     const bestGuildServerRank = guildServerRanks.length ? Math.min(...guildServerRanks) : 0;
+
+    // 커뮤니티 통합 피드 (공지 + 자유 + 팁, 최신순)
+    const noticeRows = Array.isArray(noticesRes) ? noticesRes : [];
+    const freeRows = Array.isArray(freeRes) ? freeRes : [];
+    const tipsRows = Array.isArray(tipsRes) ? tipsRes : [];
+    const communityFeed = [
+      ...noticeRows.map((p) => ({ ...p, board: "공지", href: `./notice-view?id=${p.id}`, color: "#f59e0b" })),
+      ...freeRows.map((p) => ({ ...p, board: "자유", href: `./free-view?id=${p.id}`, color: "#3b82f6" })),
+      ...tipsRows.map((p) => ({ ...p, board: "팁", href: `./tips-view?id=${p.id}`, color: "#22c55e" })),
+    ].filter((p) => p.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
+    // 사이드바 최신 공지 (고정글 우선)
+    const recentNotices = [...noticeRows]
+      .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0) || new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 4);
+    const feedDate = (iso) => {
+      if (!iso) return "";
+      const d = new Date(iso), now = new Date();
+      const diffH = (now - d) / 36e5;
+      if (diffH < 1) return "방금";
+      if (diffH < 24) return `${Math.floor(diffH)}시간 전`;
+      if (diffH < 24 * 7) return `${Math.floor(diffH / 24)}일 전`;
+      return d.toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
+    };
 
     // 길드 배치 기준일: 매달 마지막 수요일 22시
     const cutlineDate = (() => {
@@ -220,6 +246,68 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="kpi-label">이달 성장량</div>
               <div class="kpi-value">${totalMonthlyGrowth > 0 ? "+" + formatCompactPower(totalMonthlyGrowth) : "-"}</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="container">
+          <div class="home-portal">
+            <div class="portal-main">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">커뮤니티</div>
+                  <div class="section-sub">공지 · 자유 · 팁 최근 글</div>
+                </div>
+                <a class="section-link" href="./free">자유게시판 →</a>
+              </div>
+              <div class="feed-list">
+                ${communityFeed.length ? communityFeed.map((p) => `
+                  <a class="feed-row" href="${p.href}">
+                    <span class="feed-badge" style="color:${p.color};background:${p.color}18;">${p.board}</span>
+                    <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
+                    ${Number(p.likes) > 0 ? `<span class="feed-likes">❤️ ${p.likes}</span>` : ""}
+                    <span class="feed-date">${feedDate(p.created_at)}</span>
+                  </a>
+                `).join("") : `
+                  <div class="feed-empty">
+                    <div class="feed-empty-icon">💬</div>
+                    <div>아직 글이 없어요. 첫 글을 남기고 <b>포인트</b>도 받아가세요!</div>
+                    <a class="feed-empty-btn" href="./free-write">✏️ 글쓰기</a>
+                  </div>`}
+              </div>
+            </div>
+            <aside class="portal-aside">
+              ${!user ? `
+              <div class="side-card side-login">
+                <div class="side-login-title">친구패밀리에 함께해요</div>
+                <p class="side-login-desc">로그인하면 내 순위·성장·포인트를 한눈에.</p>
+                <a class="cta-btn side-login-btn" href="./login">로그인</a>
+                <a class="side-login-sub" href="./login?tab=register">회원가입 →</a>
+              </div>` : ""}
+              <div class="side-card">
+                <div class="side-card-title">빠른 메뉴</div>
+                <div class="quick-menu">
+                  <a class="quick-link" href="./ranking"><span class="quick-emoji">🏆</span>서버 전체 랭킹</a>
+                  <a class="quick-link" href="./rivals"><span class="quick-emoji">⚔️</span>라이벌 비교</a>
+                  <a class="quick-link" href="./points"><span class="quick-emoji">🔥</span>포인트</a>
+                  <a class="quick-link" href="./members"><span class="quick-emoji">👥</span>길드원</a>
+                </div>
+              </div>
+              <div class="side-card">
+                <div class="side-card-title">📢 최신 공지 <a class="side-card-more" href="./notice">더보기</a></div>
+                ${recentNotices.length ? `
+                <div class="side-notice-list">
+                  ${recentNotices.map((n) => `
+                    <a class="side-notice-row" href="./notice-view?id=${n.id}">
+                      ${n.is_pinned ? `<span class="side-pin">📌</span>` : ""}
+                      <span class="side-notice-ttl">${escapeHtml(n.title || "")}</span>
+                      <span class="side-notice-date">${feedDate(n.created_at)}</span>
+                    </a>
+                  `).join("")}
+                </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
+              </div>
+            </aside>
           </div>
         </div>
       </div>
