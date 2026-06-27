@@ -427,7 +427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ════════ 서버 전체 랭킹 (전투력순 ~3000명, 인기도 포함) ════════
     const FRIENDS = new Set(["친구들", "친구둘", "친구삼", "친구넷", "친구닷"]);
-    const SERVER_PAGE = 100;
+    const SERVER_PAGE = 50;
     let serverCache = null;
 
     async function loadServerRanking() {
@@ -505,57 +505,70 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (totalEl) totalEl.textContent = formatNumber(data.length) + "명";
       const moreWrap = document.getElementById("serverMoreWrap");
-      let shown = 0;
+      const PAGE = SERVER_PAGE;   // 페이지당 인원
+      let page = 1;
       let kw = "";
-      let observer = null;
+      let view = data;
 
-      function teardownObserver() { if (observer) { observer.disconnect(); observer = null; } }
-
-      // 무한 스크롤 — 아래로 내리면 다음 100명 자동 이어붙임(append, 전체 재렌더 X)
-      function appendNext(reset) {
-        if (reset) { listEl.innerHTML = ""; shown = 0; }
-        const next = data.slice(shown, shown + SERVER_PAGE);
-        listEl.insertAdjacentHTML("beforeend", next.map(renderServerCard).join(""));
-        shown += next.length;
-        if (shown >= data.length) {
-          teardownObserver();
-          moreWrap.innerHTML = `<div class="rk-meta">전체 ${formatNumber(data.length)}명 표시 완료</div>`;
-        } else {
-          moreWrap.innerHTML = `<div id="serverSentinel" class="rk-meta" style="padding:14px;">${formatNumber(shown)} / ${formatNumber(data.length)} · 아래로 내리면 더 표시 ↓</div>`;
-          observeSentinel();
-        }
-      }
-      function observeSentinel() {
-        teardownObserver();
-        const sentinel = document.getElementById("serverSentinel");
-        if (!sentinel) return;
-        observer = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting && !kw) appendNext(false);
-        }, { rootMargin: "600px" });   // 바닥 도달 전 미리 로드
-        observer.observe(sentinel);
+      // 표시할 페이지 번호 목록 (현재 ±2 + 처음/끝, 사이 생략 …)
+      function pageWindow(cur, total) {
+        const set = new Set([1, total]);
+        for (let i = cur - 2; i <= cur + 2; i++) if (i >= 1 && i <= total) set.add(i);
+        const nums = [...set].sort((a, b) => a - b);
+        const out = [];
+        let prev = 0;
+        nums.forEach(n => { if (n - prev > 1) out.push("…"); out.push(n); prev = n; });
+        return out;
       }
 
-      // 검색 — 전체 3000명 대상, 무한스크롤 끄고 결과만 표시
-      function renderSearch() {
-        teardownObserver();
-        const matches = data.filter(d => String(d.nickname || "").toLowerCase().includes(kw));
-        listEl.innerHTML = matches.length
-          ? `<div class="rk-meta">검색결과 ${formatNumber(matches.length)}명</div>` + matches.slice(0, 500).map(renderServerCard).join("")
-          : createEmptyBox(`"${kw}" 검색 결과가 없습니다.`);
-        moreWrap.innerHTML = matches.length > 500 ? `<div class="rk-meta">상위 500명만 표시</div>` : "";
+      function renderPager(totalPages) {
+        if (totalPages <= 1) return "";
+        const cell = (n) => n === "…"
+          ? `<span class="rk-pg-ellipsis">…</span>`
+          : `<button class="rk-pg-btn${n === page ? " rk-pg-active" : ""}" data-pg="${n}">${n}</button>`;
+        return `
+          <div class="rk-pager">
+            <button class="rk-pg-btn rk-pg-nav" data-pg="${page - 1}" ${page <= 1 ? "disabled" : ""}>‹ 이전</button>
+            ${pageWindow(page, totalPages).map(cell).join("")}
+            <button class="rk-pg-btn rk-pg-nav" data-pg="${page + 1}" ${page >= totalPages ? "disabled" : ""}>다음 ›</button>
+          </div>`;
       }
 
+      function render() {
+        const totalPages = Math.max(1, Math.ceil(view.length / PAGE));
+        if (page > totalPages) page = totalPages;
+        const start = (page - 1) * PAGE;
+        const slice = view.slice(start, start + PAGE);
+        listEl.innerHTML = slice.length
+          ? slice.map(renderServerCard).join("")
+          : createEmptyBox(kw ? `"${kw}" 검색 결과가 없습니다.` : "데이터가 없습니다.");
+        moreWrap.innerHTML = `
+          ${kw ? `<div class="rk-meta" style="margin-bottom:8px;">🔎 "${escapeHtml(kw)}" 검색결과 ${formatNumber(view.length)}명</div>` : ""}
+          ${renderPager(totalPages)}
+          ${slice.length ? `<div class="rk-meta" style="margin-top:10px;">${formatNumber(view.length)}명 중 ${formatNumber(start + 1)}~${formatNumber(start + slice.length)}위 · ${page}/${formatNumber(totalPages)} 페이지</div>` : ""}
+        `;
+        moreWrap.querySelectorAll("[data-pg]").forEach(b => b.addEventListener("click", () => {
+          if (b.hasAttribute("disabled")) return;
+          page = Number(b.dataset.pg);
+          render();
+          const top = document.getElementById("serverContent");
+          if (top) top.scrollIntoView({ behavior: "smooth", block: "start" });
+        }));
+      }
+
+      // 검색 — 전체 대상, 결과를 그대로 페이지네이션
       const input = document.getElementById("serverSearchInput");
       input.addEventListener("input", () => {
         kw = input.value.trim().toLowerCase();
-        if (kw) renderSearch();
-        else appendNext(true);
+        view = kw ? data.filter(d => String(d.nickname || "").toLowerCase().includes(kw)) : data;
+        page = 1;
+        render();
       });
       document.getElementById("serverResetButton").addEventListener("click", () => {
-        input.value = ""; kw = ""; appendNext(true); input.focus();
+        input.value = ""; kw = ""; view = data; page = 1; render(); input.focus();
       });
 
-      appendNext(true);
+      render();
     }
 
     // ════════ 길드별 비교 대시보드 ════════

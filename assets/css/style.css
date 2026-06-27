@@ -1757,8 +1757,8 @@ main { padding: 0 0 48px; }
 .rk-compact-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 14px;
+  padding: 14px 18px;
   background: var(--white);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
@@ -1820,28 +1820,29 @@ main { padding: 0 0 48px; }
 
 /* 카드 내부 요소 */
 .rk-c-rank {
-  width: 40px;
+  width: 54px;
   flex-shrink: 0;
   text-align: center;
 }
 .rk-c-num {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text-soft);
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
 }
 .rk-num-danger { color: var(--amber-dark) !important; }
 .rk-num-challenge { color: #6366f1 !important; }
 
 .rk-c-avatar {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
 }
-.rk-c-avatar .character-avatar { width: 56px; height: 56px; }
+.rk-c-avatar .character-avatar { width: 72px; height: 72px; }
 
 .rk-c-info { flex: 1; min-width: 0; }
 .rk-c-name {
-  font-size: 0.98rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: var(--text);
   line-height: 1.2;
@@ -1866,7 +1867,7 @@ main { padding: 0 0 48px; }
   flex-shrink: 0;
 }
 .rk-c-power {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--amber);
   white-space: nowrap;
@@ -1886,10 +1887,10 @@ main { padding: 0 0 48px; }
 .rk-status-chase { color: #6366f1; background: #eef2ff; border-color: #c7d2fe; }
 
 /* 인라인 스타일 제거용 클래스 */
-.rk-c-medal { font-size: 1.6rem; }
+.rk-c-medal { font-size: 2rem; }
 .rk-power-lg-main { font-size: 1.3rem; font-weight: 900; color: var(--amber); }
 .rk-power-lg-sub { font-size: 1rem; font-weight: 700; color: var(--amber-dark); }
-.rk-power-md-main { font-size: 1.05rem; font-weight: 900; color: var(--amber); }
+.rk-power-md-main { font-size: 1.2rem; font-weight: 900; color: var(--amber); }
 .rk-power-md-sub { font-size: 0.82rem; font-weight: 700; color: var(--amber-dark); }
 .rk-power-sep { font-size: 0.65rem; color: var(--text-faint); margin: 0 3px; font-weight: 400; }
 .rk-c-pop {
@@ -1920,6 +1921,43 @@ main { padding: 0 0 48px; }
 .rk-cut-dist-gap { color: #9ca3af; }
 .rk-cut-dist-wrap { margin-top: 2px; }
 .rk-meta { font-size: 0.85rem; color: var(--text-soft); margin: 12px 0 0; }
+
+/* ── 랭킹 페이지네이션 ── */
+.rk-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+}
+.rk-pg-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.rk-pg-btn:hover:not(:disabled):not(.rk-pg-active) { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--amber-dark); }
+.rk-pg-btn:disabled { opacity: 0.4; cursor: default; }
+.rk-pg-active {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--white);
+  cursor: default;
+}
+.rk-pg-nav { font-weight: 600; color: var(--text-soft); }
+.rk-pg-ellipsis { padding: 0 4px; color: var(--text-faint); align-self: center; }
+@media (max-width: 768px) {
+  .rk-pg-btn { min-width: 34px; height: 34px; padding: 0 7px; font-size: 0.85rem; }
+  .rk-pg-nav { font-size: 0.78rem; }
+}
 .rk-toolbar { margin-top: 20px; }
 .rk-top-btn {
   margin-left: auto;
