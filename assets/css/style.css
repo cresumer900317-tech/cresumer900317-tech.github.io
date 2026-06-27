@@ -166,6 +166,28 @@ main { padding: 0 0 48px; }
   color: var(--amber-dark);
   font-weight: 700;
 }
+.hero-proof-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.hero-proof {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  background: var(--white);
+  border: 1px solid var(--amber-border, #fde68a);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.hero-proof b {
+  color: var(--amber-dark);
+  font-weight: 800;
+}
 .hero-cta-row {
   display: flex;
   gap: 10px;

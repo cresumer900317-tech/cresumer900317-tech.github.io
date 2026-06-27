@@ -82,6 +82,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const top500Count = rows.filter((r) => Number(r.serverRank || 0) > 0 && Number(r.serverRank) <= 500).length;
     const top500Rate = memberCount > 0 ? ((top500Count / memberCount) * 100).toFixed(1) : "0.0";
 
+    // 영입 후크: 스카니아11 서버에서의 친구패밀리 지배력
+    const membersWithRank = rows.filter((r) => Number(r.serverRank || 0) > 0);
+    const top100Count = membersWithRank.filter((r) => Number(r.serverRank) <= 100).length;
+    const bestServerRank = membersWithRank.length ? Math.min(...membersWithRank.map((r) => Number(r.serverRank))) : 0;
+    const guildServerRanks = Object.values(guildRankMap).map((g) => Number(g.serverRank || 0)).filter((n) => n > 0);
+    const bestGuildServerRank = guildServerRanks.length ? Math.min(...guildServerRanks) : 0;
+
     // 길드 배치 기준일: 매달 마지막 수요일 22시
     const cutlineDate = (() => {
       const now = new Date();
@@ -158,6 +165,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h1 class="hero-title">함께 성장하는<br><span class="accent">친구패밀리</span></h1>
           <p class="hero-desc">내 전투력에 맞는 길드로 자동 배정돼요</p>
           <p class="hero-member-count">현재 <strong>${formatNumber(memberCount)}명</strong>이 함께하고 있어요</p>
+          <div class="hero-proof-row">
+            ${bestServerRank ? `<span class="hero-proof">🏆 최고 <b>서버 ${formatNumber(bestServerRank)}위</b></span>` : ""}
+            ${top100Count ? `<span class="hero-proof">서버 TOP 100 <b>${top100Count}명</b></span>` : ""}
+            ${top500Count ? `<span class="hero-proof">서버 TOP 500 <b>${top500Count}명</b></span>` : ""}
+            ${bestGuildServerRank ? `<span class="hero-proof">길드 서버순위 <b>${formatNumber(bestGuildServerRank)}위</b></span>` : ""}
+          </div>
           <div class="hero-cta-row">
             <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">길드 가입 문의</a>
             <a class="cta-btn cta-btn-outline" href="./ranking">랭킹 보기</a>
@@ -482,7 +495,35 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       </div>
-      ` : ""}
+      ` : `
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">친구패밀리 최강 멤버</div>
+              <div class="section-sub">전투력 TOP 5</div>
+            </div>
+            <a class="section-link" href="./ranking">전체 랭킹 →</a>
+          </div>
+          <div class="mini-card-list">
+            ${sortedRanking.slice(0, 5).map((item, i) => `
+              <div class="mini-summary-card">
+                <span class="mini-summary-rank">${i + 1}</span>
+                ${characterAvatarHtml(item)}
+                <div class="mini-summary-main">
+                  <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
+                  <div class="mini-summary-sub">
+                    ${guildBadgeHtml(item.guild)}
+                    <span>${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</span>
+                  </div>
+                </div>
+                <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+      `}
 
       <footer class="site-footer">
         <div class="container footer-inner">
