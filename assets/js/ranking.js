@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? `<span class="rk-power-md-main">${escapeHtml(pt[0])}</span><span class="rk-power-sep">|</span><span class="rk-power-md-sub">${escapeHtml(pt[1])}</span>`
         : `<span class="rk-power-md-main">${escapeHtml(item.powerText || formatCompactPower(item.power))}</span>`;
       return `
-        <div class="${cardCls}"${isFriend ? ' style="outline:2px solid var(--brand,#3182ce);outline-offset:-2px;"' : ''} data-server-row="${escapeHtml(String(item.nickname || "").toLowerCase())}">
+        <a class="${cardCls} rk-card-link" href="./profile?n=${encodeURIComponent(item.nickname || "")}"${isFriend ? ' style="outline:2px solid var(--brand,#3182ce);outline-offset:-2px;"' : ''} data-server-row="${escapeHtml(String(item.nickname || "").toLowerCase())}">
           <div class="rk-c-rank">
             ${rank <= 3 ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>` : `<span class="rk-c-num">${formatNumber(rank)}</span>`}
           </div>
@@ -471,7 +471,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="rk-c-power">${powerHtml}</div>
             <div class="rk-c-server">${item.popularity ? `<span style="color:#e5377b;font-weight:800;">♥ ${formatNumber(item.popularity)}</span>` : "-"}</div>
           </div>
-        </div>
+        </a>
       `;
     }
 
