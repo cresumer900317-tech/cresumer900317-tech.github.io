@@ -599,23 +599,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const maxLevel = Math.max(...guilds.map(g => Number(g.level || 0)), 1);
       const logMax = Math.log10(maxPower) || 1;
 
+      // 전력 균형(평균멤버÷최고멤버)은 어느 길드나 절대값이 낮아(고수+부캐 구조) 변별이 안 됨
+      // → 서버 내 상대 정규화: 가장 균형 잡힌 길드=100, 가장 쏠린 길드=0
+      const ratios = guilds.map(g => {
+        const t = Number(g.topPower || 0), a = Number(g.avgMemberPower || 0);
+        return (t > 0 && a > 0) ? a / t : null;
+      });
+      const validR = ratios.filter(r => r != null);
+      const minR = validR.length ? Math.min(...validR) : 0;
+      const maxR = validR.length ? Math.max(...validR) : 1;
+
       // 건강도 점수: 총전투력30 + 전력균형25 + 인원25 + 레벨20 (균형 데이터 없으면 비례 재분배)
-      const scored = guilds.map(g => {
+      const scored = guilds.map((g, idx) => {
         const power = Number(g.power || 0);
         const members = Number(g.members || 0);
         const level = Number(g.level || 0);
         const avg = members ? power / members : 0;
-        const top = Number(g.topPower || 0);
-        const am = Number(g.avgMemberPower || 0);
-        const hasBal = top > 0 && am > 0;
+        const r = ratios[idx];
+        const hasBal = r != null;
+        const nBal = hasBal ? (maxR > minR ? (r - minR) / (maxR - minR) : 1) : 0;
         const nTotal = power > 0 ? Math.log10(power) / logMax : 0;
         const nMem = Math.min(members / 30, 1);
         const nLv = maxLevel ? level / maxLevel : 0;
-        const nBal = hasBal ? Math.min(am / top, 1) : 0;
         const score = hasBal
           ? (nTotal * 0.30 + nBal * 0.25 + nMem * 0.25 + nLv * 0.20) * 100
           : (nTotal * 0.40 + nMem * 0.33 + nLv * 0.27) * 100;
-        return { g, power, members, level, avg, hasBal, balPct: hasBal ? Math.round(am / top * 100) : null, score: Math.round(score) };
+        return { g, power, members, level, avg, hasBal, balIdx: hasBal ? Math.round(nBal * 100) : null, score: Math.round(score) };
       }).sort((a, b) => b.score - a.score);
 
       const friendCount = scored.filter(s => FRIENDS.has(String(s.g.guildName || "").normalize("NFC"))).length;
@@ -636,7 +645,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="gc-stats">
               <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}</b></div>
               <div class="gc-stat"><span>평균 전투력</span><b>${formatCompactPower(s.avg)}</b></div>
-              <div class="gc-stat"><span>전력 균형</span><b>${s.hasBal ? s.balPct + "%" : "-"}</b></div>
+              <div class="gc-stat"><span>전력 균형</span><b>${s.hasBal ? s.balIdx : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> /100</span></b></div>
               <div class="gc-stat"><span>인원</span><b>${s.members || "-"}명 <span style="font-size:0.7rem;color:#a0aec0;">(${fillPct}%)</span></b></div>
             </div>
           </div>`;
