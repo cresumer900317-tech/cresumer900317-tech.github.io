@@ -241,8 +241,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="mini-card-list">
             ${serverTop.map((item, i) => {
               const nm = item.nickname || "";
-              const guild = (item.guild || "").trim();
-              const hasGuild = guild && guild !== "길드 없음";
               return `
                 <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
                   <span class="mini-summary-rank">${i + 1}</span>
@@ -250,8 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="mini-summary-main">
                     <div class="mini-summary-name">${escapeHtml(nm)}</div>
                     <div class="mini-summary-sub">
-                      ${hasGuild ? guildBadgeHtml(guild) : ""}
-                      <span>Lv ${item.level || "-"}</span>
+                      <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}</span>
                     </div>
                   </div>
                   <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
