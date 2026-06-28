@@ -379,6 +379,19 @@ main { padding: 0 0 48px; }
 .pf-cta-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .pf-note { margin-top: 18px; text-align: center; font-size: 0.78rem; color: var(--text-faint, #9ca3af); }
 
+/* 성장 추이 그래프 */
+.pf-growth-body { display: flex; flex-direction: column; gap: 14px; }
+.pf-growth-empty { background: var(--white); border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; padding: 28px 16px; text-align: center; font-size: 0.82rem; color: var(--text-soft); line-height: 1.6; }
+.pf-chart { background: var(--white); border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; padding: 14px 14px 8px; }
+.pf-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.pf-chart-title { font-size: 0.82rem; font-weight: 800; color: var(--text); }
+.pf-trend { font-size: 0.78rem; font-weight: 800; }
+.pf-trend.up { color: #16a34a; }
+.pf-trend.down { color: #dc2626; }
+.pf-trend.flat { color: var(--text-soft); }
+.pf-chart-svg { display: block; }
+.pf-chart-note { text-align: center; font-size: 0.72rem; color: var(--text-faint, #9ca3af); }
+
 @media (max-width: 600px) {
   .pf-hero { flex-wrap: wrap; }
   .pf-hero-rank { border-left: none; padding-left: 0; width: 100%; text-align: left; display: flex; align-items: baseline; gap: 8px; }
@@ -1902,11 +1915,11 @@ main { padding: 0 0 48px; }
 .rk-num-challenge { color: #6366f1 !important; }
 
 .rk-c-avatar {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   flex-shrink: 0;
 }
-.rk-c-avatar .character-avatar { width: 72px; height: 72px; }
+.rk-c-avatar .character-avatar { width: 100px; height: 100px; }
 
 .rk-c-info { flex: 1; min-width: 0; }
 .rk-c-name {
@@ -2120,8 +2133,8 @@ main { padding: 0 0 48px; }
   .rk-hero-power { font-size: 0.78rem; }
   .rk-power-lg-main { font-size: 0.92rem; }
   .rk-power-lg-sub { font-size: 0.72rem; }
-  .rk-c-avatar { width: 48px; height: 48px; }
-  .rk-c-avatar .character-avatar { width: 48px; height: 48px; }
+  .rk-c-avatar { width: 80px; height: 80px; }
+  .rk-c-avatar .character-avatar { width: 80px; height: 80px; }
 
   /* 컷라인 마커 */
   .rk-cut-card { padding-right: 26px !important; }

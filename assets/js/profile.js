@@ -47,6 +47,97 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // "2026-06-27" → "6/27"
+  function fmtDateShort(d) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || ""));
+    return m ? `${Number(m[2])}/${Number(m[3])}` : String(d || "");
+  }
+
+  // 단순 SVG 라인차트. points:[{label,value}], opts:{id,color,betterIsLow}
+  // betterIsLow=true(순위)면 작은 값이 위(=좋음), false(전투력)면 큰 값이 위.
+  function buildLineChart(points, opts) {
+    const W = 320, H = 120, padX = 28, padTop = 16, padBot = 24;
+    const vals = points.map(p => p.value);
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (min === max) { min -= 1; max += 1; }          // 평평한 선 방지
+    const span = max - min;
+    const innerW = W - padX * 2, innerH = H - padTop - padBot;
+    const n = points.length;
+    const xAt = (i) => padX + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+    const yAt = (v) => {
+      const t = opts.betterIsLow ? (v - min) / span : (max - v) / span;
+      return padTop + t * innerH;                      // t=0 → 위(=좋음)
+    };
+    const coords = points.map((p, i) => [xAt(i), yAt(p.value)]);
+    const linePts = coords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ");
+    const areaPath = `M ${coords[0][0].toFixed(1)} ${(H - padBot).toFixed(1)} `
+      + coords.map(c => `L ${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" ")
+      + ` L ${coords[n - 1][0].toFixed(1)} ${(H - padBot).toFixed(1)} Z`;
+    const dots = coords.map((c, i) => {
+      const last = i === n - 1;
+      return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${last ? 4 : 2.5}" fill="${last ? opts.color : "#fff"}" stroke="${opts.color}" stroke-width="1.6"/>`;
+    }).join("");
+    const xLabels = `
+      <text x="${xAt(0).toFixed(1)}" y="${H - 6}" text-anchor="start" font-size="10" fill="#94a3b8">${escapeHtml(points[0].label)}</text>
+      <text x="${xAt(n - 1).toFixed(1)}" y="${H - 6}" text-anchor="end" font-size="10" fill="#94a3b8">${escapeHtml(points[n - 1].label)}</text>`;
+    return `
+      <svg class="pf-chart-svg" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="성장 추이 그래프">
+        <defs>
+          <linearGradient id="pfgrad-${opts.id}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#pfgrad-${opts.id})"/>
+        <polyline points="${linePts}" fill="none" stroke="${opts.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${dots}
+        ${xLabels}
+      </svg>`;
+  }
+
+  // 캐릭터 이력을 받아 #pfGrowth 안에 그래프 렌더 (비동기)
+  function renderGrowth(name) {
+    getServerRankingHistory(name).then(hist => {
+      const body = document.querySelector("#pfGrowth .pf-growth-body");
+      if (!body) return;
+      const rankPts = hist.filter(h => Number(h.serverRank) > 0).map(h => ({ label: fmtDateShort(h.date), value: Number(h.serverRank) }));
+      const powerPts = hist.filter(h => Number(h.power) > 0).map(h => ({ label: fmtDateShort(h.date), value: Number(h.power) }));
+
+      if (rankPts.length < 2 && powerPts.length < 2) {
+        body.innerHTML = `<div class="pf-growth-empty">📈 아직 추이를 그릴 데이터가 부족해요.<br>매일 자동으로 쌓여서 며칠 뒤면 성장 그래프가 나타나요.</div>`;
+        return;
+      }
+
+      let html = "";
+      if (rankPts.length >= 2) {
+        const f = rankPts[0].value, l = rankPts[rankPts.length - 1].value;
+        const diff = f - l;   // +면 순위 상승(숫자 작아짐)
+        const trend = diff > 0 ? `<span class="pf-trend up">▲ ${formatNumber(diff)}계단 상승</span>`
+                    : diff < 0 ? `<span class="pf-trend down">▼ ${formatNumber(-diff)}계단 하락</span>`
+                    : `<span class="pf-trend flat">— 변동 없음</span>`;
+        html += `
+          <div class="pf-chart">
+            <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
+            ${buildLineChart(rankPts, { id: "rank", color: "#2563eb", betterIsLow: true })}
+          </div>`;
+      }
+      if (powerPts.length >= 2) {
+        const f = powerPts[0].value, l = powerPts[powerPts.length - 1].value;
+        const d = l - f;
+        const trend = d > 0 ? `<span class="pf-trend up">▲ ${formatCompactPower(d)} 성장</span>`
+                    : d < 0 ? `<span class="pf-trend down">▼ ${formatCompactPower(-d)} 감소</span>`
+                    : `<span class="pf-trend flat">— 변동 없음</span>`;
+        html += `
+          <div class="pf-chart">
+            <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
+            ${buildLineChart(powerPts, { id: "power", color: "#f59e0b", betterIsLow: false })}
+          </div>`;
+      }
+      html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
+      body.innerHTML = html;
+    });
+  }
+
   // ── 검색 전(빈 상태) ──
   if (!query) {
     main.innerHTML = searchBarHtml("") + `
@@ -195,9 +286,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       `}
 
-      <div class="pf-note">📈 성장 그래프는 일별 데이터가 쌓이는 대로 추가될 예정이에요.</div>
+      <div class="pf-section" id="pfGrowth">
+        <div class="pf-section-head">
+          <div class="pf-section-title">성장 추이</div>
+          <div class="pf-section-sub">일별 자동 수집</div>
+        </div>
+        <div class="pf-growth-body"><div class="loading-box" style="margin:0;">성장 데이터를 불러오는 중…</div></div>
+      </div>
     </div>
   ` + footerHtml();
 
   bindSearch();
+  renderGrowth(me.nickname);
 });

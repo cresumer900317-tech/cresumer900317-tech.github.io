@@ -30,6 +30,17 @@ const getGuildsData = () => fetchLocalJson("members.json");
 const getNoticeData = () => fetchLocalJson("notices.json");
 const getServerRanking = () => fetchLocalJson("server-ranking.json");
 const getGuildRanks = () => fetchLocalJson("guild-ranks.json");
+// 캐릭터 일별 서버랭킹 이력 (프로필 성장 그래프용). 데이터 없거나 실패 시 빈 배열.
+const getServerRankingHistory = async (name) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/server-ranking/history?name=${encodeURIComponent(name)}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+};
 const getTipsData = async () => ({ posts: [] });
 
 function escapeHtml(value) {
