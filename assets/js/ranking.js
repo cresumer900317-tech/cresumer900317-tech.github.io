@@ -592,34 +592,52 @@ document.addEventListener("DOMContentLoaded", async () => {
       try { guilds = await loadServerGuilds(); }
       catch (e) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 데이터를 불러오지 못했습니다.")}</div>`; return; }
 
-      guilds = (Array.isArray(guilds) ? guilds : [])
-        .filter(g => g && g.guildName)
-        .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0));
+      guilds = (Array.isArray(guilds) ? guilds : []).filter(g => g && g.guildName);
       if (!guilds.length) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("스카니아11 길드 데이터가 아직 없습니다.")}</div>`; return; }
 
       const maxPower = Math.max(...guilds.map(g => Number(g.power || 0)), 1);
-      const friendCount = guilds.filter(g => FRIENDS.has(String(g.guildName || "").normalize("NFC"))).length;
+      const maxLevel = Math.max(...guilds.map(g => Number(g.level || 0)), 1);
+      const logMax = Math.log10(maxPower) || 1;
 
-      const cardsHtml = guilds.map(g => {
+      // 건강도 점수: 총전투력30 + 전력균형25 + 인원25 + 레벨20 (균형 데이터 없으면 비례 재분배)
+      const scored = guilds.map(g => {
         const power = Number(g.power || 0);
         const members = Number(g.members || 0);
+        const level = Number(g.level || 0);
         const avg = members ? power / members : 0;
+        const top = Number(g.topPower || 0);
+        const am = Number(g.avgMemberPower || 0);
+        const hasBal = top > 0 && am > 0;
+        const nTotal = power > 0 ? Math.log10(power) / logMax : 0;
+        const nMem = Math.min(members / 30, 1);
+        const nLv = maxLevel ? level / maxLevel : 0;
+        const nBal = hasBal ? Math.min(am / top, 1) : 0;
+        const score = hasBal
+          ? (nTotal * 0.30 + nBal * 0.25 + nMem * 0.25 + nLv * 0.20) * 100
+          : (nTotal * 0.40 + nMem * 0.33 + nLv * 0.27) * 100;
+        return { g, power, members, level, avg, hasBal, balPct: hasBal ? Math.round(am / top * 100) : null, score: Math.round(score) };
+      }).sort((a, b) => b.score - a.score);
+
+      const friendCount = scored.filter(s => FRIENDS.has(String(s.g.guildName || "").normalize("NFC"))).length;
+      const scoreColor = (s) => s >= 90 ? "#16a34a" : s >= 75 ? "#f59e0b" : s >= 60 ? "#fb923c" : "#94a3b8";
+
+      const cardsHtml = scored.map(s => {
+        const g = s.g;
         const isFriend = FRIENDS.has(String(g.guildName || "").normalize("NFC"));
-        const pct = Math.max(4, Math.round(power / maxPower * 100));
-        const fillPct = Math.min(100, Math.round(members / 30 * 100)); // 정원(30) 충족률 = 활성 지표
+        const fillPct = Math.min(100, Math.round(s.members / 30 * 100));
         return `
           <div class="gc-card${isFriend ? " gc-card-friend" : ""}">
             <div class="gc-head">
-              <span class="gc-rank">${g.guildRank ? formatNumber(g.guildRank) + "위" : "-"}</span>
+              <span class="gc-score" style="background:${scoreColor(s.score)};">${s.score}</span>
               <span class="gc-name">${escapeHtml(g.guildName)}${isFriend ? ` <span class="gc-fr">친구패밀리</span>` : ""}</span>
-              <span class="gc-srank">Lv ${g.level || "-"}</span>
+              <span class="gc-srank">서버 ${g.guildRank ? formatNumber(g.guildRank) + "위" : "-"} · Lv ${g.level || "-"}</span>
             </div>
-            <div class="gc-bar"><div class="gc-bar-fill" style="width:${pct}%"></div></div>
+            <div class="gc-bar"><div class="gc-bar-fill" style="width:${Math.max(4, s.score)}%"></div></div>
             <div class="gc-stats">
-              <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(power)}</b></div>
-              <div class="gc-stat"><span>평균 전투력</span><b>${formatCompactPower(avg)}</b></div>
-              <div class="gc-stat"><span>인원</span><b>${members || "-"}명 <span style="font-size:0.7rem;color:#a0aec0;">(${fillPct}%)</span></b></div>
-              <div class="gc-stat"><span>길드 레벨</span><b>Lv ${g.level || "-"}</b></div>
+              <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}</b></div>
+              <div class="gc-stat"><span>평균 전투력</span><b>${formatCompactPower(s.avg)}</b></div>
+              <div class="gc-stat"><span>전력 균형</span><b>${s.hasBal ? s.balPct + "%" : "-"}</b></div>
+              <div class="gc-stat"><span>인원</span><b>${s.members || "-"}명 <span style="font-size:0.7rem;color:#a0aec0;">(${fillPct}%)</span></b></div>
             </div>
           </div>`;
       }).join("");
@@ -629,18 +647,18 @@ document.addEventListener("DOMContentLoaded", async () => {
           .gc-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 12px rgba(0,0,0,0.04);}
           .gc-card-friend{border-color:#fcd34d;background:linear-gradient(135deg,#fffbeb,#fff);}
           .gc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-          .gc-rank{font-weight:900;font-size:1.05rem;color:#b45309;min-width:42px;}
+          .gc-score{min-width:40px;height:40px;padding:0 9px;border-radius:11px;color:#fff;font-weight:900;font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
           .gc-name{font-weight:800;font-size:1rem;color:#2d3748;}
           .gc-fr{font-size:0.66rem;font-weight:800;color:#b45309;background:#fef3c7;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:middle;}
-          .gc-srank{margin-left:auto;font-size:0.82rem;color:#718096;font-weight:700;}
-          .gc-bar{height:10px;background:#edf2f7;border-radius:6px;overflow:hidden;margin-bottom:12px;}
+          .gc-srank{margin-left:auto;font-size:0.8rem;color:#718096;font-weight:700;text-align:right;}
+          .gc-bar{height:8px;background:#edf2f7;border-radius:6px;overflow:hidden;margin-bottom:12px;}
           .gc-bar-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:6px;}
           .gc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;}
           .gc-stat{display:flex;flex-direction:column;}
           .gc-stat span{font-size:0.72rem;color:#a0aec0;}
           .gc-stat b{font-size:0.95rem;color:#2d3748;font-weight:800;margin-top:2px;}
         </style>
-        <div class="rk-meta">스카니아11 서버 길드 건강도 · 서버 길드순위 TOP ${guilds.length}${friendCount ? ` · 친구패밀리 ${friendCount}개 입성` : ""}</div>
+        <div class="rk-meta">스카니아11 길드 건강도 · 점수순(총전투력·전력균형·인원·레벨)${friendCount ? ` · 친구패밀리 ${friendCount}개 입성` : ""}</div>
         ${cardsHtml}
       `;
     }
