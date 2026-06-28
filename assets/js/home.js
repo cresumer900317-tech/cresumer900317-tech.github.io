@@ -234,22 +234,23 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="section-head">
             <div>
               <div class="section-title">스카니아11 서버 전체 랭킹</div>
-              <div class="section-sub">전투력 TOP 10 · 우리 길드원 강조</div>
+              <div class="section-sub">전투력 TOP 10</div>
             </div>
             <a class="section-link" href="./ranking">전체 랭킹 →</a>
           </div>
           <div class="mini-card-list">
             ${serverTop.map((item, i) => {
               const nm = item.nickname || "";
-              const isFriend = FRIENDS.has(normalizeGuildName(item.guild || ""));
+              const guild = (item.guild || "").trim();
+              const hasGuild = guild && guild !== "길드 없음";
               return `
-                <a class="mini-summary-card${isFriend ? " mini-summary-friend" : ""}" href="./profile?n=${encodeURIComponent(nm)}">
+                <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
                   <span class="mini-summary-rank">${i + 1}</span>
                   ${characterAvatarHtml({ name: nm })}
                   <div class="mini-summary-main">
-                    <div class="mini-summary-name">${escapeHtml(nm)}${isFriend ? ` <span class="mini-fr-tag">친구패밀리</span>` : ""}</div>
+                    <div class="mini-summary-name">${escapeHtml(nm)}</div>
                     <div class="mini-summary-sub">
-                      ${guildBadgeHtml(item.guild || "")}
+                      ${hasGuild ? guildBadgeHtml(guild) : ""}
                       <span>Lv ${item.level || "-"}</span>
                     </div>
                   </div>
@@ -260,39 +261,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
       ` : ""}
-
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">친구패밀리 현황</div>
-              <div class="section-sub">운영 길드 통합 지표 · 스카니아11</div>
-            </div>
-          </div>
-          <div class="kpi-grid kpi-grid-overview">
-            <div class="kpi-card">
-              <div class="kpi-label">총 길드</div>
-              <div class="kpi-value">${guildCount}개</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">총 인원</div>
-              <div class="kpi-value dark">${formatNumber(memberCount)}명</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">평균 전투력</div>
-              <div class="kpi-value">${formatCompactPower(avgPower)}</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label">TOP 500</div>
-              <div class="kpi-value dark">${formatNumber(top500Count)}명 <span class="kpi-sub">(${top500Rate}%)</span></div>
-            </div>
-            <div class="kpi-card kpi-card-link" onclick="location.href='./weekly'">
-              <div class="kpi-label">이달 성장량</div>
-              <div class="kpi-value">${totalMonthlyGrowth > 0 ? "+" + formatCompactPower(totalMonthlyGrowth) : "-"}</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div class="section-block">
         <div class="container">
@@ -464,116 +432,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>`;
       })()}
 
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">길드별 현황</div>
-              <div class="section-sub">카드를 클릭하면 상세 정보를 볼 수 있어요</div>
-            </div>
-          </div>
-          <div class="family-board-grid">
-            ${guilds.map((guild) => {
-              const list = grouped[guild] || [];
-              const totalPower = list.reduce((s, r) => s + Number(r.power || 0), 0);
-              const isFull = list.length >= 30;
-              const guildLevel = list.length > 0 ? (list[0].guildLevel || 0) : 0;
-              return `
-                <div class="guild-board-card ${isFull ? "full" : "active"}" data-guild="${escapeHtml(guild)}">
-                  <div class="guild-board-name">
-                    ${escapeHtml(guild)}
-                    ${guildLevel ? `<span class="guild-board-lv">Lv.${String(guildLevel).padStart(2, "0")}</span>` : ""}
-                  </div>
-                  <div class="guild-board-stat">
-                    <div class="guild-board-stat-label">인원</div>
-                    <div class="guild-board-stat-val accent">${formatNumber(list.length)}명</div>
-                  </div>
-                  <div class="guild-board-stat">
-                    <div class="guild-board-stat-label">합산 전투력</div>
-                    <div class="guild-board-stat-val">${formatCompactPower(totalPower)}</div>
-                  </div>
-                  ${guildRankMap[guild] && guildRankMap[guild].serverRank ? `
-                  <div class="guild-board-stat">
-                    <div class="guild-board-stat-label">서버 순위</div>
-                    <div class="guild-board-stat-val accent">🏆 ${formatNumber(guildRankMap[guild].serverRank)}위</div>
-                  </div>` : ""}
-                  ${guildDesc[guild] ? `<div class="guild-board-desc">${guildDesc[guild]}</div>` : ""}
-                  <div class="guild-board-badge ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "모집 중"}</div>
-                  <div class="guild-board-more">자세히 보기 →</div>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        </div>
-      </div>
-
-      <div class="section-block section-cutline">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">TOP 30 길드 배치 현황</div>
-              <div class="section-sub">26위~35위 순위 흐름</div>
-            </div>
-            <a class="section-link" href="./ranking">전체 랭킹 →</a>
-          </div>
-          <div class="cutline-date-bar">
-            <div class="cutline-date-left">
-              <span class="cutline-date-label">다음 배치 기준일</span>
-              <span class="cutline-date-value">${cutlineDateStr}</span>
-            </div>
-            <div class="cutline-timer-wrap">
-              <span class="cutline-dday ${cutlineDDay !== null && cutlineDDay <= 3 ? 'cutline-dday-urgent' : ''}">${cutlineDDayText}</span>
-              <span class="cutline-countdown" id="cutlineCountdown"></span>
-            </div>
-          </div>
-          <div class="cutline-log">
-            ${(() => {
-              const zone = sortedRanking.slice(25, 35);
-              const cutItem = sortedRanking[29];
-              const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
-
-              return zone.map((item, i) => {
-                const rank = 26 + i;
-                const isCut = rank === 30;
-                const isAbove = rank <= 30;
-                const diff = Number(item.power || 0) - cutPower;
-                const rankDiff = item.serverRankDiff || 0;
-                const dispPower = getPowerDisplay(item);
-
-                let statusClass = isAbove ? "cl-safe" : "cl-neutral";
-                if (rank >= 28 && rank <= 30) statusClass = "cl-watch";
-
-                let trendHtml = "";
-                if (rankDiff > 0) trendHtml = `<span class="cl-up">▲${formatNumber(rankDiff)}</span>`;
-                else if (rankDiff < 0) trendHtml = `<span class="cl-down">▼${formatNumber(Math.abs(rankDiff))}</span>`;
-                else trendHtml = `<span class="cl-flat">—</span>`;
-
-                let distHtml = "";
-                if (rank === 30) {
-                  distHtml = `<span class="cl-cut-label">기준</span>`;
-                } else if (rank > 30) {
-                  distHtml = `<span class="cl-dist-gap">-${formatCompactPower(Math.abs(diff))}</span>`;
-                } else {
-                  distHtml = `<span class="cl-dist-safe">+${formatCompactPower(Math.abs(diff))}</span>`;
-                }
-
-                return `
-                  ${isCut ? `<div class="cl-cutline-bar"><span>TOP 30 배치 라인</span></div>` : ""}
-                  <div class="cl-row ${statusClass}${isCut ? " cl-cut-row" : ""}">
-                    <span class="cl-rank">${rank}</span>
-                    <span class="cl-name">${escapeHtml(item.name || "-")}</span>
-                    <span class="cl-guild">${guildBadgeHtml(item.guild || "")}</span>
-                    <span class="cl-power">${escapeHtml(dispPower)}</span>
-                    <span class="cl-trend">${trendHtml}</span>
-                    <span class="cl-dist">${distHtml}</span>
-                  </div>
-                  ${isCut ? `<div class="cl-cutline-bar cl-below-bar"><span>── 31위부터 ──</span></div>` : ""}
-                `;
-              }).join("");
-            })()}
-          </div>
-        </div>
-      </div>
+      ${"" /* 홈에서 제거(2026-06-28): 길드별 현황(친구패밀리 5길드)·TOP30 배치 현황. 스카니아11 서버 길드 랭킹은 백엔드 서버길드 크롤 추가 후 신설 예정 */}
 
       ${(growthTop.length || riseTop.length) ? `
       <div class="section-block">
@@ -627,35 +486,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       </div>
-      ` : `
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">친구패밀리 최강 멤버</div>
-              <div class="section-sub">전투력 TOP 5</div>
-            </div>
-            <a class="section-link" href="./ranking">전체 랭킹 →</a>
-          </div>
-          <div class="mini-card-list">
-            ${sortedRanking.slice(0, 5).map((item, i) => `
-              <div class="mini-summary-card">
-                <span class="mini-summary-rank">${i + 1}</span>
-                ${characterAvatarHtml(item)}
-                <div class="mini-summary-main">
-                  <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
-                  <div class="mini-summary-sub">
-                    ${guildBadgeHtml(item.guild)}
-                    <span>${item.serverRank ? "서버 " + formatNumber(item.serverRank) + "위" : "-"}</span>
-                  </div>
-                </div>
-                <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      </div>
-      `}
+      ` : ""}
 
       <footer class="site-footer">
         <div class="container footer-inner">
@@ -669,110 +500,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </footer>
 
-      <div id="guildModal" class="modal-backdrop" style="display:none;">
-        <div class="modal-box">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
-              <div>
-                <div class="modal-title" id="modalGuildName"></div>
-                <div class="modal-sub" id="modalGuildSub"></div>
-              </div>
-            </div>
-            <button class="modal-close" id="modalClose">✕</button>
-          </div>
-          <div class="modal-stats" id="modalStats"></div>
-          <div class="modal-section-title">전체 길드원</div>
-          <div id="modalTop5" style="max-height:400px; overflow-y:auto; padding:0 4px 4px;"></div>
-        </div>
-      </div>
     `;
-
-    document.querySelectorAll(".guild-board-card[data-guild]").forEach((card) => {
-      card.addEventListener("click", () => {
-        const guild = card.dataset.guild;
-        const list = grouped[guild] || [];
-        const sorted = [...list].sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
-        const avg = list.length
-          ? Math.round(list.reduce((s, r) => s + Number(r.power || 0), 0) / list.length)
-          : 0;
-        const ranks = list.filter((r) => r.serverRank).map((r) => Number(r.serverRank)).sort((a, b) => a - b);
-        const bestRank = ranks[0] || "-";
-        const worstRank = ranks[ranks.length - 1] || "-";
-        const avgPop = list.length
-          ? Math.round(list.reduce((s, r) => s + Number(r.popularity || 0), 0) / list.length)
-          : 0;
-
-        document.getElementById("modalGuildName").textContent = guild;
-        document.getElementById("modalGuildSub").textContent = `총 ${list.length}명 · 메이플키우기 스카니아 11서버`;
-        document.getElementById("modalStats").innerHTML = `
-          <div class="modal-stat-item">
-            <div class="modal-stat-label">평균 전투력</div>
-            <div class="modal-stat-value accent">${formatCompactPower(avg)}</div>
-          </div>
-          <div class="modal-stat-item">
-            <div class="modal-stat-label">최고 서버 순위</div>
-            <div class="modal-stat-value">${bestRank ? formatNumber(bestRank) + "위" : "-"}</div>
-          </div>
-          <div class="modal-stat-item">
-            <div class="modal-stat-label">서버 순위 범위</div>
-            <div class="modal-stat-value">${bestRank && worstRank ? formatNumber(bestRank) + " ~ " + formatNumber(worstRank) + "위" : "-"}</div>
-          </div>
-          <div class="modal-stat-item">
-            <div class="modal-stat-label">평균 인기도</div>
-            <div class="modal-stat-value">${formatNumber(avgPop)}</div>
-          </div>
-        `;
-
-        document.getElementById("modalTop5").innerHTML = sorted.map((item, i) => {
-          const displayPower = getPowerDisplay(item);
-          return `
-            <div class="modal-member-row">
-              <span class="modal-member-rank">${i + 1}</span>
-              ${characterAvatarHtml(item)}
-              <div class="modal-member-info">
-                <div class="modal-member-name">${escapeHtml(item.name || "-")}</div>
-                <div class="modal-member-meta">${escapeHtml(item.job || "-")} · Lv ${item.level || "-"}</div>
-              </div>
-              <div class="modal-member-power">${escapeHtml(displayPower)}</div>
-            </div>
-          `;
-        }).join("");
-
-        document.getElementById("guildModal").style.display = "flex";
-        document.body.style.overflow = "hidden";
-      });
-    });
-
-    document.getElementById("modalClose").addEventListener("click", closeModal);
-    document.getElementById("guildModal").addEventListener("click", (e) => {
-      if (e.target === document.getElementById("guildModal")) closeModal();
-    });
-
-    function closeModal() {
-      document.getElementById("guildModal").style.display = "none";
-      document.body.style.overflow = "";
-    }
-
-    // 실시간 카운트다운
-    if (cutlineDate) {
-      const countdownEl = document.getElementById("cutlineCountdown");
-      function updateCountdown() {
-        const now = new Date();
-        const diff = cutlineDate - now;
-        if (diff <= 0) {
-          countdownEl.textContent = "배치 진행 중";
-          return;
-        }
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((diff % (1000 * 60)) / 1000);
-        const pad = (n) => String(n).padStart(2, "0");
-        countdownEl.textContent = `${d}일 ${pad(h)}:${pad(m)}:${pad(s)}`;
-      }
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    }
 
   } catch (error) {
     console.error(error);
