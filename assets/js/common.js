@@ -130,16 +130,34 @@ function renderShell() {
   // 공지/팁은 로그인 필요
   if (!requireLogin(page)) return;
 
+  // IA: 서버(랭킹·전적검색) / 커뮤니티(공지·팁·자유) / 길드(길드원·월간성장·라이벌·포인트)
+  const inGroup = (arr) => (arr.includes(page) ? "is-active" : "");
   const links = `
     ${navLink("./", "home", "홈", page)}
-    ${navLink("./ranking", "ranking", "랭킹", page)}
-    ${navLink("./members", "members", "길드원", page)}
-    ${navLink("./weekly", "weekly", "월간성장", page)}
-    ${navLink("./notice", "notice", "공지", page)}
-    ${navLink("./tips", "tips", "팁", page)}
-    ${navLink("./free", "free", "자유", page)}
-    ${navLink("./rivals", "rivals", "라이벌", page)}
-    ${navLink("./points", "points", "포인트", page)}
+    <div class="nav-group ${inGroup(["ranking", "profile"])}">
+      <button class="nav-group-label" type="button">서버<span class="nav-caret">▾</span></button>
+      <div class="nav-group-menu">
+        ${navLink("./ranking", "ranking", "랭킹", page)}
+        ${navLink("./profile", "profile", "전적검색", page)}
+      </div>
+    </div>
+    <div class="nav-group ${inGroup(["notice", "tips", "free"])}">
+      <button class="nav-group-label" type="button">커뮤니티<span class="nav-caret">▾</span></button>
+      <div class="nav-group-menu">
+        ${navLink("./notice", "notice", "공지", page)}
+        ${navLink("./tips", "tips", "팁", page)}
+        ${navLink("./free", "free", "자유", page)}
+      </div>
+    </div>
+    <div class="nav-group ${inGroup(["members", "weekly", "rivals", "points"])}">
+      <button class="nav-group-label" type="button">길드<span class="nav-caret">▾</span></button>
+      <div class="nav-group-menu">
+        ${navLink("./members", "members", "길드원", page)}
+        ${navLink("./weekly", "weekly", "월간성장", page)}
+        ${navLink("./rivals", "rivals", "라이벌", page)}
+        ${navLink("./points", "points", "포인트", page)}
+      </div>
+    </div>
     ${navLink("./download", "download", "매크로", page)}
   `;
 
@@ -168,10 +186,10 @@ function renderShell() {
     <header class="site-header-bar">
       <div class="container site-header-inner">
         <a class="brand-box" href="./">
-          <span class="brand-emoji">🛡️</span>
+          <span class="brand-emoji">🍁</span>
           <div>
-            <div class="brand-title">친구패밀리</div>
-            <div class="brand-sub">Guild Portal</div>
+            <div class="brand-title">스카니아 라운지</div>
+            <div class="brand-sub">메이플키우기 11서버</div>
           </div>
         </a>
         <nav class="nav-menu">${links}</nav>
