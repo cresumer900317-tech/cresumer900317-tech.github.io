@@ -182,24 +182,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
       ` : `
-      <div class="home-hero">
+      <div class="home-hero home-hero-portal">
         <div class="container hero-inner">
           <div class="hero-badge">
             <span class="hero-dot"></span>
-            메이플키우기 · 스카니아 11서버
+            메이플키우기 · 스카니아 11서버 포털
           </div>
-          <h1 class="hero-title">함께 성장하는<br><span class="accent">친구패밀리</span></h1>
-          <p class="hero-desc">내 전투력에 맞는 길드로 자동 배정돼요</p>
-          <p class="hero-member-count">현재 <strong>${formatNumber(memberCount)}명</strong>이 함께하고 있어요</p>
+          <h1 class="hero-title">스카니아11, <span class="accent">한눈에</span></h1>
+          <p class="hero-desc">캐릭터명만 넣으면 전투력 · 서버순위 · 인기도까지 — 가입 없이 바로.</p>
+          <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+            <span class="hero-search-icon">🔎</span>
+            <input class="hero-search-input" name="q" type="text" placeholder="내 캐릭터명으로 전적 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
+            <button class="hero-search-btn" type="submit">전적검색</button>
+          </form>
           <div class="hero-proof-row">
-            ${bestServerRank ? `<span class="hero-proof">🏆 최고 <b>서버 ${formatNumber(bestServerRank)}위</b></span>` : ""}
-            ${top100Count ? `<span class="hero-proof">서버 TOP 100 <b>${top100Count}명</b></span>` : ""}
+            <span class="hero-proof hero-proof-guild">🛡️ 운영 길드 <b>친구패밀리</b></span>
+            ${bestServerRank ? `<span class="hero-proof">최고 <b>서버 ${formatNumber(bestServerRank)}위</b></span>` : ""}
             ${top500Count ? `<span class="hero-proof">서버 TOP 500 <b>${top500Count}명</b></span>` : ""}
             ${bestGuildServerRank ? `<span class="hero-proof">길드 서버순위 <b>${formatNumber(bestGuildServerRank)}위</b></span>` : ""}
           </div>
           <div class="hero-cta-row">
-            <a class="cta-btn" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">길드 가입 문의</a>
-            <a class="cta-btn cta-btn-outline" href="./ranking">랭킹 보기</a>
+            <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
+            <a class="cta-btn cta-btn-outline" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">친구패밀리 길드 가입</a>
           </div>
         </div>
       </div>
@@ -221,8 +225,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="section-head">
             <div>
-              <div class="section-title">패밀리 현황</div>
-              <div class="section-sub">전체 길드 통합 지표</div>
+              <div class="section-title">친구패밀리 현황</div>
+              <div class="section-sub">운영 길드 통합 지표 · 스카니아11</div>
             </div>
           </div>
           <div class="kpi-grid kpi-grid-overview">
@@ -615,11 +619,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <footer class="site-footer">
         <div class="container footer-inner">
-          <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
+          <div class="footer-brand">스카니아 라운지 · 메이플키우기 11서버</div>
           <div class="footer-links">
-            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
+            <a href="./profile" class="footer-link">전적검색</a>
+            <a href="./ranking" class="footer-link">서버 랭킹</a>
+            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">친구패밀리 가입 문의</a>
           </div>
-          <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+          <div class="footer-copy">&copy; ${new Date().getFullYear()} 스카니아 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>
       </footer>
 
