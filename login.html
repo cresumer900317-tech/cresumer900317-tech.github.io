@@ -233,8 +233,8 @@
       <div class="auth-body">
         <div class="auth-form">
           <div class="notice-box">
-            <div class="notice-title">📌 길드원 전용 서비스</div>
-            실제 길드원만 가입 가능하며, 운영진 승인 후 이용할 수 있습니다.
+            <div class="notice-title">📌 스카니아11 누구나 가입</div>
+            실제 스카니아11 서버 캐릭터면 바로 가입할 수 있어요. 친구들 길드원은 길드 기능도 함께 열려요. (본인 캐릭터만!)
           </div>
 
           <div class="form-group">
@@ -259,22 +259,22 @@
           </div>
 
           <div class="info-box">
-            <strong>📧 이메일 / 📅 생년월일</strong>은 비밀번호 분실 시 본인 확인에 사용됩니다. 정확한 정보를 입력해주세요.
+            <strong>📧 이메일 / 📅 생년월일 (선택)</strong> — 비밀번호 분실 시 본인 확인용이에요. 입력해두면 안전해요.
           </div>
 
           <div class="form-group">
-            <label><span class="icon">📧</span> 이메일</label>
+            <label><span class="icon">📧</span> 이메일 <span style="color:#9ca3af;font-weight:400;">(선택)</span></label>
             <input type="email" id="regEmail" placeholder="example@email.com" />
           </div>
 
           <div class="form-group">
-            <label><span class="icon">📅</span> 생년월일</label>
+            <label><span class="icon">📅</span> 생년월일 <span style="color:#9ca3af;font-weight:400;">(선택)</span></label>
             <input type="text" id="regBirth" placeholder="예: 1990-03-17" maxlength="10"
                    oninput="formatBirthInput(this)" />
           </div>
 
           <div class="auth-msg" id="registerMsg"></div>
-          <button class="submit-btn" onclick="doRegister()">가입 요청하기</button>
+          <button class="submit-btn" onclick="doRegister()">가입하기</button>
         </div>
       </div>
     </div>
@@ -493,11 +493,9 @@ async function doRegister() {
   if (!pw) { showMsg("registerMsg", "비밀번호를 입력해주세요"); return; }
   if (pw.length < 4) { showMsg("registerMsg", "비밀번호는 4자 이상이어야 합니다"); return; }
   if (pw !== pw2) { showMsg("registerMsg", "비밀번호가 일치하지 않습니다"); return; }
-  if (!email) { showMsg("registerMsg", "이메일을 입력해주세요"); return; }
-  if (!birthdate) { showMsg("registerMsg", "생년월일을 선택해주세요"); return; }
 
   const btn = document.querySelector("#registerForm .submit-btn");
-  btn.disabled = true; btn.textContent = "요청 중...";
+  btn.disabled = true; btn.textContent = "가입 중...";
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -505,14 +503,22 @@ async function doRegister() {
       body: JSON.stringify({ character_name: name, password: pw, email, birthdate }),
     });
     const data = await res.json();
-    if (!res.ok) { showMsg("registerMsg", data.detail || "가입 요청에 실패했습니다"); return; }
+    if (!res.ok) { showMsg("registerMsg", data.detail || "가입에 실패했습니다"); return; }
 
-    showMsg("registerMsg", "가입 요청이 완료되었습니다. 운영진 승인 후 이용할 수 있습니다.", false);
+    // 즉시 로그인 (백엔드가 토큰+유저 반환)
+    if (data.token && data.user) {
+      sessionStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("token", data.token);
+      const redirect = new URLSearchParams(location.search).get("redirect") || "./";
+      location.href = redirect;
+      return;
+    }
+    showMsg("registerMsg", data.message || "가입 완료!", false);
     ["regName","regPw","regPw2","regEmail","regBirth"].forEach(id => document.getElementById(id).value = "");
   } catch {
     showMsg("registerMsg", "서버에 연결할 수 없습니다");
   } finally {
-    btn.disabled = false; btn.textContent = "가입 요청하기";
+    btn.disabled = false; btn.textContent = "가입하기";
   }
 }
 

@@ -223,8 +223,8 @@ document.addEventListener("DOMContentLoaded", async () => {
               </div>
             </div>
             <form id="heroLoginForm" class="hero-login-card">
-              <div class="hero-login-title">길드원 로그인</div>
-              <div class="hero-login-desc">로그인하면 내 순위·성장·포인트를 한눈에.</div>
+              <div class="hero-login-title">로그인 / 가입</div>
+              <div class="hero-login-desc">스카니아11 캐릭터면 가입하고 출석·포인트·커뮤니티를 즐겨보세요.</div>
               <input id="heroLoginName" class="hero-login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
               <input id="heroLoginPw" class="hero-login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
               <button type="submit" class="cta-btn hero-login-btn">로그인</button>
