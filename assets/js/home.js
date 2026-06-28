@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="mini-card-list rank-scroll">
                 ${serverTop.map((item, i) => {
                   const nm = item.nickname || "";
-                  const gn = normalizeGuildName(item.guild || "");
+                  const gn = (item.guild || "").normalize("NFC").trim();
                   const hasGuild = gn && gn !== "길드 없음";
                   const guildChip = hasGuild
                     ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
