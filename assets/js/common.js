@@ -31,6 +31,7 @@ const getNoticeData = () => fetchLocalJson("notices.json");
 const getServerRanking = () => fetchLocalJson("server-ranking.json");
 const getGuildRanks = () => fetchLocalJson("guild-ranks.json");
 // 캐릭터 일별 서버랭킹 이력 (프로필 성장 그래프용). 데이터 없거나 실패 시 빈 배열.
+// (getTipsData 죽은 함수 제거: tips.js가 직접 fetch 사용 — 2026-06-28 클린업)
 const getServerRankingHistory = async (name) => {
   try {
     const res = await fetch(`${API_BASE}/api/server-ranking/history?name=${encodeURIComponent(name)}`, { cache: "no-store" });
@@ -41,7 +42,6 @@ const getServerRankingHistory = async (name) => {
     return [];
   }
 };
-const getTipsData = async () => ({ posts: [] });
 
 function escapeHtml(value) {
   return String(value ?? "")

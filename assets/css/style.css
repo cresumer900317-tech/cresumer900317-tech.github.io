@@ -967,6 +967,12 @@ main { padding: 0 0 48px; }
   color: var(--text-faint);
 }
 .mini-summary-side { font-size: 0.82rem; font-weight: 600; color: var(--amber); white-space: nowrap; }
+/* 클릭 가능한 미니 카드(서버 랭킹) + 친구패밀리 강조 */
+a.mini-summary-card { text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s, transform .05s; }
+a.mini-summary-card:hover { border-color: var(--amber); box-shadow: 0 4px 14px rgba(245,158,11,.12); }
+a.mini-summary-card:active { transform: translateY(1px); }
+.mini-summary-friend { border-color: #fcd34d; background: linear-gradient(135deg, #fffbeb, #fff); }
+.mini-fr-tag { font-size: 0.66rem; font-weight: 800; color: var(--amber-dark); background: #fef3c7; padding: 1px 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle; }
 
 /* ===== 캐릭터 아바타 ===== */
 .character-avatar {
