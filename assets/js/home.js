@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
@@ -48,7 +48,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/tips`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
     ]);
+    const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
     (Array.isArray(guildRanksRes) ? guildRanksRes : []).forEach((g) => { guildRankMap[g.guildName] = g; });
@@ -197,26 +199,38 @@ document.addEventListener("DOMContentLoaded", async () => {
       ` : `
       <div class="home-hero home-hero-portal">
         <div class="container hero-inner">
-          <div class="hero-badge">
-            <span class="hero-dot"></span>
-            메이플키우기 · 스카니아 11서버 포털
-          </div>
-          <h1 class="hero-title">스카니아11, <span class="accent">한눈에</span></h1>
-          <p class="hero-desc">캐릭터명만 넣으면 전투력 · 서버순위 · 인기도까지 — 가입 없이 바로.</p>
-          <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-            <span class="hero-search-icon">🔎</span>
-            <input class="hero-search-input" name="q" type="text" placeholder="내 캐릭터명으로 전적 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
-            <button class="hero-search-btn" type="submit">전적검색</button>
-          </form>
-          <div class="hero-proof-row">
-            <span class="hero-proof hero-proof-guild">🛡️ 운영 길드 <b>친구패밀리</b></span>
-            ${bestServerRank ? `<span class="hero-proof">최고 <b>서버 ${formatNumber(bestServerRank)}위</b></span>` : ""}
-            ${top500Count ? `<span class="hero-proof">서버 TOP 500 <b>${top500Count}명</b></span>` : ""}
-            ${bestGuildServerRank ? `<span class="hero-proof">길드 서버순위 <b>${formatNumber(bestGuildServerRank)}위</b></span>` : ""}
-          </div>
-          <div class="hero-cta-row">
-            <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
-            <a class="cta-btn cta-btn-outline" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">친구패밀리 길드 가입</a>
+          <div class="hero-portal-row">
+            <div class="hero-portal-main">
+              <div class="hero-badge">
+                <span class="hero-dot"></span>
+                메이플키우기 · 스카니아 11서버 포털
+              </div>
+              <h1 class="hero-title">스카니아11, <span class="accent">한눈에</span></h1>
+              <p class="hero-desc">캐릭터명만 넣으면 전투력 · 서버순위 · 인기도까지 — 가입 없이 바로.</p>
+              <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+                <span class="hero-search-icon">🔎</span>
+                <input class="hero-search-input" name="q" type="text" placeholder="내 캐릭터명으로 전적 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
+                <button class="hero-search-btn" type="submit">전적검색</button>
+              </form>
+              <div class="hero-proof-row">
+                <span class="hero-proof hero-proof-guild">🛡️ 운영 길드 <b>친구들</b></span>
+                ${serverTotal ? `<span class="hero-proof">👥 스카니아11 전체 <b>${formatNumber(serverTotal)}명</b></span>` : ""}
+                <span class="hero-proof">📊 전적 · 랭킹 · 커뮤니티</span>
+              </div>
+              <div class="hero-cta-row">
+                <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
+                <a class="cta-btn cta-btn-outline" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">친구들 길드 가입</a>
+              </div>
+            </div>
+            <form id="heroLoginForm" class="hero-login-card">
+              <div class="hero-login-title">길드원 로그인</div>
+              <div class="hero-login-desc">로그인하면 내 순위·성장·포인트를 한눈에.</div>
+              <input id="heroLoginName" class="hero-login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
+              <input id="heroLoginPw" class="hero-login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
+              <button type="submit" class="cta-btn hero-login-btn">로그인</button>
+              <div id="heroLoginErr" class="hero-login-err"></div>
+              <div class="hero-login-sub">계정이 없으신가요? <a href="./login?tab=register">회원가입</a></div>
+            </form>
           </div>
         </div>
       </div>
@@ -537,6 +551,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       </footer>
 
     `;
+
+    // 히어로 로그인 (로그아웃 상태일 때만 폼 존재)
+    const heroLoginForm = document.getElementById("heroLoginForm");
+    if (heroLoginForm) {
+      heroLoginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("heroLoginName").value.trim();
+        const pw = document.getElementById("heroLoginPw").value;
+        const errEl = document.getElementById("heroLoginErr");
+        errEl.textContent = "";
+        if (!name || !pw) { errEl.textContent = "캐릭터명과 비밀번호를 입력해주세요."; return; }
+        const btn = heroLoginForm.querySelector(".hero-login-btn");
+        btn.disabled = true; btn.textContent = "로그인 중...";
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ character_name: name, password: pw }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "로그인에 실패했습니다.");
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+          if (data.token) sessionStorage.setItem("token", data.token);
+          location.reload();
+        } catch (err) {
+          errEl.textContent = err.message || "로그인에 실패했습니다.";
+          btn.disabled = false; btn.textContent = "로그인";
+        }
+      });
+    }
 
   } catch (error) {
     console.error(error);
