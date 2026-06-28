@@ -103,9 +103,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `<div class="rv-card">
       ${head}
       <div class="rv-vs-row">
-        <div class="rv-side">${characterAvatarHtml({ name: me.name })}<div class="rv-name">${escapeHtml(me.name)} (나)</div></div>
+        <div class="rv-side">${characterAvatarHtml({ name: me.name, guild: me.guild })}<div class="rv-name">${escapeHtml(me.name)} (나)</div></div>
         <div class="rv-vs">VS</div>
-        <div class="rv-side">${characterAvatarHtml({ name: r.name })}<div class="rv-name">${escapeHtml(r.name)}</div></div>
+        <div class="rv-side">${characterAvatarHtml({ name: r.name, guild: r.guild })}<div class="rv-name">${escapeHtml(r.name)}</div></div>
       </div>
       ${metric("전투력", me.power, r.power, fmtPower, true)}
       ${metric("서버순위", me.serverRank, r.serverRank, fmtRank, false)}

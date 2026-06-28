@@ -459,7 +459,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="rk-c-rank">
             ${rank <= 3 ? `<span class="rk-c-medal">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>` : `<span class="rk-c-num">${formatNumber(rank)}</span>`}
           </div>
-          <div class="rk-c-avatar">${characterAvatarHtml({ name: item.nickname })}</div>
+          <div class="rk-c-avatar">${characterAvatarHtml({ name: item.nickname, guild: item.guild })}</div>
           <div class="rk-c-info">
             <div class="rk-c-name">${escapeHtml(item.nickname || "-")}${isFriend ? ` <span style="font-size:0.68rem;font-weight:700;color:var(--brand,#3182ce);">친구패밀리</span>` : ""}</div>
             <div class="rk-c-sub">

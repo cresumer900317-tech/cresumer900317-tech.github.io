@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   return `
                     <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
                       <span class="mini-summary-rank">${i + 1}</span>
-                      ${characterAvatarHtml({ name: nm })}
+                      ${characterAvatarHtml({ name: nm, guild: gn })}
                       <div class="mini-summary-main">
                         <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
                         <div class="mini-summary-sub">

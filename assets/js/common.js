@@ -287,12 +287,17 @@ function createEmptyBox(message = "데이터가 없습니다.") {
   return `<div class="empty-box">${escapeHtml(message)}</div>`;
 }
 
+// 친구패밀리(운영) 길드 — 아바타 LED 프레임 대상
+const FRIEND_GUILD_SET = new Set(["친구들", "친구둘", "친구삼", "친구닷", "친구넷"]);
+
 function characterAvatarHtml(item) {
   const name = String(item?.name || "").trim();
   const imageUrl = `https://mgf.gg/ranking/ranking_image.php?n=${encodeURIComponent(name)}`;
   const fallback = escapeHtml((name || "?").slice(0, 1));
+  const guild = String(item?.guild || "").normalize("NFC").trim();
+  const led = FRIEND_GUILD_SET.has(guild) ? " character-avatar-led" : "";
   return `
-    <div class="character-avatar">
+    <div class="character-avatar${led}">
       <img src="${imageUrl}" alt="${escapeHtml(name)}" loading="lazy" referrerpolicy="no-referrer"
            onerror="this.parentElement.classList.add('no-image'); this.remove();" />
       <span class="avatar-fallback">${fallback}</span>

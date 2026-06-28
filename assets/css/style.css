@@ -1072,6 +1072,19 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .character-avatar .avatar-fallback { display: none; }
 .character-avatar.no-image .avatar-fallback { display: inline; }
 
+/* 친구패밀리 LED 프레임 — 색이 순환하는 발광 테두리 (overflow:hidden에도 box-shadow는 바깥에 보임) */
+.character-avatar-led { animation: ledFrame 3s linear infinite; z-index: 1; }
+@keyframes ledFrame {
+  0%   { box-shadow: 0 0 0 2.5px #f59e0b, 0 0 10px 2px rgba(245,158,11,.75); }
+  25%  { box-shadow: 0 0 0 2.5px #ec4899, 0 0 10px 2px rgba(236,72,153,.75); }
+  50%  { box-shadow: 0 0 0 2.5px #a855f7, 0 0 10px 2px rgba(168,85,247,.75); }
+  75%  { box-shadow: 0 0 0 2.5px #3b82f6, 0 0 10px 2px rgba(59,130,246,.75); }
+  100% { box-shadow: 0 0 0 2.5px #f59e0b, 0 0 10px 2px rgba(245,158,11,.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .character-avatar-led { animation: none; box-shadow: 0 0 0 2.5px #f59e0b, 0 0 8px 2px rgba(245,158,11,.5); }
+}
+
 /* ===== 랭킹 페이지 ===== */
 .page-card {
   background: var(--white);

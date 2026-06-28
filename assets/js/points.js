@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `
       <div class="pt-card">
         <div class="pt-my-head">
-          <div class="pt-my-avatar">${characterAvatarHtml({ name: user.character_name })}</div>
+          <div class="pt-my-avatar">${characterAvatarHtml({ name: user.character_name, guild: user.guild })}</div>
           <div>
             <div class="pt-my-name">${escapeHtml(user.character_name)}</div>
             <div>${guildBadgeHtml(user.guild || "길드 없음")}</div>
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `
         <div class="rk-compact-card${top3 ? " rk-top3-card" : ""}">
           <div class="rk-c-rank"><span class="${top3 ? "rk-c-medal" : "rk-c-num"}">${medal}</span></div>
-          <div class="rk-c-avatar">${characterAvatarHtml({ name: r.characterName })}</div>
+          <div class="rk-c-avatar">${characterAvatarHtml({ name: r.characterName, guild: r.guild })}</div>
           <div class="rk-c-info">
             <div class="rk-c-name">${escapeHtml(r.characterName || "-")}</div>
             <div class="rk-c-sub">${guildBadgeHtml(r.guild || "길드 없음")} <span class="rk-c-job">연속 ${r.streak || 0}일 🔥</span></div>

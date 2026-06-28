@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     <div class="container pf-wrap">
 
       <div class="pf-hero ${isFriend ? "pf-hero-friend" : ""}">
-        <div class="pf-hero-avatar">${characterAvatarHtml({ name: me.nickname })}</div>
+        <div class="pf-hero-avatar">${characterAvatarHtml({ name: me.nickname, guild: me.guild })}</div>
         <div class="pf-hero-main">
           <div class="pf-hero-badges">
             ${guildBadge(me.guild)}
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return `
               <a class="pf-nb-row ${isMe ? "pf-nb-me" : ""}" href="./profile?n=${encodeURIComponent(n.nickname || "")}">
                 <span class="pf-nb-rank">${formatNumber(nr)}</span>
-                <span class="pf-nb-ava">${characterAvatarHtml({ name: n.nickname })}</span>
+                <span class="pf-nb-ava">${characterAvatarHtml({ name: n.nickname, guild: n.guild })}</span>
                 <span class="pf-nb-name">${escapeHtml(n.nickname || "-")}${isMe ? ` <b>나</b>` : ""}${nFriend && !isMe ? ` <span class="pf-nb-fr">친구패밀리</span>` : ""}</span>
                 <span class="pf-nb-power">${escapeHtml(npt)}</span>
               </a>`;
