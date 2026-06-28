@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/free`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=10`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-guild-ranking?limit=10`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
@@ -63,6 +64,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const serverTop = (Array.isArray(serverTopRes) ? serverTopRes : [])
       .filter((r) => r && r.nickname)
       .sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0))
+      .slice(0, 10);
+    // 스카니아11 서버 전체 길드 랭킹 TOP10
+    const serverGuildTop = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
+      .filter((g) => g && g.guildName)
+      .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
       .slice(0, 10);
 
     const avgPower = rows.length
@@ -253,6 +259,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                   </div>
                   <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
                 </a>`;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+      ` : ""}
+
+      ${serverGuildTop.length ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">스카니아11 길드 랭킹</div>
+              <div class="section-sub">서버 전체 길드 TOP ${serverGuildTop.length}</div>
+            </div>
+          </div>
+          <div class="guild-rank-list">
+            ${serverGuildTop.map((g) => {
+              const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
+              return `
+                <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
+                  <span class="guild-rank-no">${g.guildRank || "-"}</span>
+                  <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
+                  <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
+                  <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
+                </div>`;
             }).join("")}
           </div>
         </div>

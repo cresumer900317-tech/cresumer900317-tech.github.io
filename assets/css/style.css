@@ -974,6 +974,20 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .mini-summary-friend { border-color: #fcd34d; background: linear-gradient(135deg, #fffbeb, #fff); }
 .mini-fr-tag { font-size: 0.66rem; font-weight: 800; color: var(--amber-dark); background: #fef3c7; padding: 1px 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle; }
 
+/* 스카니아11 서버 길드 랭킹 (홈) */
+.guild-rank-list { display: flex; flex-direction: column; gap: 6px; }
+.guild-rank-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--white);
+  border: 1px solid var(--border-light, #e5e7eb); border-radius: var(--radius-md, 12px);
+}
+.guild-rank-friend { border-color: #fcd34d; background: linear-gradient(135deg, #fffbeb, #fff); }
+.guild-rank-no { width: 28px; text-align: center; font-weight: 800; color: var(--amber); flex-shrink: 0; }
+.guild-rank-name { flex: 1; min-width: 0; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guild-rank-meta { font-size: 0.8rem; color: var(--text-soft); white-space: nowrap; }
+.guild-rank-power { font-weight: 700; color: var(--amber-dark); white-space: nowrap; }
+@media (max-width: 600px) { .guild-rank-meta { display: none; } }
+
 /* ===== 캐릭터 아바타 ===== */
 .character-avatar {
   position: relative;
