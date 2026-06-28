@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>스카니아 라운지 | 회원정보</title>
-  <link rel="stylesheet" href="./assets/css/style.css?v=42" />
+  <link rel="stylesheet" href="./assets/css/style.css?v=43" />
 </head>
 <body data-page="mypage">
   <div id="app-shell"></div>
   <main></main>
-  <script src="./assets/js/common.js?v=43"></script>
+  <script src="./assets/js/common.js?v=44"></script>
   <script>
   document.addEventListener("DOMContentLoaded", () => {
     renderShell();
@@ -81,13 +81,43 @@
           <div style="margin-top:16px;text-align:center;">
             <a href="./login?tab=changepw" style="font-size:0.82rem;color:var(--amber);text-decoration:none;font-weight:600;">비밀번호 변경하기 →</a>
           </div>
+
+          <div style="margin-top:28px;">
+            <h2 style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:12px;">🚫 차단 목록</h2>
+            <div id="blockList" class="block-list"><div class="loading-box" style="margin:0;">불러오는 중…</div></div>
+          </div>
         </div>
       </div>
     `;
 
     // 기존 정보 로드
     loadProfile();
+    loadBlocks();
   });
+
+  async function loadBlocks() {
+    const el = document.getElementById("blockList");
+    if (!el) return;
+    try {
+      const list = await getMyBlocks();
+      if (!list.length) {
+        el.innerHTML = `<div style="font-size:0.84rem;color:var(--text-faint);padding:12px 0;">차단한 사용자가 없어요.</div>`;
+        return;
+      }
+      el.innerHTML = list.map(n => `
+        <div class="block-row">
+          <span style="font-weight:600;color:var(--text);">${escapeHtml(n)}</span>
+          <button class="block-unbtn" data-name="${escapeHtml(n)}">차단 해제</button>
+        </div>`).join("");
+      el.querySelectorAll(".block-unbtn").forEach(b => b.addEventListener("click", async () => {
+        b.disabled = true; b.textContent = "해제 중…";
+        if (await unblockUser(b.dataset.name)) loadBlocks();
+        else { b.disabled = false; b.textContent = "차단 해제"; }
+      }));
+    } catch {
+      el.innerHTML = `<div style="font-size:0.84rem;color:var(--text-faint);">목록을 불러올 수 없어요.</div>`;
+    }
+  }
 
   async function loadProfile() {
     try {

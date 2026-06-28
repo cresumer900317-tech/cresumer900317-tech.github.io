@@ -8,8 +8,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentCat = "전체";
 
   try {
-    const res = await fetch(`${API_BASE}/api/tips`, { cache: "no-store" });
-    const tips = await res.json();
+    const [res, blocks] = await Promise.all([
+      fetch(`${API_BASE}/api/tips`, { cache: "no-store" }),
+      getMyBlocks(),
+    ]);
+    const allTips = await res.json();
+    const blockedSet = new Set(blocks);
+    const tips = (Array.isArray(allTips) ? allTips : []).filter(t => !blockedSet.has(t.author));
 
     const catConfig = {
       "공략": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },

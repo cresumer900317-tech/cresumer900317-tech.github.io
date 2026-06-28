@@ -1008,6 +1008,17 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .rank-scroll::-webkit-scrollbar-thumb { background: var(--yellow-border, #fde68a); border-radius: 4px; }
 .rank-scroll::-webkit-scrollbar-track { background: transparent; }
 .guild-badge.guild-badge-neutral { background: #eef2f7; border-color: #cbd5e1; color: #4a5568; }
+
+/* 신고/차단 버튼 */
+.board-report-btn { background: #f8fafc; border: 1px solid var(--border, #e5e7eb); color: var(--text-soft); border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; transition: all .15s; }
+.board-report-btn:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.cmt-report-btn, .cmt-block-btn { background: none; border: none; color: var(--text-faint, #9ca3af); font-size: 0.72rem; cursor: pointer; padding: 2px 4px; }
+.cmt-report-btn:hover, .cmt-block-btn:hover { color: #dc2626; text-decoration: underline; }
+/* 마이페이지 차단 목록 */
+.block-list { display: flex; flex-direction: column; gap: 8px; }
+.block-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--white); border: 1px solid var(--border-light, #e5e7eb); border-radius: 10px; }
+.block-unbtn { background: #f8fafc; border: 1px solid var(--border, #e5e7eb); color: var(--text-soft); border-radius: 8px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
+.block-unbtn:hover { background: #fffbeb; border-color: #fcd34d; color: var(--amber-dark); }
 @media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } .rank-scroll { max-height: 372px; } }
 
 /* 스카니아11 서버 길드 랭킹 (홈) */

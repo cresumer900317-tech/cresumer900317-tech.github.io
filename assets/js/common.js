@@ -366,6 +366,46 @@ function authHeaders() {
   return headers;
 }
 
+// ── 신고 / 차단 (커뮤니티 운영) ──
+async function getMyBlocks() {
+  if (!getUser()) return [];
+  try {
+    const r = await fetch(`${API_BASE}/api/blocks`, { headers: authHeaders() });
+    return r.ok ? await r.json() : [];
+  } catch { return []; }
+}
+async function reportContent(targetType, board, targetId) {
+  if (!getUser()) { alert("로그인 후 신고할 수 있어요."); return; }
+  const reason = prompt("신고 사유를 적어주세요 (선택):", "");
+  if (reason === null) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/reports`, {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify({ targetType, board: board || null, targetId: targetId != null ? String(targetId) : null, reason }),
+    });
+    if (!r.ok) throw 0;
+    alert("신고가 접수됐어요. 운영진이 검토합니다.");
+  } catch { alert("신고에 실패했어요. 잠시 후 다시 시도해주세요."); }
+}
+async function blockUser(name) {
+  if (!getUser()) { alert("로그인 후 차단할 수 있어요."); return false; }
+  if (!confirm(`'${name}'님을 차단할까요?\n이 사용자의 글·댓글이 보이지 않게 됩니다.`)) return false;
+  try {
+    const r = await fetch(`${API_BASE}/api/blocks`, {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify({ blocked: name }),
+    });
+    if (!r.ok) throw 0;
+    return true;
+  } catch { alert("차단에 실패했어요."); return false; }
+}
+async function unblockUser(name) {
+  try {
+    const r = await fetch(`${API_BASE}/api/blocks/${encodeURIComponent(name)}`, { method: "DELETE", headers: authHeaders() });
+    return r.ok;
+  } catch { return false; }
+}
+
 function requireLogin(page) {
   // 공지, 팁 페이지는 로그인 필요
   const restricted = ["members", "weekly", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "free", "free-view", "free-write", "download"];

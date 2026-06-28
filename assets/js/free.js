@@ -7,8 +7,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentPage = 1;
 
   try {
-    const res = await fetch(`${API_BASE}/api/free`, { cache: "no-store" });
-    const posts = await res.json();
+    const [res, blocks] = await Promise.all([
+      fetch(`${API_BASE}/api/free`, { cache: "no-store" }),
+      getMyBlocks(),
+    ]);
+    const allPosts = await res.json();
+    const blockedSet = new Set(blocks);
+    const posts = (Array.isArray(allPosts) ? allPosts : []).filter(p => !blockedSet.has(p.author));
 
     // 인기글 (좋아요 + 조회수 기준 상위 3개)
     function getHotPosts() {

@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <button id="likeBtn" class="board-view-like${alreadyLiked ? " liked" : ""}">❤️ ${post.likes || 0}</button>
               </div>
               <div class="board-view-actions">
+                ${user && !isOwner ? `<button id="reportPostBtn" class="board-report-btn">🚩 신고</button><button id="blockAuthorBtn" class="board-report-btn">🚫 차단</button>` : ""}
                 ${canDelete ? `<button id="deleteBtn" class="board-delete-btn">🗑️ 삭제</button>` : ""}
               </div>
             </div>
@@ -204,6 +205,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
+    // 신고 / 차단 (글)
+    const reportPostBtn = document.getElementById("reportPostBtn");
+    if (reportPostBtn) reportPostBtn.addEventListener("click", () => reportContent("post", "free", post.id));
+    const blockAuthorBtn = document.getElementById("blockAuthorBtn");
+    if (blockAuthorBtn) blockAuthorBtn.addEventListener("click", async () => {
+      if (await blockUser(post.author)) location.href = "./free";
+    });
+
     // ── 댓글 기능 (tips-view와 동일, 경로만 free) ──
     const token = getToken();
     const commentList = document.getElementById("commentList");
@@ -243,6 +252,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="tip-comment-actions">
                 ${user && !isReply ? '<button class="tip-comment-reply-btn" data-id="' + c.id + '" data-author="' + escapeHtml(c.author) + '">답글</button>' : ''}
                 ${canManage(c.author) ? (isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : '') + '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+                ${user && !isMe(c.author) ? '<button class="cmt-report-btn" data-id="' + c.id + '">신고</button><button class="cmt-block-btn" data-author="' + escapeHtml(c.author) + '">차단</button>' : ''}
               </div>
             </div>
             <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
@@ -277,6 +287,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           loadComments();
         });
       });
+
+      commentList.querySelectorAll(".cmt-report-btn").forEach(btn =>
+        btn.addEventListener("click", () => reportContent("comment", "free", btn.dataset.id)));
+      commentList.querySelectorAll(".cmt-block-btn").forEach(btn =>
+        btn.addEventListener("click", async () => { if (await blockUser(btn.dataset.author)) loadComments(); }));
 
       commentList.querySelectorAll(".tip-comment-edit-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -375,9 +390,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadComments() {
       try {
-        const res = await fetch(`${API_BASE}/api/free/${postId}/comments`);
+        const [res, blocks] = await Promise.all([
+          fetch(`${API_BASE}/api/free/${postId}/comments`),
+          getMyBlocks(),
+        ]);
         const data = await res.json();
-        renderComments(data);
+        const blockedSet = new Set(blocks);
+        renderComments((Array.isArray(data) ? data : []).filter(c => !blockedSet.has(c.author)));
       } catch { commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;">댓글을 불러올 수 없습니다.</p>'; }
     }
 
