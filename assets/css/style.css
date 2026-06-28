@@ -977,8 +977,16 @@ a.mini-summary-card:active { transform: translateY(1px); }
 /* 홈 랭킹 2단 (좌: 서버 전체 랭킹 / 우: 길드 랭킹) */
 .rank-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; align-items: start; }
 .rank-2col .rank-col { min-width: 0; }
-.rank-2col .mini-summary-card .character-avatar { width: 56px; height: 56px; }
-@media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } }
+.rank-2col .mini-summary-card .character-avatar { width: 64px; height: 64px; }
+.rank-2col .mini-summary-name { font-size: 0.95rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rank-2col .mini-summary-sub { font-size: 0.78rem; }
+/* 내부 스크롤: 좌우 같은 높이(약 5행) 후 스크롤 */
+.rank-scroll { max-height: 432px; overflow-y: auto; padding-right: 6px; }
+.rank-scroll::-webkit-scrollbar { width: 7px; }
+.rank-scroll::-webkit-scrollbar-thumb { background: var(--yellow-border, #fde68a); border-radius: 4px; }
+.rank-scroll::-webkit-scrollbar-track { background: transparent; }
+.guild-badge.guild-badge-neutral { background: #eef2f7; border-color: #cbd5e1; color: #4a5568; }
+@media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } .rank-scroll { max-height: 372px; } }
 
 /* 스카니아11 서버 길드 랭킹 (홈) */
 .guild-rank-list { display: flex; flex-direction: column; gap: 6px; }

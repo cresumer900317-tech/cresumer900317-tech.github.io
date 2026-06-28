@@ -46,8 +46,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/free`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/server-ranking?limit=10`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/server-guild-ranking?limit=10`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
@@ -64,12 +64,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const serverTop = (Array.isArray(serverTopRes) ? serverTopRes : [])
       .filter((r) => r && r.nickname)
       .sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0))
-      .slice(0, 10);
-    // 스카니아11 서버 전체 길드 랭킹 TOP10
+      .slice(0, 100);
+    // 스카니아11 서버 전체 길드 랭킹 (최대 30)
     const serverGuildTop = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
       .filter((g) => g && g.guildName)
       .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
-      .slice(0, 10);
+      .slice(0, 30);
 
     const avgPower = rows.length
       ? Math.round(rows.reduce((sum, r) => sum + Number(r.power || 0), 0) / rows.length)
@@ -243,21 +243,27 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-head">
                 <div>
                   <div class="section-title">서버 전체 랭킹</div>
-                  <div class="section-sub">스카니아11 전투력 TOP 10</div>
+                  <div class="section-sub">전투력 TOP 100</div>
                 </div>
-                <a class="section-link" href="./ranking">전체 →</a>
+                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
               </div>
-              <div class="mini-card-list">
+              <div class="mini-card-list rank-scroll">
                 ${serverTop.map((item, i) => {
                   const nm = item.nickname || "";
+                  const gn = normalizeGuildName(item.guild || "");
+                  const hasGuild = gn && gn !== "길드 없음";
+                  const guildChip = hasGuild
+                    ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
+                    : "";
+                  const pop = Number(item.popularity || 0);
                   return `
                     <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
                       <span class="mini-summary-rank">${i + 1}</span>
                       ${characterAvatarHtml({ name: nm })}
                       <div class="mini-summary-main">
-                        <div class="mini-summary-name">${escapeHtml(nm)}</div>
+                        <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
                         <div class="mini-summary-sub">
-                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}</span>
+                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}${pop ? " · ♥ " + formatNumber(pop) : ""}</span>
                         </div>
                       </div>
                       <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
@@ -272,9 +278,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="section-title">길드 랭킹</div>
                   <div class="section-sub">스카니아11 서버 길드 TOP ${serverGuildTop.length}</div>
                 </div>
-                <a class="section-link" href="./ranking">전체 →</a>
+                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
               </div>
-              <div class="guild-rank-list">
+              <div class="guild-rank-list rank-scroll">
                 ${serverGuildTop.map((g) => {
                   const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
                   return `
