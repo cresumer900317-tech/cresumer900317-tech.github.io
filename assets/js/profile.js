@@ -205,6 +205,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const powerText = String(me.powerText || "").trim() || formatCompactPower(me.power);
 
+  // 체급별 영입 후크 메시지 (비친구 캐릭터용)
+  const recruitTier = pct <= 5 ? "이미 서버 상위권! 친구들 주력 길드에서 TOP30을 같이 노려봐요."
+    : pct <= 20 ? "성장 중인 체급이에요 — 친구들에서 같이 더 끌어올려요."
+    : pct <= 50 ? "지금부터가 진짜 재미 — 친구들과 함께 쭉 키워요."
+    : "막 시작하기 좋은 타이밍! 친구들에서 든든하게 시작해요.";
+
   main.innerHTML = searchBarHtml(query) + `
     <div class="container pf-wrap">
 
@@ -272,16 +278,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="pf-cta-desc">로그인하면 내 성장·공헌·포인트를 한눈에 볼 수 있어요.</div>
           <div class="pf-cta-btns">
             <a class="cta-btn" href="./login">로그인</a>
-            <a class="cta-btn cta-btn-outline" href="./ranking">전체 랭킹 보기</a>
+            <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
           </div>
         </div>
       ` : `
         <div class="pf-cta pf-cta-recruit">
-          <div class="pf-cta-title">스카니아11 ${formatNumber(rank)}위 — 친구패밀리와 함께 더 키워보실래요?</div>
-          <div class="pf-cta-desc">전투력대별로 5개 길드를 운영해요. 내 체급에 맞는 길드로 자동 배정 · TOP30 길드 경쟁.</div>
+          <div class="pf-cta-title">스카니아11 ${formatNumber(rank)}위 — 친구들과 함께 더 키워보실래요?</div>
+          <div class="pf-cta-desc">${recruitTier}<br>전투력대별 5개 길드 운영 · 내 체급에 맞는 길드 자동 배정 · TOP30 길드 경쟁.</div>
           <div class="pf-cta-btns">
-            <a class="cta-btn" href="${KAKAO}" target="_blank" rel="noopener noreferrer">길드 가입 문의</a>
-            <a class="cta-btn cta-btn-outline" href="./ranking">서버 전체 랭킹</a>
+            <a class="cta-btn" href="${KAKAO}" target="_blank" rel="noopener noreferrer">친구들 길드 가입</a>
+            <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
           </div>
         </div>
       `}
@@ -298,4 +304,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   bindSearch();
   renderGrowth(me.nickname);
+
+  // 전적 공유 (홍보 바이럴) — Web Share 우선, 없으면 링크 복사
+  const shareBtn = document.getElementById("pfShareBtn");
+  if (shareBtn) {
+    shareBtn.addEventListener("click", async () => {
+      const url = location.href;
+      const text = `${me.nickname}님 · 스카니아11 서버 ${formatNumber(rank)}위(전투력) — 친구들 라운지`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "스카니아 라운지 전적", text, url });
+        } else {
+          await navigator.clipboard.writeText(`${text}\n${url}`);
+          const orig = shareBtn.textContent;
+          shareBtn.textContent = "✅ 링크 복사됨";
+          setTimeout(() => { shareBtn.textContent = orig; }, 2000);
+        }
+      } catch (e) { /* 사용자 취소 등 무시 */ }
+    });
+  }
 });
