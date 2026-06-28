@@ -296,6 +296,8 @@ main { padding: 0 0 48px; }
 .hero-login-err { font-size: 0.78rem; color: #dc2626; min-height: 1em; }
 .hero-login-sub { font-size: 0.8rem; color: var(--text-soft); text-align: center; }
 .hero-login-sub a { color: var(--amber-dark); font-weight: 700; }
+.hero-myprofile-link { display: inline-block; margin-top: 8px; font-size: 0.85rem; font-weight: 700; color: var(--amber-dark); text-decoration: none; }
+.hero-myprofile-link:hover { text-decoration: underline; }
 @media (max-width: 860px) { .hero-portal-row { grid-template-columns: 1fr; gap: 24px; } }
 
 @media (max-width: 600px) {

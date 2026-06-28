@@ -187,6 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 메이플키우기 · 스카니아 11서버
               </div>
               <h1 class="hero-title-slim">반갑습니다, <span class="accent">${escapeHtml(user.character_name)}</span>님</h1>
+              <a class="hero-myprofile-link" href="./profile?n=${encodeURIComponent(user.character_name)}">👤 내 전적 보기 →</a>
             </div>
             <div class="hero-slim-stats">
               <span class="hero-slim-stat">${formatNumber(memberCount)}명 활동 중</span>
@@ -203,13 +204,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="hero-portal-main">
               <div class="hero-badge">
                 <span class="hero-dot"></span>
-                메이플키우기 · 스카니아 11서버 포털
+                메이플키우기 · 스카니아 11서버
               </div>
-              <h1 class="hero-title">스카니아11, <span class="accent">한눈에</span></h1>
-              <p class="hero-desc">캐릭터명만 넣으면 전투력 · 서버순위 · 인기도까지 — 가입 없이 바로.</p>
+              <h1 class="hero-title">스카니아 <span class="accent">라운지</span></h1>
+              <p class="hero-desc">전적 · 서버랭킹 · 커뮤니티</p>
               <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
                 <span class="hero-search-icon">🔎</span>
-                <input class="hero-search-input" name="q" type="text" placeholder="내 캐릭터명으로 전적 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
+                <input class="hero-search-input" name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
                 <button class="hero-search-btn" type="submit">전적검색</button>
               </form>
               <div class="hero-proof-row">
@@ -374,113 +375,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      ${(() => {
-        if (!user) return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">내 대시보드</div>
-                  <div class="section-sub">로그인하면 내 정보를 한눈에 볼 수 있어요</div>
-                </div>
-              </div>
-              <div class="dashboard-preview-wrap">
-                <div class="kpi-grid kpi-grid-dashboard dashboard-blur">
-                  <div class="kpi-card"><div class="kpi-label">전투력</div><div class="kpi-value">2조 3,400억</div></div>
-                  <div class="kpi-card"><div class="kpi-label">서버 순위</div><div class="kpi-value dark">128위</div></div>
-                  <div class="kpi-card"><div class="kpi-label">이달 성장</div><div class="kpi-value kpi-value-up">+1,200억</div></div>
-                  <div class="kpi-card"><div class="kpi-label">패밀리 순위</div><div class="kpi-value dark">15위</div></div>
-                  <div class="kpi-card"><div class="kpi-label">인기도</div><div class="kpi-value kpi-value-pink">3,200</div></div>
-                  <div class="kpi-card"><div class="kpi-label">TOP 30</div><div class="kpi-value kpi-value-up">+800억 여유</div></div>
-                </div>
-                <div class="dashboard-login-overlay">
-                  <p class="dashboard-login-text">로그인하면 내 전투력, 순위, 성장 현황을<br>한눈에 확인할 수 있어요</p>
-                  <a href="./login?redirect=./" class="cta-btn">로그인하기</a>
-                  <a href="./login?tab=register" class="dashboard-register-link">아직 계정이 없으신가요?</a>
-                </div>
-              </div>
-            </div>
-          </div>`;
-
-        const myName = user.character_name;
-        const me = rows.find(r => r.name === myName);
-        const myMonthly = monthlyRows.find(r => r.name === myName);
-
-        if (!me) return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">내 대시보드</div>
-                  <div class="section-sub">캐릭터 데이터를 찾을 수 없습니다</div>
-                </div>
-              </div>
-            </div>
-          </div>`;
-
-        const myPower = Number(me.power || 0);
-        const myServerRank = me.serverRank ? formatNumber(me.serverRank) + "위" : "-";
-        const myFamilyRank = sortedRanking.findIndex(r => r.name === myName) + 1;
-        const myMonthlyDiff = myMonthly ? Number(myMonthly.monthlyDiff || 0) : 0;
-        const myPopularity = formatNumber(Number(me.popularity || 0));
-        const cutItem = sortedRanking[29];
-        const cutPower = cutItem ? Number(cutItem.power || 0) : 0;
-        const cutDiff = myPower - cutPower;
-        const isAboveCut = myFamilyRank <= 30;
-
-        const monthlyColor = myMonthlyDiff > 0 ? 'up' : myMonthlyDiff < 0 ? 'down' : 'neutral';
-        const rankPercent = rows.length > 0 ? myFamilyRank / rows.length : 1;
-        const rankTier = myFamilyRank === 1 ? 'rank-tier-1st'
-          : rankPercent <= 0.1 ? 'rank-tier-top10'
-          : rankPercent <= 0.3 ? 'rank-tier-top30'
-          : rankPercent <= 0.5 ? 'rank-tier-top50'
-          : 'rank-tier-rest';
-
-        return `
-          <div class="section-block">
-            <div class="container">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">내 대시보드</div>
-                  <div class="section-sub">${escapeHtml(myName)}님의 현재 현황</div>
-                </div>
-                <a class="section-link" href="./mypage">회원정보 →</a>
-              </div>
-              <div class="kpi-grid kpi-grid-dashboard">
-                <div class="kpi-card">
-                  <div class="kpi-label">전투력</div>
-                  <div class="kpi-value">${formatCompactPower(myPower)}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">서버 순위</div>
-                  <div class="kpi-value dark">${myServerRank}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">이달 성장</div>
-                  <div class="kpi-value kpi-value-${monthlyColor}">
-                    ${myMonthlyDiff > 0 ? '+' + formatCompactPower(myMonthlyDiff) : myMonthlyDiff < 0 ? '-' + formatCompactPower(Math.abs(myMonthlyDiff)) : '-'}
-                  </div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">패밀리 순위</div>
-                  <div class="kpi-value ${rankTier}">${myFamilyRank}위 <span class="kpi-sub">/ ${rows.length}명</span></div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">인기도</div>
-                  <div class="kpi-value kpi-value-pink">${myPopularity}</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">TOP 30 ${cutlineDDayText ? `<span class="kpi-dday">${cutlineDDayText}</span>` : ''}</div>
-                  <div class="kpi-value ${isAboveCut ? 'kpi-value-up' : 'kpi-value-neutral'}">
-                    ${isAboveCut
-                      ? '+' + formatCompactPower(cutDiff) + ' 여유'
-                      : cutDiff === 0 ? '30위' : formatCompactPower(Math.abs(cutDiff)) + ' 목표'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>`;
-      })()}
 
       ${"" /* 홈에서 제거(2026-06-28): 길드별 현황(친구패밀리 5길드)·TOP30 배치 현황. 스카니아11 서버 길드 랭킹은 백엔드 서버길드 크롤 추가 후 신설 예정 */}
 
