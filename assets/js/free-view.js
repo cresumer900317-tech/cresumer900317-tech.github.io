@@ -133,6 +133,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
 
+          <!-- 댓글 -->
+          <div class="board-comments-section" style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px;">
+            <h3 style="font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:14px;">💬 댓글</h3>
+            ${user ? `
+            <div class="macro-comment-form">
+              <textarea id="commentInput" class="macro-comment-input" placeholder="댓글을 작성해주세요 (최대 500자)" maxlength="500"></textarea>
+              <div class="macro-comment-form-footer">
+                <span id="commentCharCount" class="macro-comment-char">0 / 500</span>
+                <button id="commentSubmitBtn" class="macro-comment-submit" disabled>등록</button>
+              </div>
+              <p id="commentToast" style="font-size:0.8rem;margin-top:6px;min-height:1.2em;transition:opacity 0.3s;"></p>
+            </div>
+            ` : `<p style="font-size:0.84rem;color:var(--text-faint);margin-bottom:14px;">로그인 후 댓글을 작성할 수 있습니다.</p>`}
+            <div id="commentList" class="macro-comment-list">
+              <p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">불러오는 중...</p>
+            </div>
+          </div>
+
           <!-- 이전/다음 글 -->
           <div class="board-post-nav">
             ${nextPost ? `
@@ -185,6 +203,214 @@ document.addEventListener("DOMContentLoaded", async () => {
         location.href = "./free";
       });
     }
+
+    // ── 댓글 기능 (tips-view와 동일, 경로만 free) ──
+    const token = getToken();
+    const commentList = document.getElementById("commentList");
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return "방금 전";
+      if (m < 60) return m + "분 전";
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + "시간 전";
+      const d = Math.floor(h / 24);
+      if (d < 30) return d + "일 전";
+      return new Date(dateStr).toLocaleDateString("ko-KR");
+    }
+
+    const isMe = (author) => user && user.character_name === author;
+    const canManage = (author) => user && (isMe(author) || user.role === "admin" || user.role === "superadmin");
+
+    function showToast(msg, color) {
+      const t = document.getElementById("commentToast");
+      if (!t) return;
+      t.textContent = msg;
+      t.style.color = color;
+      t.style.opacity = "1";
+      setTimeout(() => { t.style.opacity = "0"; }, 2500);
+    }
+
+    function renderOneComment(c, isReply) {
+      return `
+        <div class="macro-comment-item${isMe(c.author) ? ' tip-comment-mine' : ''}${isReply ? ' tip-comment-reply' : ''}" data-id="${c.id}">
+          ${isReply ? '<span class="tip-reply-indicator">↳</span>' : ''}
+          <div class="tip-comment-content-wrap">
+            <div class="macro-comment-header">
+              <span class="macro-comment-author">${escapeHtml(c.author)}${isMe(c.author) ? ' <span class="tip-comment-me-badge">나</span>' : ''}${c.author_guild ? ' <span class="macro-comment-guild">' + escapeHtml(c.author_guild) + '</span>' : ''}</span>
+              <span class="macro-comment-time">${timeAgo(c.created_at)}</span>
+              <div class="tip-comment-actions">
+                ${user && !isReply ? '<button class="tip-comment-reply-btn" data-id="' + c.id + '" data-author="' + escapeHtml(c.author) + '">답글</button>' : ''}
+                ${canManage(c.author) ? (isMe(c.author) ? '<button class="tip-comment-edit-btn" data-id="' + c.id + '" data-content="' + c.content.replace(/"/g,"&quot;") + '">수정</button>' : '') + '<button class="macro-comment-del" data-id="' + c.id + '">삭제</button>' : ''}
+              </div>
+            </div>
+            <p class="macro-comment-body" id="comment-body-${c.id}">${c.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>
+          </div>
+        </div>`;
+    }
+
+    function renderComments(comments) {
+      if (!comments.length) {
+        commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;padding:20px 0;">아직 댓글이 없습니다. 첫 번째로 댓글을 남겨보세요!</p>';
+        return;
+      }
+      const parents = comments.filter(c => !c.parent_id);
+      const childMap = {};
+      comments.filter(c => c.parent_id).forEach(c => {
+        if (!childMap[c.parent_id]) childMap[c.parent_id] = [];
+        childMap[c.parent_id].push(c);
+      });
+      let html = "";
+      parents.forEach(p => {
+        html += renderOneComment(p, false);
+        if (childMap[p.id]) childMap[p.id].forEach(r => { html += renderOneComment(r, true); });
+      });
+      commentList.innerHTML = html;
+
+      commentList.querySelectorAll(".macro-comment-del").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("댓글을 삭제하시겠습니까?")) return;
+          await fetch(`${API_BASE}/api/free/comments/${btn.dataset.id}`, {
+            method: "DELETE", headers: { "Authorization": "Bearer " + token }
+          });
+          loadComments();
+        });
+      });
+
+      commentList.querySelectorAll(".tip-comment-edit-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const cId = btn.dataset.id;
+          const bodyEl = document.getElementById("comment-body-" + cId);
+          const original = btn.dataset.content;
+          const item = bodyEl.closest(".macro-comment-item");
+          if (item.querySelector(".tip-comment-edit-area")) return;
+          bodyEl.style.display = "none";
+          const editArea = document.createElement("div");
+          editArea.className = "tip-comment-edit-area";
+          editArea.innerHTML = `
+            <textarea class="macro-comment-input" style="min-height:60px;margin-bottom:8px;" maxlength="500">${original.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button class="tip-comment-cancel-btn">취소</button>
+              <button class="macro-comment-submit" style="padding:6px 14px;font-size:0.8rem;">저장</button>
+            </div>
+          `;
+          bodyEl.parentNode.insertBefore(editArea, bodyEl.nextSibling);
+          editArea.querySelector(".tip-comment-cancel-btn").addEventListener("click", () => {
+            editArea.remove();
+            bodyEl.style.display = "";
+          });
+          editArea.querySelector(".macro-comment-submit").addEventListener("click", async function() {
+            const newContent = editArea.querySelector("textarea").value.trim();
+            if (!newContent) return alert("내용을 입력해주세요");
+            this.disabled = true;
+            this.textContent = "저장 중...";
+            try {
+              const res = await fetch(`${API_BASE}/api/free/comments/${cId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ content: newContent })
+              });
+              if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "수정 실패"); }
+              loadComments();
+            } catch(e) { alert(e.message); this.disabled = false; this.textContent = "저장"; }
+          });
+        });
+      });
+
+      commentList.querySelectorAll(".tip-comment-reply-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const parentId = btn.dataset.id;
+          const parentAuthor = btn.dataset.author;
+          const item = btn.closest(".macro-comment-item");
+          const existing = item.parentNode.querySelector('.tip-reply-form[data-parent="' + parentId + '"]');
+          if (existing) { existing.remove(); return; }
+          commentList.querySelectorAll(".tip-reply-form").forEach(f => f.remove());
+          const replyForm = document.createElement("div");
+          replyForm.className = "tip-reply-form";
+          replyForm.dataset.parent = parentId;
+          replyForm.innerHTML = `
+            <div class="tip-reply-form-inner">
+              <span class="tip-reply-indicator">↳</span>
+              <div style="flex:1;">
+                <textarea class="macro-comment-input tip-reply-input" placeholder="@${parentAuthor} 에게 답글 (최대 500자)" maxlength="500"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                  <button class="tip-comment-cancel-btn tip-reply-cancel">취소</button>
+                  <button class="macro-comment-submit tip-reply-submit" style="padding:6px 14px;font-size:0.8rem;" disabled>답글 등록</button>
+                </div>
+              </div>
+            </div>
+          `;
+          let insertAfter = item;
+          let next = item.nextElementSibling;
+          while (next && next.classList.contains("tip-comment-reply")) {
+            insertAfter = next;
+            next = next.nextElementSibling;
+          }
+          insertAfter.after(replyForm);
+          const textarea = replyForm.querySelector("textarea");
+          const submitBtn = replyForm.querySelector(".tip-reply-submit");
+          textarea.focus();
+          textarea.addEventListener("input", () => { submitBtn.disabled = !textarea.value.trim(); });
+          replyForm.querySelector(".tip-reply-cancel").addEventListener("click", () => replyForm.remove());
+          submitBtn.addEventListener("click", async () => {
+            const content = textarea.value.trim();
+            if (!content) return;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "등록 중...";
+            try {
+              const res = await fetch(`${API_BASE}/api/free/${postId}/comments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ content, author: user.character_name, author_guild: user.guild || "", parent_id: Number(parentId) })
+              });
+              if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
+              showToast("답글이 등록되었습니다.", "var(--green, #16a34a)");
+              loadComments();
+            } catch(e) { alert(e.message); submitBtn.disabled = false; submitBtn.textContent = "답글 등록"; }
+          });
+        });
+      });
+    }
+
+    async function loadComments() {
+      try {
+        const res = await fetch(`${API_BASE}/api/free/${postId}/comments`);
+        const data = await res.json();
+        renderComments(data);
+      } catch { commentList.innerHTML = '<p style="color:var(--text-faint);font-size:0.84rem;text-align:center;">댓글을 불러올 수 없습니다.</p>'; }
+    }
+
+    if (user) {
+      const commentInput = document.getElementById("commentInput");
+      const commentCharCount = document.getElementById("commentCharCount");
+      const commentSubmitBtn = document.getElementById("commentSubmitBtn");
+      commentInput.addEventListener("input", () => {
+        commentCharCount.textContent = commentInput.value.length + " / 500";
+        commentSubmitBtn.disabled = !commentInput.value.trim();
+      });
+      commentSubmitBtn.addEventListener("click", async () => {
+        const content = commentInput.value.trim();
+        if (!content) return;
+        commentSubmitBtn.disabled = true;
+        commentSubmitBtn.textContent = "등록 중...";
+        try {
+          const res = await fetch(`${API_BASE}/api/free/${postId}/comments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify({ content, author: user.character_name, author_guild: user.guild || "" })
+          });
+          if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "등록 실패"); }
+          commentInput.value = "";
+          commentCharCount.textContent = "0 / 500";
+          showToast("댓글이 등록되었습니다.", "var(--green, #16a34a)");
+          loadComments();
+        } catch (e) { showToast(e.message, "#dc2626"); }
+        finally { commentSubmitBtn.disabled = true; commentSubmitBtn.textContent = "등록"; }
+      });
+    }
+
+    loadComments();
 
   } catch(e) {
     renderError(null, e);
