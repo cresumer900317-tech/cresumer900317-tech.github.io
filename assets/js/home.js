@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes, bossRes, wbossRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
@@ -48,6 +48,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/tips`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-boss-ranking?kind=guild_boss&limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-boss-ranking?kind=world_boss&limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
@@ -70,6 +72,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       .filter((g) => g && g.guildName)
       .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
       .slice(0, 30);
+    // 서버 전체 보스 랭킹 (토벌전/월드보스)
+    const sortBoss = (res) => (Array.isArray(res) ? res : [])
+      .filter((r) => r && r.nickname)
+      .sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0))
+      .slice(0, 100);
+    const bossTop = sortBoss(bossRes);
+    const wbossTop = sortBoss(wbossRes);
+    // 보스 랭킹 카드 (점수 표시) — 캐릭터 카드와 동일 톤
+    const bossCardHtml = (item, i) => {
+      const nm = item.nickname || "";
+      const gn = (item.guild || "").normalize("NFC").trim();
+      const hasGuild = gn && gn !== "길드 없음";
+      const guildChip = hasGuild
+        ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
+        : "";
+      const st = (item.scoreText || "").trim();
+      const scoreDisp = st ? st.split(/\s+/).filter(Boolean).slice(0, 2).join(" ") : formatCompactPower(item.score || 0);
+      return `
+        <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
+          <span class="mini-summary-rank">${i + 1}</span>
+          ${characterAvatarHtml({ name: nm })}
+          <div class="mini-summary-main">
+            <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
+            <div class="mini-summary-sub"><span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}</span></div>
+          </div>
+          <div class="mini-summary-side">${escapeHtml(scoreDisp)}</div>
+        </a>`;
+    };
 
     const avgPower = rows.length
       ? Math.round(rows.reduce((sum, r) => sum + Number(r.power || 0), 0) / rows.length)
@@ -291,6 +321,41 @@ document.addEventListener("DOMContentLoaded", async () => {
                       <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
                     </div>`;
                 }).join("")}
+              </div>
+            </div>` : ""}
+          </div>
+        </div>
+      </div>
+      ` : ""}
+
+      ${(bossTop.length || wbossTop.length) ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="rank-2col">
+            ${bossTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">토벌전 랭킹</div>
+                  <div class="section-sub">스카니아11 길드 보스 TOP 100</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
+              </div>
+              <div class="mini-card-list rank-scroll">
+                ${bossTop.map(bossCardHtml).join("")}
+              </div>
+            </div>` : ""}
+            ${wbossTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">월드보스 랭킹</div>
+                  <div class="section-sub">스카니아11 월드보스 TOP 100</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
+              </div>
+              <div class="mini-card-list rank-scroll">
+                ${wbossTop.map(bossCardHtml).join("")}
               </div>
             </div>` : ""}
           </div>
