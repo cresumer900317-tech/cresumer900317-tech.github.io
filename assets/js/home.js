@@ -234,57 +234,59 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      ${serverTop.length ? `
+      ${(serverTop.length || serverGuildTop.length) ? `
       <div class="section-block">
         <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">스카니아11 서버 전체 랭킹</div>
-              <div class="section-sub">전투력 TOP 10</div>
-            </div>
-            <a class="section-link" href="./ranking">전체 랭킹 →</a>
-          </div>
-          <div class="mini-card-list">
-            ${serverTop.map((item, i) => {
-              const nm = item.nickname || "";
-              return `
-                <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
-                  <span class="mini-summary-rank">${i + 1}</span>
-                  ${characterAvatarHtml({ name: nm })}
-                  <div class="mini-summary-main">
-                    <div class="mini-summary-name">${escapeHtml(nm)}</div>
-                    <div class="mini-summary-sub">
-                      <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}</span>
-                    </div>
-                  </div>
-                  <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
-                </a>`;
-            }).join("")}
-          </div>
-        </div>
-      </div>
-      ` : ""}
-
-      ${serverGuildTop.length ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">스카니아11 길드 랭킹</div>
-              <div class="section-sub">서버 전체 길드 TOP ${serverGuildTop.length}</div>
-            </div>
-          </div>
-          <div class="guild-rank-list">
-            ${serverGuildTop.map((g) => {
-              const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
-              return `
-                <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
-                  <span class="guild-rank-no">${g.guildRank || "-"}</span>
-                  <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
-                  <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
-                  <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
-                </div>`;
-            }).join("")}
+          <div class="rank-2col">
+            ${serverTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">서버 전체 랭킹</div>
+                  <div class="section-sub">스카니아11 전투력 TOP 10</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 →</a>
+              </div>
+              <div class="mini-card-list">
+                ${serverTop.map((item, i) => {
+                  const nm = item.nickname || "";
+                  return `
+                    <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
+                      <span class="mini-summary-rank">${i + 1}</span>
+                      ${characterAvatarHtml({ name: nm })}
+                      <div class="mini-summary-main">
+                        <div class="mini-summary-name">${escapeHtml(nm)}</div>
+                        <div class="mini-summary-sub">
+                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}</span>
+                        </div>
+                      </div>
+                      <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
+                    </a>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+            ${serverGuildTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">길드 랭킹</div>
+                  <div class="section-sub">스카니아11 서버 길드 TOP ${serverGuildTop.length}</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 →</a>
+              </div>
+              <div class="guild-rank-list">
+                ${serverGuildTop.map((g) => {
+                  const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
+                  return `
+                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
+                      <span class="guild-rank-no">${g.guildRank || "-"}</span>
+                      <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
+                      <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
+                      <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
+                    </div>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
           </div>
         </div>
       </div>

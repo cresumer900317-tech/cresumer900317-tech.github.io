@@ -974,6 +974,12 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .mini-summary-friend { border-color: #fcd34d; background: linear-gradient(135deg, #fffbeb, #fff); }
 .mini-fr-tag { font-size: 0.66rem; font-weight: 800; color: var(--amber-dark); background: #fef3c7; padding: 1px 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle; }
 
+/* 홈 랭킹 2단 (좌: 서버 전체 랭킹 / 우: 길드 랭킹) */
+.rank-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; align-items: start; }
+.rank-2col .rank-col { min-width: 0; }
+.rank-2col .mini-summary-card .character-avatar { width: 56px; height: 56px; }
+@media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } }
+
 /* 스카니아11 서버 길드 랭킹 (홈) */
 .guild-rank-list { display: flex; flex-direction: column; gap: 6px; }
 .guild-rank-row {
