@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
@@ -71,6 +72,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const serverGuildTop = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
       .filter((g) => g && g.guildName)
       .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
+      .slice(0, 30);
+    // 길드 건강도 순위 (활력 점수: 깊이0.42·활동0.33·균형0.25 — ranking.js와 동일 공식)
+    const clampH = (v) => Math.max(0, Math.min(100, v));
+    const healthTop = (Array.isArray(serverHealthRes) ? serverHealthRes : [])
+      .filter((g) => g && g.guildName && Number(g.memberSampled || 0) >= 3)
+      .map((g) => {
+        const depth = Number(g.medianPower || 0) > 0 ? clampH(50 + 12.5 * Math.log10(Number(g.medianPower) / 1e12)) : 0;
+        const bal = g.effContributors != null ? clampH((Number(g.effContributors) - 1) / 9 * 100) : null;
+        const act = g.activeRatio != null ? Number(g.activeRatio) * 100 : null;
+        const parts = [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter((p) => p[0] != null);
+        const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
+        const score = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
+        return { name: g.guildName, score };
+      })
+      .sort((a, b) => b.score - a.score)
       .slice(0, 30);
 
     const avgPower = rows.length
@@ -249,10 +265,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      ${(serverTop.length || serverGuildTop.length) ? `
+      ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
       <div class="section-block">
         <div class="container">
-          <div class="rank-2col">
+          <div class="rank-2col rank-3">
             ${serverTop.length ? `
             <div class="rank-col">
               <div class="section-head">
@@ -304,6 +320,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                       <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
                       <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
                       <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
+                    </div>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+            ${healthTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">길드 건강도</div>
+                  <div class="section-sub">활력 점수 TOP ${healthTop.length}</div>
+                </div>
+                <a class="section-link" href="./ranking">건강도 상세보기 →</a>
+              </div>
+              <div class="guild-rank-list rank-scroll">
+                ${healthTop.map((g, i) => {
+                  const isFriend = FRIENDS.has(normalizeGuildName(g.name || ""));
+                  const col = g.score >= 70 ? "#16a34a" : g.score >= 55 ? "#f59e0b" : g.score >= 40 ? "#fb923c" : "#94a3b8";
+                  return `
+                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
+                      <span class="guild-rank-no">${i + 1}</span>
+                      <span class="guild-rank-name">${escapeHtml(g.name || "-")}</span>
+                      <span class="guild-rank-power" style="color:${col};">${g.score}</span>
                     </div>`;
                 }).join("")}
               </div>
@@ -434,13 +472,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <footer class="site-footer">
         <div class="container footer-inner">
-          <div class="footer-brand">스카니아 라운지 · 메이플키우기 11서버</div>
+          <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
           <div class="footer-links">
             <a href="./profile" class="footer-link">전적검색</a>
             <a href="./ranking" class="footer-link">서버 랭킹</a>
             <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">친구패밀리 가입 문의</a>
           </div>
-          <div class="footer-copy">&copy; ${new Date().getFullYear()} 스카니아 라운지 · 운영 친구패밀리. All rights reserved.</div>
+          <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>
       </footer>
 

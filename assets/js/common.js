@@ -188,7 +188,7 @@ function renderShell() {
         <a class="brand-box" href="./">
           <span class="brand-emoji">🍁</span>
           <div>
-            <div class="brand-title">스카니아 라운지</div>
+            <div class="brand-title">메이플키우기 라운지</div>
             <div class="brand-sub">메이플키우기 11서버</div>
           </div>
         </a>

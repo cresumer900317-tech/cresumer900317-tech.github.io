@@ -1022,6 +1022,10 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .block-unbtn { background: #f8fafc; border: 1px solid var(--border, #e5e7eb); color: var(--text-soft); border-radius: 8px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
 .block-unbtn:hover { background: #fffbeb; border-color: #fcd34d; color: var(--amber-dark); }
 @media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } .rank-scroll { max-height: 372px; } }
+/* 홈 랭킹 3단 (서버 전체 / 길드 랭킹 / 길드 건강도) */
+.rank-2col.rank-3 { grid-template-columns: 1.3fr 1fr 1fr; }
+@media (max-width: 1080px) { .rank-2col.rank-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .rank-2col.rank-3 { grid-template-columns: 1fr; } }
 
 /* 스카니아11 서버 길드 랭킹 (홈) */
 .guild-rank-list { display: flex; flex-direction: column; gap: 6px; }

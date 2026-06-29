@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const text = `${me.nickname}님 · 스카니아11 서버 ${formatNumber(rank)}위(전투력) — 친구들 라운지`;
       try {
         if (navigator.share) {
-          await navigator.share({ title: "스카니아 라운지 전적", text, url });
+          await navigator.share({ title: "메이플키우기 라운지 전적", text, url });
         } else {
           await navigator.clipboard.writeText(`${text}\n${url}`);
           const orig = shareBtn.textContent;
