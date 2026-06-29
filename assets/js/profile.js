@@ -56,7 +56,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 단순 SVG 라인차트. points:[{label,value}], opts:{id,color,betterIsLow}
   // betterIsLow=true(순위)면 작은 값이 위(=좋음), false(전투력)면 큰 값이 위.
   function buildLineChart(points, opts) {
-    const W = 320, H = 120, padX = 28, padTop = 16, padBot = 24;
+    const W = 320, H = 132, padX = 30, padTop = 24, padBot = 26;
+    const fmt = opts.fmt || ((v) => String(v));
     const vals = points.map(p => p.value);
     let min = Math.min(...vals), max = Math.max(...vals);
     if (min === max) { min -= 1; max += 1; }          // 평평한 선 방지
@@ -77,6 +78,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const last = i === n - 1;
       return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${last ? 4 : 2.5}" fill="${last ? opts.color : "#fff"}" stroke="${opts.color}" stroke-width="1.6"/>`;
     }).join("");
+    // 값 라벨: 시작점·현재(마지막)점의 실제 수치를 그래프 위에 표시 (점 위쪽, 잘림 방지)
+    const labelY = (c) => Math.min(H - padBot - 6, Math.max(padTop - 6, c[1] - 8));
+    const valLabels = points.map((p, i) => {
+      if (i !== 0 && i !== n - 1) return "";           // 시작·끝만 (중간점 과밀 방지)
+      const c = coords[i], last = i === n - 1;
+      const anchor = i === 0 && n > 1 ? "start" : (last && n > 1 ? "end" : "middle");
+      return `<text x="${c[0].toFixed(1)}" y="${labelY(c).toFixed(1)}" text-anchor="${anchor}" font-size="${last ? 11 : 10}" font-weight="${last ? 800 : 700}" fill="${last ? opts.color : "#94a3b8"}">${escapeHtml(fmt(p.value))}</text>`;
+    }).join("");
     const xLabels = `
       <text x="${xAt(0).toFixed(1)}" y="${H - 6}" text-anchor="start" font-size="10" fill="#94a3b8">${escapeHtml(points[0].label)}</text>
       <text x="${xAt(n - 1).toFixed(1)}" y="${H - 6}" text-anchor="end" font-size="10" fill="#94a3b8">${escapeHtml(points[n - 1].label)}</text>`;
@@ -91,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <path d="${areaPath}" fill="url(#pfgrad-${opts.id})"/>
         <polyline points="${linePts}" fill="none" stroke="${opts.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
+        ${valLabels}
         ${xLabels}
       </svg>`;
   }
@@ -118,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         html += `
           <div class="pf-chart">
             <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
-            ${buildLineChart(rankPts, { id: "rank", color: "#2563eb", betterIsLow: true })}
+            ${buildLineChart(rankPts, { id: "rank", color: "#2563eb", betterIsLow: true, fmt: (v) => formatNumber(v) + "위" })}
           </div>`;
       }
       if (powerPts.length >= 2) {
@@ -130,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         html += `
           <div class="pf-chart">
             <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
-            ${buildLineChart(powerPts, { id: "power", color: "#f59e0b", betterIsLow: false })}
+            ${buildLineChart(powerPts, { id: "power", color: "#f59e0b", betterIsLow: false, fmt: (v) => formatCompactPower(v) })}
           </div>`;
       }
       html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
