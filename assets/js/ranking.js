@@ -586,57 +586,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `<div id="guildcmpContent"><div class="rk-list"><div class="loading-box">스카니아11 길드 데이터 불러오는 중…</div></div></div>`;
     }
 
+    let guildHealthCache = null;
+    async function loadGuildHealth() {                 // 길드별 분포 통계(중앙값·유효기여자·활동비율)를 백엔드가 집계 → 경량
+      if (guildHealthCache) return guildHealthCache;
+      try {
+        const r = await fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" });
+        guildHealthCache = r.ok ? await r.json() : [];
+      } catch { guildHealthCache = []; }
+      return guildHealthCache;
+    }
+
     async function initGuildcmpTab() {
       const wrap = document.getElementById("guildcmpContent");
       let guilds;
-      let members = [];
-      try {
-        guilds = await loadServerGuilds();
-        members = await loadServerRanking();   // 길드별 멤버 분포(중앙값·유효기여자·인기) 계산용
-      }
+      try { guilds = await loadGuildHealth(); }   // server-ranking 전체(1MB+) 대신 길드 30개 통계만 받음
       catch (e) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 데이터를 불러오지 못했습니다.")}</div>`; return; }
 
       guilds = (Array.isArray(guilds) ? guilds : []).filter(g => g && g.guildName);
       if (!guilds.length) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("스카니아11 길드 데이터가 아직 없습니다.")}</div>`; return; }
 
       // ── 길드 건강도(활력) 모델 ── 전 길드 공통 데이터(mgf)만 사용, 고래 왜곡 없음
-      //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 유효 기여자 수(1/HHI, "사실상 몇 명이 떠받치나") · 활동 = 인기도≥50 멤버 비율
-      //   가중 깊이0.42·활동0.33·균형0.25 · 성장 = 이력 누적 후 가동(현재 미가동 → 비례 재분배)
-      const POP_ACTIVE = 50;                          // 활동 멤버 인기도 임계값
+      //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 유효 기여자 수(1/HHI) · 활동 = 인기도≥50 멤버 비율
+      //   분포 통계(medianPower·effContributors·activeRatio)는 백엔드 /api/guild-health 가 계산해 내려줌
       const GROWTH_ACTIVE = false;                    // 이력 충분히 쌓이면 true
-      const byGuild = {};
-      (Array.isArray(members) ? members : []).forEach(m => {
-        const gn = String(m.guild || "").normalize("NFC").trim();
-        if (!gn) return;
-        (byGuild[gn] = byGuild[gn] || []).push(m);
-      });
+      const POP_ACTIVE = 50;                          // 활동 멤버 인기도 기준(표시용, 실제 집계는 백엔드)
       const clamp = (v) => Math.max(0, Math.min(100, v));
-      const median = (arr) => {
-        if (!arr.length) return 0;
-        const s = [...arr].sort((a, b) => a - b);
-        const mid = s.length >> 1;
-        return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
-      };
-      const effContributors = (arr) => {               // 유효 기여자 수 = 1/허핀달지수 ("사실상 몇 명이 떠받치나", N 무관)
-        const sum = arr.reduce((a, b) => a + b, 0);
-        if (!sum) return 0;
-        const hhi = arr.reduce((a, p) => a + (p / sum) ** 2, 0);
-        return hhi ? 1 / hhi : 0;
-      };
       const depthScore = (med) => med > 0 ? clamp(50 + 12.5 * Math.log10(med / 1e12)) : 0;   // 1조=50, ×10마다+12.5
       const balanceScore = (neff) => clamp((neff - 1) / (10 - 1) * 100);                     // 유효기여자 1명→0, 10명→100
 
       const scored = guilds.map((g) => {
-        const name = String(g.guildName || "").normalize("NFC").trim();
-        const ms = byGuild[name] || [];
-        const powers = ms.map(m => Number(m.power || 0)).filter(p => p > 0);
-        const pops = ms.map(m => Number(m.popularity || 0));
         const power = Number(g.power || 0);
-        const memCount = Number(g.members || powers.length || 0);
-        const hasDist = powers.length >= 3;                       // 분포 산출 가능 여부
-        const med = hasDist ? median(powers) : (memCount ? power / memCount : 0);
-        const neff = hasDist ? effContributors(powers) : null;    // 유효 기여자 수
-        const actRatio = pops.length ? pops.filter(p => p >= POP_ACTIVE).length / pops.length : null;
+        const memCount = Number(g.members || g.memberSampled || 0);
+        const hasDist = Number(g.memberSampled || 0) >= 3;        // 분포 산출 가능 여부
+        const med = Number(g.medianPower || 0) > 0 ? Number(g.medianPower) : (memCount ? power / memCount : 0);
+        const neff = (hasDist && g.effContributors != null) ? Number(g.effContributors) : null;
+        const actRatio = g.activeRatio != null ? Number(g.activeRatio) : null;
 
         const axisDepth = Math.round(depthScore(med));
         const axisBalance = neff != null ? Math.round(balanceScore(neff)) : null;
