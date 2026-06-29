@@ -589,64 +589,118 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function initGuildcmpTab() {
       const wrap = document.getElementById("guildcmpContent");
       let guilds;
-      try { guilds = await loadServerGuilds(); }
+      let members = [];
+      try {
+        guilds = await loadServerGuilds();
+        members = await loadServerRanking();   // 길드별 멤버 분포(중앙값·지니·인기) 계산용
+      }
       catch (e) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 데이터를 불러오지 못했습니다.")}</div>`; return; }
 
       guilds = (Array.isArray(guilds) ? guilds : []).filter(g => g && g.guildName);
       if (!guilds.length) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("스카니아11 길드 데이터가 아직 없습니다.")}</div>`; return; }
 
-      const maxPower = Math.max(...guilds.map(g => Number(g.power || 0)), 1);
-      const maxLevel = Math.max(...guilds.map(g => Number(g.level || 0)), 1);
-      const logMax = Math.log10(maxPower) || 1;
-
-      // 전력 균형(평균멤버÷최고멤버)은 어느 길드나 절대값이 낮아(고수+부캐 구조) 변별이 안 됨
-      // → 서버 내 상대 정규화: 가장 균형 잡힌 길드=100, 가장 쏠린 길드=0
-      const ratios = guilds.map(g => {
-        const t = Number(g.topPower || 0), a = Number(g.avgMemberPower || 0);
-        return (t > 0 && a > 0) ? a / t : null;
+      // ── 길드 건강도(활력) 모델 ── 전 길드 공통 데이터(mgf)만 사용, 고래 왜곡 없음
+      //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 1−지니 · 활동 = 인기도≥50 멤버 비율
+      //   성장 = 이력 누적 후 가동(현재 미가동 → 깊이·균형·활동 비례 재분배)
+      const POP_ACTIVE = 50;                          // 활동 멤버 인기도 임계값
+      const GROWTH_ACTIVE = false;                    // 이력 충분히 쌓이면 true
+      const byGuild = {};
+      (Array.isArray(members) ? members : []).forEach(m => {
+        const gn = String(m.guild || "").normalize("NFC").trim();
+        if (!gn) return;
+        (byGuild[gn] = byGuild[gn] || []).push(m);
       });
-      const validR = ratios.filter(r => r != null);
-      const minR = validR.length ? Math.min(...validR) : 0;
-      const maxR = validR.length ? Math.max(...validR) : 1;
+      const clamp = (v) => Math.max(0, Math.min(100, v));
+      const median = (arr) => {
+        if (!arr.length) return 0;
+        const s = [...arr].sort((a, b) => a - b);
+        const mid = s.length >> 1;
+        return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+      };
+      const gini = (arr) => {                          // 0=완전평등, 1=완전쏠림
+        const xs = [...arr].sort((a, b) => a - b);
+        const n = xs.length, sum = xs.reduce((a, b) => a + b, 0);
+        if (!n || !sum) return 0;
+        const cum = xs.reduce((acc, v, i) => acc + (i + 1) * v, 0);
+        return (2 * cum) / (n * sum) - (n + 1) / n;
+      };
+      const depthScore = (med) => med > 0 ? clamp(50 + 12.5 * Math.log10(med / 1e12)) : 0;   // 1조=50, ×10마다+12.5
+      const balanceScore = (g) => clamp((0.90 - g) / 0.60 * 100);                            // 지니0.3→100, 0.9→0
 
-      // 건강도 점수: 총전투력30 + 전력균형25 + 인원25 + 레벨20 (균형 데이터 없으면 비례 재분배)
-      const scored = guilds.map((g, idx) => {
+      const scored = guilds.map((g) => {
+        const name = String(g.guildName || "").normalize("NFC").trim();
+        const ms = byGuild[name] || [];
+        const powers = ms.map(m => Number(m.power || 0)).filter(p => p > 0);
+        const pops = ms.map(m => Number(m.popularity || 0));
         const power = Number(g.power || 0);
-        const members = Number(g.members || 0);
-        const level = Number(g.level || 0);
-        const avg = members ? power / members : 0;
-        const r = ratios[idx];
-        const hasBal = r != null;
-        const nBal = hasBal ? (maxR > minR ? (r - minR) / (maxR - minR) : 1) : 0;
-        const nTotal = power > 0 ? Math.log10(power) / logMax : 0;
-        const nMem = Math.min(members / 30, 1);
-        const nLv = maxLevel ? level / maxLevel : 0;
-        const score = hasBal
-          ? (nTotal * 0.30 + nBal * 0.25 + nMem * 0.25 + nLv * 0.20) * 100
-          : (nTotal * 0.40 + nMem * 0.33 + nLv * 0.27) * 100;
-        return { g, power, members, level, avg, hasBal, balIdx: hasBal ? Math.round(nBal * 100) : null, score: Math.round(score) };
+        const memCount = Number(g.members || powers.length || 0);
+        const hasDist = powers.length >= 3;                       // 분포 산출 가능 여부
+        const med = hasDist ? median(powers) : (memCount ? power / memCount : 0);
+        const gi = hasDist ? gini(powers) : null;
+        const actRatio = pops.length ? pops.filter(p => p >= POP_ACTIVE).length / pops.length : null;
+
+        const axisDepth = Math.round(depthScore(med));
+        const axisBalance = gi != null ? Math.round(balanceScore(gi)) : null;
+        const axisActivity = actRatio != null ? Math.round(actRatio * 100) : null;
+        const axisGrowth = GROWTH_ACTIVE ? 0 : null;             // TODO: 이력 기반 주간 성장 멤버 비율
+
+        // 종합: 성장 가동 시 성장30·활동25·깊이25·균형20, 미가동 시 활동/깊이/균형 비례 재분배
+        let composite, parts;
+        if (GROWTH_ACTIVE && axisGrowth != null && axisBalance != null && axisActivity != null) {
+          parts = [[axisGrowth, 0.30], [axisActivity, 0.25], [axisDepth, 0.25], [axisBalance, 0.20]];
+        } else {
+          // 활동:깊이:균형 = 0.36:0.34:0.30 (누락 축은 가용 가중치로 재정규화)
+          parts = [[axisActivity, 0.36], [axisDepth, 0.34], [axisBalance, 0.30]].filter(p => p[0] != null);
+        }
+        const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
+        composite = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
+
+        return {
+          g, power, members: memCount, med, gini: gi, actRatio,
+          axisDepth, axisBalance, axisActivity, axisGrowth, hasDist,
+          score: composite,
+        };
       }).sort((a, b) => b.score - a.score);
 
       const friendCount = scored.filter(s => FRIENDS.has(String(s.g.guildName || "").normalize("NFC"))).length;
-      const scoreColor = (s) => s >= 90 ? "#16a34a" : s >= 75 ? "#f59e0b" : s >= 60 ? "#fb923c" : "#94a3b8";
+      const scoreColor = (s) => s >= 70 ? "#16a34a" : s >= 55 ? "#f59e0b" : s >= 40 ? "#fb923c" : "#94a3b8";
 
+      const axisBar = (label, val, color) => {
+        if (val == null) return `
+            <div class="gc-axis gc-axis-na">
+              <span class="gc-axis-l">${label}</span>
+              <div class="gc-axisbar"><div class="gc-axisfill" style="width:0%;"></div></div>
+              <b class="gc-axis-v">수집중</b>
+            </div>`;
+        return `
+            <div class="gc-axis">
+              <span class="gc-axis-l">${label}</span>
+              <div class="gc-axisbar"><div class="gc-axisfill" style="width:${Math.max(3, val)}%;background:${color};"></div></div>
+              <b class="gc-axis-v">${val}</b>
+            </div>`;
+      };
       const cardsHtml = scored.map(s => {
         const g = s.g;
         const isFriend = FRIENDS.has(String(g.guildName || "").normalize("NFC"));
-        const fillPct = Math.min(100, Math.round(s.members / 30 * 100));
+        const actPct = s.actRatio != null ? Math.round(s.actRatio * 100) : null;
         return `
           <div class="gc-card${isFriend ? " gc-card-friend" : ""}">
             <div class="gc-head">
               <span class="gc-score" style="background:${scoreColor(s.score)};">${s.score}</span>
               <span class="gc-name">${escapeHtml(g.guildName)}${isFriend ? ` <span class="gc-fr">친구패밀리</span>` : ""}</span>
-              <span class="gc-srank">서버 ${g.guildRank ? formatNumber(g.guildRank) + "위" : "-"} · Lv ${g.level || "-"}</span>
+              <span class="gc-srank">전력 ${g.guildRank ? formatNumber(g.guildRank) + "위" : "-"} · Lv ${g.level || "-"}</span>
             </div>
-            <div class="gc-bar"><div class="gc-bar-fill" style="width:${Math.max(4, s.score)}%"></div></div>
+            <div class="gc-axes">
+              ${axisBar("성장", s.axisGrowth, "#16a34a")}
+              ${axisBar("활동", s.axisActivity, "#3182ce")}
+              ${axisBar("깊이", s.axisDepth, "#7c3aed")}
+              ${axisBar("균형", s.axisBalance, "#f59e0b")}
+            </div>
             <div class="gc-stats">
-              <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}</b></div>
-              <div class="gc-stat"><span>평균 전투력</span><b>${formatCompactPower(s.avg)}</b></div>
-              <div class="gc-stat"><span>전력 균형</span><b>${s.hasBal ? s.balIdx : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> /100</span></b></div>
-              <div class="gc-stat"><span>인원</span><b>${s.members || "-"}명 <span style="font-size:0.7rem;color:#a0aec0;">(${fillPct}%)</span></b></div>
+              <div class="gc-stat"><span>중앙값 전투력</span><b>${formatCompactPower(s.med)}</b></div>
+              <div class="gc-stat"><span>활동 멤버</span><b>${actPct != null ? actPct + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> ♥${POP_ACTIVE}+</span></b></div>
+              <div class="gc-stat"><span>전력 쏠림</span><b>${s.gini != null ? "지니 " + s.gini.toFixed(2) : "-"}</b></div>
+              <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}<span style="font-size:0.7rem;color:#a0aec0;"> ${s.members || "-"}명</span></b></div>
             </div>
           </div>`;
       }).join("");
@@ -655,19 +709,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         <style>
           .gc-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 4px 12px rgba(0,0,0,0.04);}
           .gc-card-friend{border-color:#fcd34d;background:linear-gradient(135deg,#fffbeb,#fff);}
-          .gc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+          .gc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
           .gc-score{min-width:40px;height:40px;padding:0 9px;border-radius:11px;color:#fff;font-weight:900;font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
           .gc-name{font-weight:800;font-size:1rem;color:#2d3748;}
           .gc-fr{font-size:0.66rem;font-weight:800;color:#b45309;background:#fef3c7;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:middle;}
           .gc-srank{margin-left:auto;font-size:0.8rem;color:#718096;font-weight:700;text-align:right;}
-          .gc-bar{height:8px;background:#edf2f7;border-radius:6px;overflow:hidden;margin-bottom:12px;}
-          .gc-bar-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:6px;}
-          .gc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;}
+          .gc-axes{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+          .gc-axis{display:flex;align-items:center;gap:8px;}
+          .gc-axis-l{font-size:0.74rem;font-weight:800;color:#4a5568;width:30px;flex-shrink:0;}
+          .gc-axisbar{flex:1;height:9px;background:#edf2f7;border-radius:6px;overflow:hidden;}
+          .gc-axisfill{height:100%;border-radius:6px;transition:width .3s;}
+          .gc-axis-v{font-size:0.78rem;font-weight:800;color:#2d3748;width:34px;text-align:right;flex-shrink:0;}
+          .gc-axis-na .gc-axis-v{color:#cbd5e0;font-weight:700;font-size:0.68rem;}
+          .gc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;border-top:1px solid #f1f5f9;padding-top:11px;}
           .gc-stat{display:flex;flex-direction:column;}
           .gc-stat span{font-size:0.72rem;color:#a0aec0;}
-          .gc-stat b{font-size:0.95rem;color:#2d3748;font-weight:800;margin-top:2px;}
+          .gc-stat b{font-size:0.92rem;color:#2d3748;font-weight:800;margin-top:2px;}
         </style>
-        <div class="rk-meta">스카니아11 길드 건강도 · 점수순(총전투력·전력균형·인원·레벨)${friendCount ? ` · 친구패밀리 ${friendCount}개 입성` : ""}</div>
+        <div class="rk-meta">스카니아11 길드 건강도 · 활력 점수순 · 깊이(중앙값)·균형(지니)·활동(♥${POP_ACTIVE}+)${GROWTH_ACTIVE ? "·성장" : " · 성장축 수집중"}${friendCount ? ` · 친구패밀리 ${friendCount}개` : ""}</div>
         ${cardsHtml}
       `;
     }
