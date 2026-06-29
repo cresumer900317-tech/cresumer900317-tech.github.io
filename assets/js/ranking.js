@@ -592,7 +592,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       let members = [];
       try {
         guilds = await loadServerGuilds();
-        members = await loadServerRanking();   // 길드별 멤버 분포(중앙값·지니·인기) 계산용
+        members = await loadServerRanking();   // 길드별 멤버 분포(중앙값·유효기여자·인기) 계산용
       }
       catch (e) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("길드 데이터를 불러오지 못했습니다.")}</div>`; return; }
 
@@ -600,8 +600,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!guilds.length) { wrap.innerHTML = `<div class="rk-list">${createEmptyBox("스카니아11 길드 데이터가 아직 없습니다.")}</div>`; return; }
 
       // ── 길드 건강도(활력) 모델 ── 전 길드 공통 데이터(mgf)만 사용, 고래 왜곡 없음
-      //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 1−지니 · 활동 = 인기도≥50 멤버 비율
-      //   성장 = 이력 누적 후 가동(현재 미가동 → 깊이·균형·활동 비례 재분배)
+      //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 유효 기여자 수(1/HHI, "사실상 몇 명이 떠받치나") · 활동 = 인기도≥50 멤버 비율
+      //   가중 깊이0.42·활동0.33·균형0.25 · 성장 = 이력 누적 후 가동(현재 미가동 → 비례 재분배)
       const POP_ACTIVE = 50;                          // 활동 멤버 인기도 임계값
       const GROWTH_ACTIVE = false;                    // 이력 충분히 쌓이면 true
       const byGuild = {};
@@ -617,15 +617,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const mid = s.length >> 1;
         return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
       };
-      const gini = (arr) => {                          // 0=완전평등, 1=완전쏠림
-        const xs = [...arr].sort((a, b) => a - b);
-        const n = xs.length, sum = xs.reduce((a, b) => a + b, 0);
-        if (!n || !sum) return 0;
-        const cum = xs.reduce((acc, v, i) => acc + (i + 1) * v, 0);
-        return (2 * cum) / (n * sum) - (n + 1) / n;
+      const effContributors = (arr) => {               // 유효 기여자 수 = 1/허핀달지수 ("사실상 몇 명이 떠받치나", N 무관)
+        const sum = arr.reduce((a, b) => a + b, 0);
+        if (!sum) return 0;
+        const hhi = arr.reduce((a, p) => a + (p / sum) ** 2, 0);
+        return hhi ? 1 / hhi : 0;
       };
       const depthScore = (med) => med > 0 ? clamp(50 + 12.5 * Math.log10(med / 1e12)) : 0;   // 1조=50, ×10마다+12.5
-      const balanceScore = (g) => clamp((0.90 - g) / 0.60 * 100);                            // 지니0.3→100, 0.9→0
+      const balanceScore = (neff) => clamp((neff - 1) / (10 - 1) * 100);                     // 유효기여자 1명→0, 10명→100
 
       const scored = guilds.map((g) => {
         const name = String(g.guildName || "").normalize("NFC").trim();
@@ -636,27 +635,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         const memCount = Number(g.members || powers.length || 0);
         const hasDist = powers.length >= 3;                       // 분포 산출 가능 여부
         const med = hasDist ? median(powers) : (memCount ? power / memCount : 0);
-        const gi = hasDist ? gini(powers) : null;
+        const neff = hasDist ? effContributors(powers) : null;    // 유효 기여자 수
         const actRatio = pops.length ? pops.filter(p => p >= POP_ACTIVE).length / pops.length : null;
 
         const axisDepth = Math.round(depthScore(med));
-        const axisBalance = gi != null ? Math.round(balanceScore(gi)) : null;
+        const axisBalance = neff != null ? Math.round(balanceScore(neff)) : null;
         const axisActivity = actRatio != null ? Math.round(actRatio * 100) : null;
         const axisGrowth = GROWTH_ACTIVE ? 0 : null;             // TODO: 이력 기반 주간 성장 멤버 비율
 
-        // 종합: 성장 가동 시 성장30·활동25·깊이25·균형20, 미가동 시 활동/깊이/균형 비례 재분배
+        // 종합: 성장 가동 시 성장30·활동25·깊이25·균형20, 미가동 시 깊이0.42·활동0.33·균형0.25 비례 재분배
         let composite, parts;
         if (GROWTH_ACTIVE && axisGrowth != null && axisBalance != null && axisActivity != null) {
           parts = [[axisGrowth, 0.30], [axisActivity, 0.25], [axisDepth, 0.25], [axisBalance, 0.20]];
         } else {
-          // 활동:깊이:균형 = 0.36:0.34:0.30 (누락 축은 가용 가중치로 재정규화)
-          parts = [[axisActivity, 0.36], [axisDepth, 0.34], [axisBalance, 0.30]].filter(p => p[0] != null);
+          // 깊이:활동:균형 = 0.42:0.33:0.25 (누락 축은 가용 가중치로 재정규화)
+          parts = [[axisDepth, 0.42], [axisActivity, 0.33], [axisBalance, 0.25]].filter(p => p[0] != null);
         }
         const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
         composite = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
 
         return {
-          g, power, members: memCount, med, gini: gi, actRatio,
+          g, power, members: memCount, med, neff, actRatio,
           axisDepth, axisBalance, axisActivity, axisGrowth, hasDist,
           score: composite,
         };
@@ -699,7 +698,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="gc-stats">
               <div class="gc-stat"><span>중앙값 전투력</span><b>${formatCompactPower(s.med)}</b></div>
               <div class="gc-stat"><span>활동 멤버</span><b>${actPct != null ? actPct + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> ♥${POP_ACTIVE}+</span></b></div>
-              <div class="gc-stat"><span>전력 쏠림</span><b>${s.gini != null ? "지니 " + s.gini.toFixed(2) : "-"}</b></div>
+              <div class="gc-stat"><span>유효 기여자</span><b>${s.neff != null ? s.neff.toFixed(1) + "명" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 실질캐리</span></b></div>
               <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}<span style="font-size:0.7rem;color:#a0aec0;"> ${s.members || "-"}명</span></b></div>
             </div>
           </div>`;
@@ -726,7 +725,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           .gc-stat span{font-size:0.72rem;color:#a0aec0;}
           .gc-stat b{font-size:0.92rem;color:#2d3748;font-weight:800;margin-top:2px;}
         </style>
-        <div class="rk-meta">스카니아11 길드 건강도 · 활력 점수순 · 깊이(중앙값)·균형(지니)·활동(♥${POP_ACTIVE}+)${GROWTH_ACTIVE ? "·성장" : " · 성장축 수집중"}${friendCount ? ` · 친구패밀리 ${friendCount}개` : ""}</div>
+        <div class="rk-meta">스카니아11 길드 건강도 · 활력 점수순 · 깊이(중앙값)·균형(유효기여자)·활동(♥${POP_ACTIVE}+)${GROWTH_ACTIVE ? "·성장" : " · 성장축 수집중"}${friendCount ? ` · 친구패밀리 ${friendCount}개` : ""}</div>
         ${cardsHtml}
       `;
     }
