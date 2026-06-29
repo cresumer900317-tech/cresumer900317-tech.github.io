@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const [res, blocks] = await Promise.all([
-      fetch(`${API_BASE}/api/tips`, { cache: "no-store" }),
+      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }),
       getMyBlocks(),
     ]);
     const allTips = await res.json();
@@ -66,17 +66,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       `;
-    }
-
-    function stripHtml(html) {
-      const tmp = document.createElement("div");
-      tmp.innerHTML = html;
-      return tmp.textContent || tmp.innerText || "";
-    }
-
-    function getPreview(content) {
-      const text = stripHtml(content || "");
-      return text.length > 50 ? text.substring(0, 50) + "…" : text;
     }
 
     function renderList(list) {
