@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const allHtml = sorted.map((item, i) => renderBossCard(item, i + 1, cfg)).join("");
       return `
         <div id="${cfg.key}Content">
-          <div class="rk-meta">${cfg.label} 점수 기준 · ${formatNumber(sorted.length)}명 · Scania 11</div>
+          <div class="rk-meta">${cfg.label} · ${formatNumber(sorted.length)}명</div>
           ${podiumHtml}
           ${allHtml ? `
             <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }).join("");
       return `
         <div id="powerContent">
-          <div class="rk-meta">전투력 기준 · ${formatNumber(sortedPower.length)}명</div>
+          <div class="rk-meta">전투력 · ${formatNumber(sortedPower.length)}명</div>
           ${heroHtml}
           <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
             <label class="search-field">
@@ -408,7 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const allHtml = sortedPopularity.map((item, i) => renderPopularityCard(item, i + 1)).join("");
       return `
         <div id="popularityContent">
-          <div class="rk-meta">인기도 기준 · ${formatNumber(sortedPopularity.length)}명</div>
+          <div class="rk-meta">인기도 · ${formatNumber(sortedPopularity.length)}명</div>
           ${podiumHtml}
           ${allHtml ? `
             <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
@@ -478,7 +478,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderServerContent() {
       return `
         <div id="serverContent">
-          <div class="rk-meta">스카니아11 서버 전체 전투력 랭킹 · 상위 <span id="serverTotal">…</span> · ♥는 인기도</div>
+          <div class="rk-meta">서버 전체 <span id="serverTotal">…</span>명</div>
           <div class="toolbar-card rk-toolbar rk-toolbar-sticky">
             <label class="search-field"><span>🔎</span>
               <input id="serverSearchInput" type="text" placeholder="서버 전체에서 캐릭터명 검색" autocomplete="off" />
@@ -653,7 +653,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="gc-axis gc-axis-na">
               <span class="gc-axis-l">${label}</span>
               <div class="gc-axisbar"><div class="gc-axisfill" style="width:0%;"></div></div>
-              <b class="gc-axis-v">수집중</b>
+              <b class="gc-axis-v">-</b>
             </div>`;
         return `
             <div class="gc-axis">
@@ -674,7 +674,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <span class="gc-srank">전력 ${g.guildRank ? formatNumber(g.guildRank) + "위" : "-"} · Lv ${g.level || "-"}</span>
             </div>
             <div class="gc-axes">
-              ${axisBar("성장", s.axisGrowth, "#16a34a")}
+              ${GROWTH_ACTIVE ? axisBar("성장", s.axisGrowth, "#16a34a") : ""}
               ${axisBar("활동", s.axisActivity, "#3182ce")}
               ${axisBar("깊이", s.axisDepth, "#7c3aed")}
               ${axisBar("균형", s.axisBalance, "#f59e0b")}
@@ -708,8 +708,26 @@ document.addEventListener("DOMContentLoaded", async () => {
           .gc-stat{display:flex;flex-direction:column;}
           .gc-stat span{font-size:0.72rem;color:#a0aec0;}
           .gc-stat b{font-size:0.92rem;color:#2d3748;font-weight:800;margin-top:2px;}
+          .gc-cap{display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.8rem;color:#718096;font-weight:700;margin-bottom:14px;}
+          .gc-info{position:relative;border:none;background:none;cursor:pointer;color:#a0aec0;font-size:0.95rem;padding:0;line-height:1;}
+          .gc-info .gc-tip{display:none;position:absolute;left:50%;top:150%;transform:translateX(-50%);width:248px;max-width:78vw;background:#1a202c;color:#e2e8f0;border-radius:10px;padding:11px 13px;font-size:0.74rem;font-weight:600;line-height:1.55;text-align:left;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,0.25);}
+          .gc-info .gc-tip b{display:block;color:#fff;margin-bottom:5px;font-size:0.78rem;}
+          .gc-info .gc-tip span{display:block;}
+          .gc-info .gc-tip .gc-tip-soon{color:#a0aec0;margin-top:5px;}
+          .gc-info.open .gc-tip{display:block;}
         </style>
-        <div class="rk-meta">스카니아11 길드 건강도 · 활력 점수순 · 깊이(중앙값)·균형(유효기여자)·활동(♥${POP_ACTIVE}+)${GROWTH_ACTIVE ? "·성장" : " · 성장축 수집중"}${friendCount ? ` · 친구패밀리 ${friendCount}개` : ""}</div>
+        <div class="gc-cap">
+          <span>${friendCount ? `친구패밀리 ${friendCount}개 입성 중` : "스카니아11 길드 건강도"}</span>
+          <button type="button" class="gc-info" onclick="this.classList.toggle('open')" aria-label="건강도 점수 설명">ⓘ
+            <span class="gc-tip">
+              <b>건강도 점수 기준</b>
+              <span>· 깊이 — 본대가 얼마나 두꺼운가</span>
+              <span>· 균형 — 한두 명에게 안 업혔는가</span>
+              <span>· 활동 — 활발한 멤버 비율</span>
+              <span class="gc-tip-soon">성장(주간 성장)은 데이터 수집 후 추가 예정</span>
+            </span>
+          </button>
+        </div>
         ${cardsHtml}
       `;
     }
