@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const [res, blocks] = await Promise.all([
-      fetch(`${API_BASE}/api/free`, { cache: "no-store" }),
+      fetch(`${API_BASE}/api/free?summary=true`, { cache: "no-store" }),
       getMyBlocks(),
     ]);
     const allPosts = await res.json();
