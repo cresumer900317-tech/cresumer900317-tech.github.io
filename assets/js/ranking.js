@@ -608,7 +608,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // ── 길드 건강도(활력) 모델 ── 전 길드 공통 데이터(mgf)만 사용, 고래 왜곡 없음
       //   깊이 = 중앙값 전투력(로그 절대) · 균형 = 유효 기여자 수(1/HHI) · 활동 = 인기도≥50 멤버 비율
       //   분포 통계(medianPower·effContributors·activeRatio)는 백엔드 /api/guild-health 가 계산해 내려줌
-      const GROWTH_ACTIVE = false;                    // 이력 충분히 쌓이면 true
+      const GROWTH_ACTIVE = true;                     // 2026-07-05 가동 — 백엔드 growthRatio(주간 +1%↑ 멤버 비율)
       const POP_ACTIVE = 50;                          // 활동 멤버 인기도 기준(표시용, 실제 집계는 백엔드)
       const clamp = (v) => Math.max(0, Math.min(100, v));
       const depthScore = (med) => med > 0 ? clamp(50 + 12.5 * Math.log10(med / 1e12)) : 0;   // 1조=50, ×10마다+12.5
@@ -625,7 +625,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const axisDepth = Math.round(depthScore(med));
         const axisBalance = neff != null ? Math.round(balanceScore(neff)) : null;
         const axisActivity = actRatio != null ? Math.round(actRatio * 100) : null;
-        const axisGrowth = GROWTH_ACTIVE ? 0 : null;             // TODO: 이력 기반 주간 성장 멤버 비율
+        const axisGrowth = (GROWTH_ACTIVE && g.growthRatio != null) ? Math.round(Number(g.growthRatio) * 100) : null;
 
         // 종합: 성장 가동 시 성장30·활동25·깊이25·균형20, 미가동 시 깊이0.42·활동0.33·균형0.25 비례 재분배
         let composite, parts;
@@ -683,6 +683,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="gc-stat"><span>중앙값 전투력</span><b>${formatCompactPower(s.med)}</b></div>
               <div class="gc-stat"><span>활동 멤버</span><b>${actPct != null ? actPct + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> ♥${POP_ACTIVE}+</span></b></div>
               <div class="gc-stat"><span>유효 기여자</span><b>${s.neff != null ? s.neff.toFixed(1) + "명" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 실질캐리</span></b></div>
+              <div class="gc-stat"><span>주간 성장</span><b>${s.axisGrowth != null ? s.axisGrowth + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 멤버비율</span></b></div>
               <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}<span style="font-size:0.7rem;color:#a0aec0;"> ${s.members || "-"}명</span></b></div>
             </div>
           </div>`;
@@ -721,10 +722,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           <button type="button" class="gc-info" onclick="this.classList.toggle('open')" aria-label="건강도 점수 설명">ⓘ
             <span class="gc-tip">
               <b>건강도 점수 기준</b>
+              <span>· 성장 — 이번 주 전투력이 오른 멤버 비율</span>
+              <span>· 활동 — 활발한 멤버 비율</span>
               <span>· 깊이 — 본대가 얼마나 두꺼운가</span>
               <span>· 균형 — 한두 명에게 안 업혔는가</span>
-              <span>· 활동 — 활발한 멤버 비율</span>
-              <span class="gc-tip-soon">성장(주간 성장)은 데이터 수집 후 추가 예정</span>
             </span>
           </button>
         </div>
@@ -758,11 +759,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
         <footer class="site-footer">
           <div class="container footer-inner">
-            <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
+            <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
             <div class="footer-links">
               <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
             </div>
-            <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+            <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
           </div>
         </footer>
       `;

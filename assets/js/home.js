@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/api/notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/free?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .filter((g) => g && g.guildName)
       .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
       .slice(0, 30);
-    // 길드 건강도 순위 (활력 점수: 깊이0.42·활동0.33·균형0.25 — ranking.js와 동일 공식)
+    // 길드 건강도 순위 (활력 점수 — ranking.js와 동일 공식. 성장축 가동: 성장30·활동25·깊이25·균형20)
     const clampH = (v) => Math.max(0, Math.min(100, v));
     const healthTop = (Array.isArray(serverHealthRes) ? serverHealthRes : [])
       .filter((g) => g && g.guildName && Number(g.memberSampled || 0) >= 3)
@@ -81,7 +81,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const depth = Number(g.medianPower || 0) > 0 ? clampH(50 + 12.5 * Math.log10(Number(g.medianPower) / 1e12)) : 0;
         const bal = g.effContributors != null ? clampH((Number(g.effContributors) - 1) / 9 * 100) : null;
         const act = g.activeRatio != null ? Number(g.activeRatio) * 100 : null;
-        const parts = [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter((p) => p[0] != null);
+        const grow = g.growthRatio != null ? Number(g.growthRatio) * 100 : null;
+        const parts = (grow != null && bal != null && act != null)
+          ? [[grow, 0.30], [act, 0.25], [depth, 0.25], [bal, 0.20]]
+          : [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter((p) => p[0] != null);
         const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
         const score = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
         return { name: g.guildName, score };
@@ -222,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <span class="hero-dot"></span>
                 메이플키우기 · 스카니아 11서버
               </div>
-              <h1 class="hero-title">스카니아 <span class="accent">라운지</span></h1>
+              <h1 class="hero-title">메이플키우기 <span class="accent">라운지</span></h1>
               <p class="hero-desc">전적 · 서버랭킹 · 커뮤니티</p>
               <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
                 <span class="hero-search-icon">🔎</span>
@@ -237,6 +240,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="hero-cta-row">
                 <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
                 <a class="cta-btn cta-btn-outline" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">친구들 길드 가입</a>
+                <a class="cta-btn cta-btn-outline" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">📱 길드라운지 앱</a>
               </div>
             </div>
             <form id="heroLoginForm" class="hero-login-card">
@@ -386,6 +390,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <a class="cta-btn side-login-btn" href="./login">로그인</a>
                 <a class="side-login-sub" href="./login?tab=register">회원가입 →</a>
               </div>` : ""}
+              <div class="side-card side-app">
+                <div class="side-card-title">📱 길드라운지 앱</div>
+                <p class="side-login-desc">일정 알림 푸시·랭킹·게시판을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
+                <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store 다운로드</a>
+              </div>
               <div class="side-card">
                 <div class="side-card-title">빠른 메뉴</div>
                 <div class="quick-menu">
@@ -476,6 +485,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="footer-links">
             <a href="./profile" class="footer-link">전적검색</a>
             <a href="./ranking" class="footer-link">서버 랭킹</a>
+            <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer" class="footer-link">앱 다운로드</a>
             <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">친구패밀리 가입 문의</a>
           </div>
           <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>

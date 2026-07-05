@@ -32,8 +32,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${inner}
       </div></div>
       <footer class="site-footer"><div class="container footer-inner">
-        <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
-        <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+        <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
+        <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
       </div></footer>`;
   }
 

@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentPage = 1;
 
   try {
-    const res = await fetch(`${API_BASE}/api/notices`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" });
     const notices = await res.json();
 
     function categoryColor(cat) {

@@ -189,7 +189,7 @@ function renderShell() {
           <span class="brand-emoji">🍁</span>
           <div>
             <div class="brand-title">메이플키우기 라운지</div>
-            <div class="brand-sub">메이플키우기 11서버</div>
+            <div class="brand-sub">스카니아11 서버</div>
           </div>
         </a>
         <nav class="nav-menu">${links}</nav>
@@ -412,8 +412,8 @@ async function unblockUser(name) {
 }
 
 function requireLogin(page) {
-  // 공지, 팁 페이지는 로그인 필요
-  const restricted = ["members", "weekly", "notice", "tips", "notice-view", "notice-write", "tips-view", "tips-write", "free", "free-view", "free-write", "download"];
+  // 공지·팁 읽기는 공개(검색 유입·미리보기), 글쓰기·내부 페이지만 로그인 필요
+  const restricted = ["members", "weekly", "notice-write", "tips-write", "free", "free-view", "free-write", "download"];
   if (restricted.includes(page) && !getUser()) {
     const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page.startsWith("free") ? "free" : page;
     location.href = `./login?redirect=./${base}`;

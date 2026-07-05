@@ -15,11 +15,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `
       <footer class="site-footer">
         <div class="container footer-inner">
-          <div class="footer-brand">친구패밀리 · 메이플키우기 스카니아 11서버</div>
+          <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
           <div class="footer-links">
             <a href="${KAKAO}" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
           </div>
-          <div class="footer-copy">&copy; ${new Date().getFullYear()} 친구패밀리. All rights reserved.</div>
+          <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>
       </footer>`;
   }
@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${isFriend ? `
         <div class="pf-cta pf-cta-member">
           <div class="pf-cta-title">🛡️ 친구패밀리 길드원이네요!</div>
-          <div class="pf-cta-desc">로그인하면 내 성장·공헌·포인트를 한눈에 볼 수 있어요.</div>
+          <div class="pf-cta-desc">로그인하면 내 성장·포인트·출석을 한눈에 볼 수 있어요.</div>
           <div class="pf-cta-btns">
             <a class="cta-btn" href="./login">로그인</a>
             <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (shareBtn) {
     shareBtn.addEventListener("click", async () => {
       const url = location.href;
-      const text = `${me.nickname}님 · 스카니아11 서버 ${formatNumber(rank)}위(전투력) — 친구들 라운지`;
+      const text = `${me.nickname}님 · 스카니아11 서버 ${formatNumber(rank)}위(전투력) — 메이플키우기 라운지`;
       try {
         if (navigator.share) {
           await navigator.share({ title: "메이플키우기 라운지 전적", text, url });
