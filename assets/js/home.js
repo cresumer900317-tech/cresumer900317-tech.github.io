@@ -239,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               </div>
               <div class="hero-cta-row">
                 <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
-                <a class="cta-btn cta-btn-outline" href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer">친구들 길드 가입</a>
+                <a class="cta-btn cta-btn-outline" href="./join">친구패밀리 길드 가입</a>
                 <a class="cta-btn cta-btn-outline" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">📱 길드라운지 앱</a>
               </div>
             </div>
@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <a href="./profile" class="footer-link">전적검색</a>
             <a href="./ranking" class="footer-link">서버 랭킹</a>
             <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer" class="footer-link">앱 다운로드</a>
-            <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">친구패밀리 가입 문의</a>
+            <a href="./join" class="footer-link">친구패밀리 가입 문의</a>
           </div>
           <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>

@@ -761,7 +761,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="container footer-inner">
             <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
             <div class="footer-links">
-              <a href="https://open.kakao.com/o/gagOlyni" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
+              <a href="./join" class="footer-link">길드 가입 문의</a>
             </div>
             <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
           </div>

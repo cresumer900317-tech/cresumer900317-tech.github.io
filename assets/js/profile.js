@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const FRIENDS = new Set(["친구들", "친구둘", "친구삼", "친구닷", "친구넷"]);
   const norm = (s) => String(s || "").normalize("NFC").trim();
   const lc = (s) => norm(s).toLowerCase();
-  const KAKAO = "https://open.kakao.com/o/gagOlyni";
 
   function footerHtml() {
     return `
@@ -17,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container footer-inner">
           <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
           <div class="footer-links">
-            <a href="${KAKAO}" target="_blank" rel="noopener noreferrer" class="footer-link">카카오톡 가입 문의</a>
+            <a href="./join" class="footer-link">길드 가입 문의</a>
           </div>
           <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>
@@ -296,7 +295,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="pf-cta-title">스카니아11 ${formatNumber(rank)}위 — 친구들과 함께 더 키워보실래요?</div>
           <div class="pf-cta-desc">${recruitTier}<br>전투력대별 5개 길드 운영 · 내 체급에 맞는 길드 자동 배정 · TOP30 길드 경쟁.</div>
           <div class="pf-cta-btns">
-            <a class="cta-btn" href="${KAKAO}" target="_blank" rel="noopener noreferrer">친구들 길드 가입</a>
+            <a class="cta-btn" href="./join">친구패밀리 길드 가입</a>
             <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
           </div>
         </div>

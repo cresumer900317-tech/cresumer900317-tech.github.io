@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /mypage
+Disallow: /login
+Disallow: /me/
+Disallow: /wedding/
+
+Sitemap: https://xn--2e0br5l24w.com/sitemap.xml
