@@ -240,7 +240,8 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="hero-cta-row">
                 <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
                 <a class="cta-btn cta-btn-outline" href="./join">친구패밀리 길드 가입</a>
-                <a class="cta-btn cta-btn-outline" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">📱 길드라운지 앱</a>
+                <a class="cta-btn cta-btn-outline" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">📱 앱 iOS</a>
+                <a class="cta-btn cta-btn-outline" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">🤖 앱 Android</a>
               </div>
             </div>
             <form id="heroLoginForm" class="hero-login-card">
@@ -394,6 +395,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="side-card-title">📱 길드라운지 앱</div>
                 <p class="side-login-desc">일정 알림 푸시·랭킹·게시판을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
                 <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store 다운로드</a>
+                <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play 다운로드</a>
               </div>
               <div class="side-card">
                 <div class="side-card-title">빠른 메뉴</div>
@@ -485,7 +487,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="footer-links">
             <a href="./profile" class="footer-link">전적검색</a>
             <a href="./ranking" class="footer-link">서버 랭킹</a>
-            <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer" class="footer-link">앱 다운로드</a>
+            <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer" class="footer-link">앱 (iOS)</a>
+            <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer" class="footer-link">앱 (Android)</a>
             <a href="./join" class="footer-link">친구패밀리 가입 문의</a>
           </div>
           <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
