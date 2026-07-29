@@ -146,40 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return d.toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
     };
 
-    // 길드 배치 기준일: 매달 마지막 수요일 22시
-    const cutlineDate = (() => {
-      const now = new Date();
-      let y = now.getFullYear(), m = now.getMonth();
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const lastDay = new Date(y, m + 1, 0);
-        const dow = lastDay.getDay();
-        const diff = (dow - 3 + 7) % 7;
-        const wed = new Date(y, m, lastDay.getDate() - diff);
-        wed.setHours(22, 0, 0, 0);
-        if (wed > now) return wed;
-        m++;
-        if (m > 11) { m = 0; y++; }
-      }
-      return null;
-    })();
-    const cutlineDDay = cutlineDate
-      ? Math.ceil((cutlineDate - new Date()) / (1000 * 60 * 60 * 24))
-      : null;
-    const cutlineDateStr = cutlineDate
-      ? `${cutlineDate.getMonth()+1}/${cutlineDate.getDate()}(수) 22시`
-      : "";
-    const cutlineDDayText = cutlineDDay === 0 ? "D-Day"
-      : cutlineDDay === 1 ? "D-1"
-      : cutlineDDay !== null ? `D-${cutlineDDay}` : "";
-
-    const guildDesc = {
-      "친구들": "TOP30 경쟁 메인 길드",
-      "친구둘": "내부 리그 강자",
-      "친구삼": "균형형 경쟁 길드",
-      "친구넷": "성장형 경쟁 길드",
-      "친구닷": "확장 · 자유 길드",
-    };
-
     const visitorHtml = (() => {
       const online = visitorStats.online || 0;
       const list = visitorStats.online_list || [];
@@ -207,12 +173,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <div class="hero-slim-stats">
               <span class="hero-slim-stat">${formatNumber(memberCount)}명 활동 중</span>
-              <span class="hero-slim-divider">·</span>
-              <span class="hero-slim-stat">${cutlineDDayText} 남음</span>
             </div>
           </div>
         </div>
       </div>
+      ${recentNotices.length ? `
+      <div class="container" style="margin-top:14px;">
+        <a href="./notice-view?id=${recentNotices[0].id}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;text-decoration:none;">
+          <span style="flex-shrink:0;font-size:0.72rem;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:999px;">📢 공지</span>
+          <span style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(recentNotices[0].title || "")}</span>
+          <span style="flex-shrink:0;font-size:0.78rem;color:var(--text-soft);">보기 →</span>
+        </a>
+      </div>` : ""}
       ` : `
       <div class="home-hero home-hero-portal">
         <div class="container hero-inner">
@@ -381,28 +353,32 @@ document.addEventListener("DOMContentLoaded", async () => {
               </div>
             </div>
             <aside class="portal-aside">
-              ${!user ? `
+              ${(() => {
+                const loginCard = `
               <div class="side-card side-login">
                 <div class="side-login-title">친구패밀리에 함께해요</div>
                 <p class="side-login-desc">로그인하면 내 순위·성장·포인트를 한눈에.</p>
                 <a class="cta-btn side-login-btn" href="./login">로그인</a>
                 <a class="side-login-sub" href="./login?tab=register">회원가입 →</a>
-              </div>` : ""}
+              </div>`;
+                const appCard = `
               <div class="side-card side-app">
                 <div class="side-card-title">📱 길드라운지 앱</div>
-                <p class="side-login-desc">일정 알림 푸시·랭킹·게시판을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
+                <p class="side-login-desc">일정 알림 푸시·랭킹·공략을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
                 <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store 다운로드</a>
                 <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play 다운로드</a>
-              </div>
+              </div>`;
+                const quickCard = `
               <div class="side-card">
                 <div class="side-card-title">빠른 메뉴</div>
                 <div class="quick-menu">
                   <a class="quick-link" href="./ranking"><span class="quick-emoji">🏆</span>서버 전체 랭킹</a>
-                  <a class="quick-link" href="./rivals"><span class="quick-emoji">⚔️</span>라이벌 비교</a>
+                  <a class="quick-link" href="./tips"><span class="quick-emoji">📖</span>공략 게시판</a>
                   <a class="quick-link" href="./points"><span class="quick-emoji">🔥</span>포인트</a>
                   <a class="quick-link" href="./members"><span class="quick-emoji">👥</span>길드원</a>
                 </div>
-              </div>
+              </div>`;
+                const noticeCard = `
               <div class="side-card">
                 <div class="side-card-title">📢 최신 공지 <a class="side-card-more" href="./notice">더보기</a></div>
                 ${recentNotices.length ? `
@@ -415,7 +391,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </a>
                   `).join("")}
                 </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
-              </div>
+              </div>`;
+                // 로그인 = 길드원: 공지 우선. 비로그인 = 방문자: 가입/앱 전환 우선.
+                return user
+                  ? noticeCard + quickCard + appCard
+                  : loginCard + appCard + quickCard + noticeCard;
+              })()}
             </aside>
           </div>
         </div>
