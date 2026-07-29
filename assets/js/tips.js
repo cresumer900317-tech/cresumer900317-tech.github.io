@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const [res, blocks, noticesRes] = await Promise.all([
-      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }),
+      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders() }),
       getMyBlocks(),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="tips-hot-rank">${medals[i]} ${i + 1}위</div>
                   <div class="tips-hot-card-title">${escapeHtml(p.text)}</div>
                   <div class="tips-hot-card-meta">
-                    ${tagBadges(p.tags)}
+                    ${t.members_only ? `<span class="board-cat" style="color:#475569;background:#f1f5f9;font-size:0.68rem;padding:2px 8px;">🔒 길드원</span>` : ""}${tagBadges(p.tags)}
                     <span>❤️ ${t.likes || 0}</span>
                     <span>👁 ${t.views || 0}</span>
                     <span>${escapeHtml(t.author || "-")}</span>
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <a class="board-row" href="./tips-view?id=${t.id}" style="text-decoration:none;color:inherit;">
           <span class="board-row-num">${num}</span>
           <div class="board-row-title">
-            ${tagBadges(p.tags)}
+            ${t.members_only ? `<span class="board-cat" style="color:#475569;background:#f1f5f9;">🔒 길드원</span>` : ""}${tagBadges(p.tags)}
             <span class="board-ttl">${escapeHtml(p.text)}</span>
             <span class="board-stats">
               ${t.likes > 0 ? `<span class="stat-likes">❤️ ${t.likes}</span>` : ""}

@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders() }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),

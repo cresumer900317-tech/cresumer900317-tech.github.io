@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
               <option value="">직업 공통</option>
               <option>전사</option><option>마법사</option><option>궁수</option><option>도적</option><option>해적</option>
             </select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--text-soft);cursor:pointer;">
+              <input type="checkbox" id="tMembersOnly" /> 🔒 길드원 전용 (비로그인 열람 불가)
+            </label>
           </div>
           <input type="text" id="tTitle" placeholder="제목을 입력하세요 — 앞에 [컨텐츠][직업] 헤더가 자동으로 붙어요" class="board-input" />
           <div id="editorWrap">
@@ -80,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         title, content, category: "공략",
         author: user.character_name,
         author_guild: user.guild || "",
+        members_only: document.getElementById("tMembersOnly").checked,
       }),
     });
 
