@@ -51,15 +51,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     return linkifyText(clean);
   }
 
-  function categoryColor(cat) {
-    const map = {
-      "공략": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },
-      "성장": { color: "#2563eb", bg: "#eff6ff", icon: "📈" },
-      "캐릭터": { color: "#0891b2", bg: "#ecfeff", icon: "🧙" },
-      "아이템": { color: "#7c3aed", bg: "#f5f3ff", icon: "🎒" },
-      "기타": { color: "#6b7280", bg: "#f9fafb", icon: "📝" },
-    };
-    return map[cat] || map["기타"];
+  // 제목 앞 [토벌전][전사] 헤더 파싱 — tips.js 와 동일 규칙
+  const TAG_CONFIG = {
+    "토벌전": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },
+    "대항전": { color: "#dc2626", bg: "#fef2f2", icon: "🚩" },
+    "수련장": { color: "#2563eb", bg: "#eff6ff", icon: "🥋" },
+    "월드아레나": { color: "#7c3aed", bg: "#f5f3ff", icon: "🏟️" },
+    "세팅": { color: "#0891b2", bg: "#ecfeff", icon: "🧰" },
+  };
+  const NEUTRAL_TAG = { color: "#6b7280", bg: "#f3f4f6", icon: "" };
+
+  function parseTitle(title) {
+    const tags = [];
+    let rest = String(title || "");
+    let m;
+    while ((m = rest.match(/^\s*\[([^\[\]]{1,12})\]/))) {
+      tags.push(m[1].trim());
+      rest = rest.slice(m[0].length);
+    }
+    return { tags, text: rest.trim() || String(title || "") };
   }
 
   // 좋아요 중복 방지 (localStorage)
@@ -109,8 +119,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const isHtml = tip.content && (tip.content.includes("<") && tip.content.includes(">"));
     const contentHtml = isHtml ? sanitize(tip.content) : `<p style="white-space:pre-wrap;">${escapeHtml(tip.content)}</p>`;
-    const cat = tip.category || "기타";
-    const catCfg = categoryColor(cat);
+    const parsed = parseTitle(tip.title);
+    const tagBadges = parsed.tags.map(tag => {
+      const c = TAG_CONFIG[tag] || NEUTRAL_TAG;
+      return `<span class="board-cat" style="color:${c.color};background:${c.bg};">${c.icon ? c.icon + " " : ""}${escapeHtml(tag)}</span>`;
+    }).join("");
 
     const alreadyLiked = hasLiked(postId);
 
@@ -118,15 +131,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="page-card">
         <div class="container" style="padding-bottom:32px;">
           <div style="padding:20px 0 16px;">
-            <a href="./tips" style="font-size:0.82rem;color:var(--text-soft);text-decoration:none;">&larr; 꿀팁 게시판 목록</a>
+            <a href="./tips" style="font-size:0.82rem;color:var(--text-soft);text-decoration:none;">&larr; 공략 게시판 목록</a>
           </div>
 
           <div class="board-view-page">
             <div class="board-view-header">
-              <div class="board-view-meta">
-                <span class="board-cat" style="color:${catCfg.color};background:${catCfg.bg};">${catCfg.icon} ${cat}</span>
-              </div>
-              <h1 class="board-view-title">${escapeHtml(tip.title)}</h1>
+              ${tagBadges ? `<div class="board-view-meta">${tagBadges}</div>` : ""}
+              <h1 class="board-view-title">${escapeHtml(parsed.text)}</h1>
               <div class="board-view-info">
                 <span>✍️ ${escapeHtml(tip.author || "-")}</span>
                 ${tip.author_guild ? `<span>🏰 ${escapeHtml(tip.author_guild)}</span>` : ""}

@@ -141,12 +141,11 @@ function renderShell() {
         ${navLink("./profile", "profile", "전적검색", page)}
       </div>
     </div>
-    <div class="nav-group ${inGroup(["notice", "tips", "free"])}">
+    <div class="nav-group ${inGroup(["notice", "tips"])}">
       <button class="nav-group-label" type="button">커뮤니티<span class="nav-caret">▾</span></button>
       <div class="nav-group-menu">
         ${navLink("./notice", "notice", "공지", page)}
-        ${navLink("./tips", "tips", "팁", page)}
-        ${navLink("./free", "free", "자유", page)}
+        ${navLink("./tips", "tips", "공략", page)}
       </div>
     </div>
     <div class="nav-group ${inGroup(["members", "weekly", "rivals", "points"])}">
@@ -158,7 +157,6 @@ function renderShell() {
         ${navLink("./points", "points", "포인트", page)}
       </div>
     </div>
-    ${navLink("./download", "download", "매크로", page)}
   `;
 
   const userHtml = user
@@ -412,11 +410,10 @@ async function unblockUser(name) {
 }
 
 function requireLogin(page) {
-  // 공지·팁 읽기는 공개(검색 유입·미리보기), 글쓰기·내부 페이지만 로그인 필요
-  // 자유게시판 읽기 공개(2026-07-17) — 쓰기(free-write)만 로그인. 커뮤니티가 살아있음을 외부에 보여주는 쇼윈도.
-  const restricted = ["members", "weekly", "notice-write", "tips-write", "free-write", "download"];
+  // 공지·공략 읽기는 공개(검색 유입·미리보기), 글쓰기·내부 페이지만 로그인 필요
+  const restricted = ["members", "weekly", "notice-write", "tips-write", "download"];
   if (restricted.includes(page) && !getUser()) {
-    const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page.startsWith("free") ? "free" : page;
+    const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page;
     location.href = `./login?redirect=./${base}`;
     return false;
   }

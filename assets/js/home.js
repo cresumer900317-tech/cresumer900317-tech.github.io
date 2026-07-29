@@ -37,14 +37,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, freeRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes] = await Promise.all([
+    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes] = await Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/free?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -126,14 +125,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const guildServerRanks = Object.values(guildRankMap).map((g) => Number(g.serverRank || 0)).filter((n) => n > 0);
     const bestGuildServerRank = guildServerRanks.length ? Math.min(...guildServerRanks) : 0;
 
-    // 커뮤니티 통합 피드 (공지 + 자유 + 팁, 최신순)
+    // 커뮤니티 통합 피드 (공지 + 공략, 최신순)
     const noticeRows = Array.isArray(noticesRes) ? noticesRes : [];
-    const freeRows = Array.isArray(freeRes) ? freeRes : [];
     const tipsRows = Array.isArray(tipsRes) ? tipsRes : [];
     const communityFeed = [
       ...noticeRows.map((p) => ({ ...p, board: "공지", href: `./notice-view?id=${p.id}`, color: "#f59e0b" })),
-      ...freeRows.map((p) => ({ ...p, board: "자유", href: `./free-view?id=${p.id}`, color: "#3b82f6" })),
-      ...tipsRows.map((p) => ({ ...p, board: "팁", href: `./tips-view?id=${p.id}`, color: "#22c55e" })),
+      ...tipsRows.map((p) => ({ ...p, board: "공략", href: `./tips-view?id=${p.id}`, color: "#22c55e" })),
     ].filter((p) => p.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
     // 사이드바 최신 공지 (고정글 우선)
     const recentNotices = [...noticeRows]
@@ -363,9 +360,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-head">
                 <div>
                   <div class="section-title">커뮤니티</div>
-                  <div class="section-sub">공지 · 자유 · 팁 최근 글</div>
+                  <div class="section-sub">공지 · 공략 최근 글</div>
                 </div>
-                <a class="section-link" href="./free">자유게시판 →</a>
+                <a class="section-link" href="./tips">공략 게시판 →</a>
               </div>
               <div class="feed-list">
                 ${communityFeed.length ? communityFeed.map((p) => `
@@ -379,7 +376,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="feed-empty">
                     <div class="feed-empty-icon">💬</div>
                     <div>아직 글이 없어요. 첫 글을 남기고 <b>포인트</b>도 받아가세요!</div>
-                    <a class="feed-empty-btn" href="./free-write">✏️ 글쓰기</a>
+                    <a class="feed-empty-btn" href="./tips-write">✏️ 글쓰기</a>
                   </div>`}
               </div>
             </div>
