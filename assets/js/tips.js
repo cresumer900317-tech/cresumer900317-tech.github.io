@@ -8,11 +8,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentTag = "전체";
 
   try {
-    const [res, blocks] = await Promise.all([
+    const [res, blocks, noticesRes] = await Promise.all([
       fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store" }),
       getMyBlocks(),
+      fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
     const allTips = await res.json();
+    // 최신 공지 1건 (API가 고정글 우선·최신순 정렬) — 게시판 상단 배너
+    const topNotice = Array.isArray(noticesRes) && noticesRes.length ? noticesRes[0] : null;
     const blockedSet = new Set(blocks);
     const tips = (Array.isArray(allTips) ? allTips : []).filter(t => !blockedSet.has(t.author));
 
@@ -159,6 +162,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <a href="./tips-write" class="board-write-btn" style="text-decoration:none;">✏️ 공략 등록</a>
           </div>
+
+          ${topNotice ? `
+          <a href="./notice-view?id=${topNotice.id}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;text-decoration:none;">
+            <span style="flex-shrink:0;font-size:0.72rem;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:999px;">📢 공지</span>
+            <span style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(topNotice.title)}</span>
+            <span style="flex-shrink:0;font-size:0.78rem;color:var(--text-soft);">보기 →</span>
+          </a>` : ""}
 
           <!-- 인기글 섹션 -->
           <div id="hotSection">${renderHotSection()}</div>
