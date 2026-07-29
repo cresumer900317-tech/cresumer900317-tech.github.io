@@ -158,6 +158,61 @@ document.addEventListener("DOMContentLoaded", async () => {
       return `<span class="live-bar-text">지금 <strong>${online}명</strong>이 함께 보고 있어요</span>`;
     })();
 
+    // 이번 주 변화 — 로그인(길드원)은 서버랭킹보다 위, 비로그인(방문자)은 하단
+    const changesHtml = (growthTop.length || riseTop.length) ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">이번 주 변화</div>
+              <div class="section-sub">성장량 · 서버 순위 상승 TOP 5</div>
+            </div>
+            <a class="section-link" href="./weekly">월간성장 보기 →</a>
+          </div>
+          <div class="summary-split">
+            <div class="summary-panel">
+              <div class="sub-head">성장 TOP 5</div>
+              <div class="mini-card-list">
+                ${growthTop.map((item, i) => `
+                  <div class="mini-summary-card">
+                    <span class="mini-summary-rank">${i + 1}</span>
+                    ${characterAvatarHtml(item)}
+                    <div class="mini-summary-main">
+                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
+                      <div class="mini-summary-sub">
+                        ${guildBadgeHtml(item.guild)}
+                        <span>성장률 ${escapeHtml(formatRate(item.growthRate || 0))}</span>
+                      </div>
+                    </div>
+                    <div class="mini-summary-side">${metricHtml(item.weeklyDiff || 0)}</div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+            <div class="summary-panel">
+              <div class="sub-head">서버 순위 상승 TOP 5</div>
+              <div class="mini-card-list">
+                ${riseTop.map((item, i) => `
+                  <div class="mini-summary-card">
+                    <span class="mini-summary-rank">${i + 1}</span>
+                    ${characterAvatarHtml(item)}
+                    <div class="mini-summary-main">
+                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
+                      <div class="mini-summary-sub">
+                        ${guildBadgeHtml(item.guild)}
+                        <span>현재 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</span>
+                      </div>
+                    </div>
+                    <div class="mini-summary-side">${rankTrendHtml(item)}</div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : "";
+
     document.querySelector("main").innerHTML = `
       ${user ? `
       <div class="home-hero home-hero-slim">
@@ -238,6 +293,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="live-bar-update">마지막 업데이트: ${lastUpdate}</span>
         </div>
       </div>
+
+      ${user ? changesHtml : ""}
 
       ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
       <div class="section-block">
@@ -405,59 +462,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       ${"" /* 홈에서 제거(2026-06-28): 길드별 현황(친구패밀리 5길드)·TOP30 배치 현황. 스카니아11 서버 길드 랭킹은 백엔드 서버길드 크롤 추가 후 신설 예정 */}
 
-      ${(growthTop.length || riseTop.length) ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">이번 주 변화</div>
-              <div class="section-sub">성장량 · 서버 순위 상승 TOP 5</div>
-            </div>
-            <a class="section-link" href="./weekly">월간성장 보기 →</a>
-          </div>
-          <div class="summary-split">
-            <div class="summary-panel">
-              <div class="sub-head">성장 TOP 5</div>
-              <div class="mini-card-list">
-                ${growthTop.map((item, i) => `
-                  <div class="mini-summary-card">
-                    <span class="mini-summary-rank">${i + 1}</span>
-                    ${characterAvatarHtml(item)}
-                    <div class="mini-summary-main">
-                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
-                      <div class="mini-summary-sub">
-                        ${guildBadgeHtml(item.guild)}
-                        <span>성장률 ${escapeHtml(formatRate(item.growthRate || 0))}</span>
-                      </div>
-                    </div>
-                    <div class="mini-summary-side">${metricHtml(item.weeklyDiff || 0)}</div>
-                  </div>
-                `).join("")}
-              </div>
-            </div>
-            <div class="summary-panel">
-              <div class="sub-head">서버 순위 상승 TOP 5</div>
-              <div class="mini-card-list">
-                ${riseTop.map((item, i) => `
-                  <div class="mini-summary-card">
-                    <span class="mini-summary-rank">${i + 1}</span>
-                    ${characterAvatarHtml(item)}
-                    <div class="mini-summary-main">
-                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
-                      <div class="mini-summary-sub">
-                        ${guildBadgeHtml(item.guild)}
-                        <span>현재 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</span>
-                      </div>
-                    </div>
-                    <div class="mini-summary-side">${rankTrendHtml(item)}</div>
-                  </div>
-                `).join("")}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      ` : ""}
+      ${user ? "" : changesHtml}
 
       <footer class="site-footer">
         <div class="container footer-inner">
