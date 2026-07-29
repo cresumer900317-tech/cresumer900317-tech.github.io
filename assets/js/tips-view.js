@@ -55,8 +55,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const TAG_CONFIG = {
     "토벌전": { color: "#ea580c", bg: "#fff7ed", icon: "⚔️" },
     "대항전": { color: "#dc2626", bg: "#fef2f2", icon: "🚩" },
-    "수련장": { color: "#2563eb", bg: "#eff6ff", icon: "🥋" },
+    "길드수련장": { color: "#2563eb", bg: "#eff6ff", icon: "🥋" },
     "월드아레나": { color: "#7c3aed", bg: "#f5f3ff", icon: "🏟️" },
+    "월드보스": { color: "#16a34a", bg: "#f0fdf4", icon: "🐲" },
+    "콜로세움": { color: "#b45309", bg: "#fffbeb", icon: "🏛️" },
     "세팅": { color: "#0891b2", bg: "#ecfeff", icon: "🧰" },
   };
   const NEUTRAL_TAG = { color: "#6b7280", bg: "#f3f4f6", icon: "" };

@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
             <select id="tContent" class="board-select">
               <option value="">컨텐츠 선택</option>
-              <option>토벌전</option><option>대항전</option><option>수련장</option><option>월드아레나</option><option>세팅</option>
+              <option>토벌전</option><option>대항전</option><option>길드수련장</option><option>월드아레나</option><option>월드보스</option><option>콜로세움</option><option>세팅</option>
             </select>
             <select id="tJob" class="board-select">
               <option value="">직업 공통</option>
