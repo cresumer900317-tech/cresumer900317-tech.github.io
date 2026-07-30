@@ -35,9 +35,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>
   `;
 
-  try {
-    const user = getUser();
-    const [summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes] = await Promise.all([
+  const HOME_CACHE_KEY = "homeDataCache_v1";
+
+  async function loadHomeData() {
+    return Promise.all([
       getHomeData(),
       getGuildsData(),
       fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
@@ -50,6 +51,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
+  }
+
+  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes]) {
+    const user = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
     const guildRankMap = {};
@@ -510,8 +515,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
+  }
+
+  // stale-while-revalidate: 캐시본 즉시 렌더(재방문 체감 0초) → 최신 데이터 백그라운드 갱신 후 재렌더
+  let cachedStr = null;
+  let renderedFromCache = false;
+  try {
+    const c = JSON.parse(localStorage.getItem(HOME_CACHE_KEY) || "null");
+    if (c && Array.isArray(c.d) && Date.now() - c.t < 3600000) {   // 데이터 갱신주기(1h) 넘은 캐시는 스켈레톤이 낫다
+      renderHome(c.d);
+      cachedStr = JSON.stringify(c.d);
+      renderedFromCache = true;
+    }
+  } catch (_) {}
+
+  try {
+    const fresh = await loadHomeData();
+    try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ t: Date.now(), d: fresh })); } catch (_) {}
+    // 내용이 캐시와 동일하면 재렌더 생략 (로그인 폼 입력 초기화·깜빡임 방지)
+    if (!renderedFromCache || JSON.stringify(fresh) !== cachedStr) renderHome(fresh);
   } catch (error) {
     console.error(error);
-    renderError(null, error);
+    if (!renderedFromCache) renderError(null, error);
   }
 });
