@@ -72,6 +72,10 @@
     .badge-stay { background: #dcfce7; color: #16a34a; }
     .card-sub { font-size: 0.74rem; color: #6b7280; margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
     .card-sub .up { color: #16a34a; font-weight: 700; }
+    .score-row { display: flex; gap: 8px; margin-top: 6px; }
+    .score-row label { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; color: #6b7280; flex: 1; }
+    .score-in { width: 100%; min-width: 0; padding: 3px 7px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.76rem; }
+    .score-in:focus { outline: none; border-color: #f59e0b; }
     .card-actions { display: flex; align-items: center; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
     .gbtn { padding: 3px 8px; border: 1px solid #e5e7eb; border-radius: 7px; background: #fff; font-size: 0.72rem; font-weight: 700; color: #6b7280; cursor: pointer; }
     .gbtn:hover { border-color: #fbbf24; color: #92400e; }
@@ -245,6 +249,14 @@ async function toggleMoved(id, checked) {
   if (await patchRow(id, { moved: checked })) { row.moved = checked; render(); }
 }
 
+async function setScore(id, field, val) {
+  const row = boardRows.find(r => r.id === id);
+  if (!row) return;
+  const num = val === "" ? null : Number(val);
+  if (num !== null && (!Number.isFinite(num) || num < 0)) { toast("숫자만 입력해주세요"); return; }
+  if (await patchRow(id, { [field]: num })) { row[field] = num; render(); }
+}
+
 async function delRow(id) {
   const row = boardRows.find(r => r.id === id);
   if (!row) return;
@@ -280,6 +292,16 @@ function cardHtml(row) {
       ${weekly > 0 ? `<span class="up">▲ 주간 +${fmtPower(weekly)}</span>` : ""}
     </div>` : "";
 
+  const crawlBoss = m && m.bossScore != null ? Number(m.bossScore) : null;
+  const scores = `
+    <div class="score-row">
+      <label>🏆 토벌 <input class="score-in" type="number" min="0" value="${row.boss_score ?? ""}"
+        placeholder="${crawlBoss != null ? crawlBoss.toLocaleString() : "-"}"
+        onchange="setScore(${row.id}, 'boss_score', this.value)" title="비우면 크롤값 사용" /></label>
+      <label>🎌 대항 <input class="score-in" type="number" min="0" value="${row.versus_score ?? ""}"
+        placeholder="-" onchange="setScore(${row.id}, 'versus_score', this.value)" /></label>
+    </div>`;
+
   const gbtns = GUILDS.map(g => `<button class="gbtn${row.assigned_guild === g ? " on" : ""}" onclick="assign(${row.id}, '${g}')">${GUILD_SHORT[g]}</button>`).join("");
   const tail = row.assigned_guild
     ? `<label class="moved-label"><input type="checkbox" ${row.moved ? "checked" : ""} onchange="toggleMoved(${row.id}, this.checked)" />이동 완료</label>`
@@ -289,20 +311,31 @@ function cardHtml(row) {
     <div class="card${row.moved ? " moved" : ""}">
       <div class="card-top"><span class="card-name">${esc(row.character_name)}</span>${badges}</div>
       ${sub}
+      ${scores}
       <div class="card-actions">${gbtns}${row.assigned_guild ? `<button class="gbtn gbtn-clear" onclick="clearGuild(${row.id})">↩</button>` : ""}${tail}</div>
     </div>`;
+}
+
+function effBoss(r) {   // 토벌전: 수동값 우선, 없으면 크롤값
+  if (r.boss_score != null) return Number(r.boss_score);
+  const m = memberMap[nfc(r.character_name)];
+  return m && m.bossScore != null ? Number(m.bossScore) : 0;
 }
 
 function colHtml(title, rows, isPool) {
   const withData = rows.filter(r => memberMap[nfc(r.character_name)]);
   const sumPower = withData.reduce((s, r) => s + Number(memberMap[nfc(r.character_name)].power || 0), 0);
   const activeCnt = withData.filter(r => Number(memberMap[nfc(r.character_name)].popularity || 0) >= POP_ACTIVE).length;
+  const sumBoss = rows.reduce((s, r) => s + effBoss(r), 0);
+  const sumVersus = rows.reduce((s, r) => s + Number(r.versus_score || 0), 0);
   const movedCnt = rows.filter(r => r.moved).length;
   const stats = isPool
     ? `<div class="col-stats"><span>배치 대기 인원이에요</span></div>`
     : `<div class="col-stats">
          <span>⚔️ 합계 <b>${fmtPower(sumPower)}</b></span>
          <span>♥ 활동 <b>${activeCnt}</b></span>
+         ${sumBoss ? `<span>🏆 <b>${sumBoss.toLocaleString()}</b></span>` : ""}
+         ${sumVersus ? `<span>🎌 <b>${sumVersus.toLocaleString()}</b></span>` : ""}
          <span class="col-moved">이동 ${movedCnt}/${rows.length}</span>
        </div>`;
   const body = rows.length
