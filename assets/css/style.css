@@ -1025,6 +1025,10 @@ a.mini-summary-card:active { transform: translateY(1px); }
 /* 홈 랭킹 3단 (서버 전체 / 길드 랭킹 / 길드 건강도) */
 .rank-2col.rank-3 { grid-template-columns: 1.3fr 1fr 1fr; }
 
+/* 메키 공식 소식 카드 */
+.side-official-kind { flex-shrink: 0; font-size: 0.66rem; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: #fef3c7; color: #92400e; }
+.side-official-kind.patch { background: #dbeafe; color: #1d4ed8; }
+
 /* 전적검색 변경 이력 */
 .pf-change-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid #f3f4f6; font-size: 0.86rem; flex-wrap: wrap; }
 .pf-change-row:last-child { border-bottom: none; }

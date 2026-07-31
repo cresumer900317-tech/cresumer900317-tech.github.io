@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>
   `;
 
-  const HOME_CACHE_KEY = "homeDataCache_v2";   // v2: 쿠폰·영상 추가
+  const HOME_CACHE_KEY = "homeDataCache_v3";   // v3: 공식 소식 추가·사이드 정리
 
   async function loadHomeData() {
     return Promise.all([
@@ -59,10 +59,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/coupons`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/home-videos`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/official-notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
   }
 
-  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes]) {
+  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes]) {
     const user = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
@@ -278,8 +279,6 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="hero-cta-row">
                 <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
                 <a class="cta-btn cta-btn-outline" href="./join">친구패밀리 길드 가입</a>
-                <a class="cta-btn cta-btn-outline" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">📱 앱 iOS</a>
-                <a class="cta-btn cta-btn-outline" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">🤖 앱 Android</a>
               </div>
             </div>
             <form id="heroLoginForm" class="hero-login-card">
@@ -373,29 +372,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <aside class="portal-aside">
               ${(() => {
-                const loginCard = `
-              <div class="side-card side-login">
-                <div class="side-login-title">친구패밀리에 함께해요</div>
-                <p class="side-login-desc">로그인하면 내 순위·성장·포인트를 한눈에.</p>
-                <a class="cta-btn side-login-btn" href="./login">로그인</a>
-                <a class="side-login-sub" href="./login?tab=register">회원가입 →</a>
-              </div>`;
                 const appCard = `
               <div class="side-card side-app">
                 <div class="side-card-title">📱 길드라운지 앱</div>
                 <p class="side-login-desc">일정 알림 푸시·랭킹·공략을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
                 <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store 다운로드</a>
                 <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play 다운로드</a>
-              </div>`;
-                const quickCard = `
-              <div class="side-card">
-                <div class="side-card-title">빠른 메뉴</div>
-                <div class="quick-menu">
-                  <a class="quick-link" href="./ranking"><span class="quick-emoji">🏆</span>서버 전체 랭킹</a>
-                  <a class="quick-link" href="./tips"><span class="quick-emoji">📖</span>공략 게시판</a>
-                  <a class="quick-link" href="./points"><span class="quick-emoji">🔥</span>포인트</a>
-                  <a class="quick-link" href="./members"><span class="quick-emoji">👥</span>길드원</a>
-                </div>
               </div>`;
                 const noticeCard = `
               <div class="side-card">
@@ -411,19 +393,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                   `).join("")}
                 </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
               </div>`;
+                const officialRows = Array.isArray(officialRes) ? officialRes : [];
                 const officialCard = `
               <div class="side-card">
-                <div class="side-card-title">🍁 메키 공식</div>
-                <div class="quick-menu">
-                  <a class="quick-link" href="https://forum.nexon.com/maplestoryidle-kr/board_list?board=6633" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">📢</span>공식 공지사항</a>
-                  <a class="quick-link" href="https://forum.nexon.com/maplestoryidle-kr/board_list?board=6698" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">🛠️</span>패치노트</a>
-                  <a class="quick-link" href="https://maplestoryidle.nexon.com/ko" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">🏠</span>공식 홈페이지</a>
-                </div>
+                <div class="side-card-title">🍁 메키 공식 소식 <a class="side-card-more" href="https://forum.nexon.com/maplestoryidle-kr/" target="_blank" rel="noopener noreferrer">더보기</a></div>
+                ${officialRows.length ? `
+                <div class="side-notice-list">
+                  ${officialRows.map((n) => `
+                    <a class="side-notice-row" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
+                      <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
+                      <span class="side-notice-ttl">${escapeHtml(n.title || "")}</span>
+                      <span class="side-notice-date">${(n.date || "").slice(5)}</span>
+                    </a>
+                  `).join("")}
+                </div>` : `<div class="side-empty">공식 소식을 불러오는 중이에요</div>`}
               </div>`;
-                // 로그인 = 길드원: 공지 우선. 비로그인 = 방문자: 가입/앱 전환 우선.
+                // 로그인 = 길드원: 우리 공지 우선. 비로그인 = 서버 방문자: 공식 소식 우선.
                 return user
-                  ? noticeCard + quickCard + officialCard + appCard
-                  : loginCard + appCard + quickCard + noticeCard + officialCard;
+                  ? noticeCard + officialCard + appCard
+                  : officialCard + noticeCard + appCard;
               })()}
             </aside>
           </div>
