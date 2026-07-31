@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders() }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/server-ranking?limit=100`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/server-ranking?limit=15`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -67,11 +67,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const grouped = byGuild(rows);
     const guilds = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"];
     const FRIENDS = new Set(guilds);
-    // 스카니아11 서버 전체 랭킹 TOP10 (서버 포털 메인 콘텐츠)
+    // 스카니아11 서버 전체 랭킹 TOP15 — 홈은 미리보기, 전체는 랭킹 페이지 담당
     const serverTop = (Array.isArray(serverTopRes) ? serverTopRes : [])
       .filter((r) => r && r.nickname)
       .sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0))
-      .slice(0, 100);
+      .slice(0, 15);
     // 스카니아11 서버 전체 길드 랭킹 (최대 30)
     const serverGuildTop = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
       .filter((g) => g && g.guildName)
@@ -310,9 +310,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-head">
                 <div>
                   <div class="section-title">서버 전체 랭킹</div>
-                  <div class="section-sub">전투력 TOP 100</div>
+                  <div class="section-sub">전투력 TOP ${serverTop.length}</div>
                 </div>
-                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
+                <a class="section-link" href="./ranking">전체 랭킹 보기 →</a>
               </div>
               <div class="mini-card-list rank-scroll">
                 ${serverTop.map((item, i) => {
@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-head">
                 <div>
                   <div class="section-title">길드 건강도</div>
-                  <div class="section-sub">활력 점수 TOP ${healthTop.length}</div>
+                  <div class="section-sub">성장·활동·깊이·균형을 종합한 활력점수 TOP ${healthTop.length}</div>
                 </div>
                 <a class="section-link" href="./ranking">건강도 상세보기 →</a>
               </div>
@@ -386,6 +386,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
       ` : ""}
+
+      <div class="section-block">
+        <div class="container">
+          <div class="recruit-band">
+            <div class="recruit-band-main">
+              <div class="recruit-band-title">🛡️ 친구패밀리와 함께 성장하세요</div>
+              <div class="recruit-band-desc">스카니아11 운영 5개 길드${rows.length ? ` · 길드원 ${formatNumber(rows.length)}명` : ""} — 초보부터 랭커까지 환영해요.</div>
+            </div>
+            <a class="cta-btn" href="./join">길드 가입 문의 →</a>
+          </div>
+        </div>
+      </div>
 
       <div class="section-block">
         <div class="container">

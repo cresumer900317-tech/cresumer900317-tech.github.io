@@ -1024,6 +1024,12 @@ a.mini-summary-card:active { transform: translateY(1px); }
 @media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } .rank-scroll { max-height: 372px; } }
 /* 홈 랭킹 3단 (서버 전체 / 길드 랭킹 / 길드 건강도) */
 .rank-2col.rank-3 { grid-template-columns: 1.3fr 1fr 1fr; }
+
+/* 홈 가입 배너 — 랭킹 구경 직후 모집 퍼널 */
+.recruit-band { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 26px; border-radius: 16px; background: linear-gradient(135deg, #fffbeb, #fff7ed); border: 1px solid var(--yellow-border, #fde68a); }
+.recruit-band-title { font-weight: 800; font-size: 1.05rem; }
+.recruit-band-desc { color: var(--text-soft, #64748b); font-size: 0.9rem; margin-top: 4px; }
+@media (max-width: 640px) { .recruit-band { flex-direction: column; align-items: flex-start; } .recruit-band .cta-btn { width: 100%; text-align: center; } }
 @media (max-width: 1080px) { .rank-2col.rank-3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 760px) { .rank-2col.rank-3 { grid-template-columns: 1fr; } }
 
