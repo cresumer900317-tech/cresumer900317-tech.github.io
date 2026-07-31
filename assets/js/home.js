@@ -380,13 +380,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="mini-tabs">
                   <button class="mini-tab active" onclick="showOfficialTab(this, '전체')">전체</button>
                   <button class="mini-tab" onclick="showOfficialTab(this, '공지')">공지</button>
+                  <button class="mini-tab" onclick="showOfficialTab(this, '이벤트')">이벤트</button>
                   <button class="mini-tab" onclick="showOfficialTab(this, '패치')">패치</button>
                 </div>
               </div>
               <div class="hw-list" id="officialList">
                 ${officialRows.length ? officialRows.map((n) => `
                 <a class="official-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
-                  <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
+                  <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}${n.kind === "이벤트" ? " event" : ""}">${n.kind || "공지"}</span>
                   <span class="official-ttl">${escapeHtml(n.title || "")}</span>
                   <span class="official-date">${(n.date || "").slice(5)}</span>
                 </a>`).join("") : `<div class="hw-empty">공식 소식을 불러오지 못했어요</div>`}
@@ -399,7 +400,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="hw-card">
                 <div class="hw-head"><span class="hw-title">▶️ 추천 영상</span></div>
                 <div class="hw-videos">
-                  ${videosRes.slice(0, 3).map((v) => `
+                  ${videosRes.slice(0, 4).map((v) => `
                   <a class="hw-video" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer">
                     <img class="hw-video-thumb" src="https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg" alt="" loading="lazy" />
                     ${v.title ? `<div class="hw-video-ttl">${escapeHtml(v.title)}</div>` : ""}
