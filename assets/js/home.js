@@ -1,3 +1,18 @@
+window.showOfficialTab = function (btn, kind) {
+  btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
+  document.querySelectorAll("#officialList .official-row").forEach((r) => {
+    r.style.display = (kind === "전체" || r.dataset.kind === kind) ? "" : "none";
+  });
+};
+
+window.showCommTab = function (btn, id) {
+  btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
+  ["commLatest", "commPopular"].forEach((x) => {
+    const el = document.getElementById(x);
+    if (el) el.style.display = x === id ? "" : "none";
+  });
+};
+
 window.copyCoupon = function (code, btn) {
   navigator.clipboard.writeText(code).then(() => {
     const el = btn.querySelector(".coupon-copy");
@@ -140,13 +155,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const guildServerRanks = Object.values(guildRankMap).map((g) => Number(g.serverRank || 0)).filter((n) => n > 0);
     const bestGuildServerRank = guildServerRanks.length ? Math.min(...guildServerRanks) : 0;
 
-    // 커뮤니티 통합 피드 (공지 + 공략, 최신순)
+    // 커뮤니티 통합 피드 (공지 + 공략) — 최신글·인기글 탭
     const noticeRows = Array.isArray(noticesRes) ? noticesRes : [];
     const tipsRows = Array.isArray(tipsRes) ? tipsRes : [];
-    const communityFeed = [
+    const mergedFeed = [
       ...noticeRows.map((p) => ({ ...p, board: "공지", href: `./notice-view?id=${p.id}`, color: "#f59e0b" })),
       ...tipsRows.map((p) => ({ ...p, board: "공략", href: `./tips-view?id=${p.id}`, color: "#22c55e" })),
-    ].filter((p) => p.created_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
+    ].filter((p) => p.created_at);
+    const communityFeed = [...mergedFeed].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
+    const popularFeed = [...mergedFeed].filter((p) => Number(p.likes) > 0)
+      .sort((a, b) => Number(b.likes || 0) - Number(a.likes || 0) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
+    // 메키 공식 소식 (넥슨 커뮤니티 프록시)
+    const officialRows = Array.isArray(officialRes) ? officialRes : [];
     // 사이드바 최신 공지 (고정글 우선)
     const recentNotices = [...noticeRows]
       .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0) || new Date(b.created_at) - new Date(a.created_at))
@@ -319,7 +339,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>` : ""}
 
+      <div class="section-block feature-tiles-block">
+        <div class="container">
+          <div class="feature-tiles">
+            <a class="feature-tile" href="./profile"><span class="ft-emoji">🔍</span><div class="ft-main"><div class="ft-title">전적검색</div><div class="ft-sub">캐릭터 정보 · 성장 그래프</div></div><span class="ft-arrow">→</span></a>
+            <a class="feature-tile" href="./ranking"><span class="ft-emoji">👑</span><div class="ft-main"><div class="ft-title">서버 랭킹</div><div class="ft-sub">전투력 · 인기도 · 보스</div></div><span class="ft-arrow">→</span></a>
+            <a class="feature-tile" href="./ranking"><span class="ft-emoji">🛡️</span><div class="ft-main"><div class="ft-title">길드 랭킹</div><div class="ft-sub">서버 길드 TOP30 · 건강도</div></div><span class="ft-arrow">→</span></a>
+            <a class="feature-tile" href="./weekly"><span class="ft-emoji">📈</span><div class="ft-main"><div class="ft-title">성장 리포트</div><div class="ft-sub">주간 · 월간 성장량</div></div><span class="ft-arrow">→</span></a>
+            <a class="feature-tile" href="./tips"><span class="ft-emoji">📖</span><div class="ft-main"><div class="ft-title">공략</div><div class="ft-sub">토벌전 · 대항전 · 세팅</div></div><span class="ft-arrow">→</span></a>
+            <a class="feature-tile" href="./points"><span class="ft-emoji">🔥</span><div class="ft-main"><div class="ft-title">포인트</div><div class="ft-sub">출석 · 활동 리워드</div></div><span class="ft-arrow">→</span></a>
+          </div>
+        </div>
+      </div>
+
       ${user ? changesHtml : ""}
+
+      ${officialRows.length ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🍁 메키 공식 소식</div>
+              <div class="section-sub">넥슨 공식 커뮤니티 공지 · 패치노트</div>
+            </div>
+            <div class="mini-tabs">
+              <button class="mini-tab active" onclick="showOfficialTab(this, '전체')">전체</button>
+              <button class="mini-tab" onclick="showOfficialTab(this, '공지')">공지</button>
+              <button class="mini-tab" onclick="showOfficialTab(this, '패치')">패치노트</button>
+            </div>
+          </div>
+          <div class="official-list" id="officialList">
+            ${officialRows.map((n) => `
+              <a class="official-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
+                <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
+                <span class="official-ttl">${escapeHtml(n.title || "")}</span>
+                <span class="official-date">${escapeHtml(n.date || "")}</span>
+              </a>`).join("")}
+          </div>
+        </div>
+      </div>` : ""}
 
       ${(Array.isArray(videosRes) && videosRes.length) ? `
       <div class="section-block">
@@ -350,25 +408,38 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="section-head">
                 <div>
                   <div class="section-title">커뮤니티</div>
-                  <div class="section-sub">공지 · 공략 최근 글</div>
+                  <div class="section-sub">공지 · 공략</div>
                 </div>
-                <a class="section-link" href="./tips">공략 게시판 →</a>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="mini-tabs">
+                    <button class="mini-tab active" onclick="showCommTab(this, 'commLatest')">최신글</button>
+                    <button class="mini-tab" onclick="showCommTab(this, 'commPopular')">인기글</button>
+                  </div>
+                  <a class="section-link" href="./tips">공략 게시판 →</a>
+                </div>
               </div>
-              <div class="feed-list">
-                ${communityFeed.length ? communityFeed.map((p) => `
+              ${(() => {
+                const feedRow = (p) => `
                   <a class="feed-row" href="${p.href}">
                     <span class="feed-badge" style="color:${p.color};background:${p.color}18;">${p.board}</span>
                     <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
                     ${Number(p.likes) > 0 ? `<span class="feed-likes">❤️ ${p.likes}</span>` : ""}
                     <span class="feed-date">${feedDate(p.created_at)}</span>
-                  </a>
-                `).join("") : `
+                  </a>`;
+                const emptyBox = (msg) => `
                   <div class="feed-empty">
                     <div class="feed-empty-icon">💬</div>
-                    <div>아직 글이 없어요. 첫 글을 남기고 <b>포인트</b>도 받아가세요!</div>
+                    <div>${msg}</div>
                     <a class="feed-empty-btn" href="./tips-write">✏️ 글쓰기</a>
-                  </div>`}
+                  </div>`;
+                return `
+              <div class="feed-list" id="commLatest">
+                ${communityFeed.length ? communityFeed.map(feedRow).join("") : emptyBox("아직 글이 없어요. 첫 글을 남기고 <b>포인트</b>도 받아가세요!")}
               </div>
+              <div class="feed-list" id="commPopular" style="display:none;">
+                ${popularFeed.length ? popularFeed.map(feedRow).join("") : emptyBox("아직 좋아요를 받은 글이 없어요. 좋은 글에 ❤️를 눌러주세요!")}
+              </div>`;
+              })()}
             </div>
             <aside class="portal-aside">
               ${(() => {
@@ -393,25 +464,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                   `).join("")}
                 </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
               </div>`;
-                const officialRows = Array.isArray(officialRes) ? officialRes : [];
-                const officialCard = `
-              <div class="side-card">
-                <div class="side-card-title">🍁 메키 공식 소식 <a class="side-card-more" href="https://forum.nexon.com/maplestoryidle-kr/" target="_blank" rel="noopener noreferrer">더보기</a></div>
-                ${officialRows.length ? `
-                <div class="side-notice-list">
-                  ${officialRows.map((n) => `
-                    <a class="side-notice-row" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
-                      <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
-                      <span class="side-notice-ttl">${escapeHtml(n.title || "")}</span>
-                      <span class="side-notice-date">${(n.date || "").slice(5)}</span>
-                    </a>
-                  `).join("")}
-                </div>` : `<div class="side-empty">공식 소식을 불러오는 중이에요</div>`}
-              </div>`;
-                // 로그인 = 길드원: 우리 공지 우선. 비로그인 = 서버 방문자: 공식 소식 우선.
-                return user
-                  ? noticeCard + officialCard + appCard
-                  : officialCard + noticeCard + appCard;
+                // 공식 소식은 메인 섹션으로 승격 — 사이드는 우리 공지 + 앱만
+                return noticeCard + appCard;
               })()}
             </aside>
           </div>
