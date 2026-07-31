@@ -391,10 +391,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div class="recruit-band">
             <div class="recruit-band-main">
-              <div class="recruit-band-title">🛡️ 친구패밀리와 함께 성장하세요</div>
-              <div class="recruit-band-desc">스카니아11 운영 5개 길드${rows.length ? ` · 길드원 ${formatNumber(rows.length)}명` : ""} — 초보부터 랭커까지 환영해요.</div>
+              <div class="recruit-band-title">🛡️ 같이 할 길드 찾고 계신가요?</div>
+              <div class="recruit-band-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
             </div>
-            <a class="cta-btn" href="./join">길드 가입 문의 →</a>
+            <a class="cta-btn" href="./join">가입 문의하기 →</a>
           </div>
         </div>
       </div>
