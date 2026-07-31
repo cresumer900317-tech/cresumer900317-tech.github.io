@@ -1025,6 +1025,25 @@ a.mini-summary-card:active { transform: translateY(1px); }
 /* 홈 랭킹 3단 (서버 전체 / 길드 랭킹 / 길드 건강도) */
 .rank-2col.rank-3 { grid-template-columns: 1.3fr 1fr 1fr; }
 
+/* 히어로 인기 검색어 칩 */
+.hero-hot { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin: 10px 0 2px; }
+.hero-hot-label { font-size: 0.78rem; font-weight: 800; color: #b45309; white-space: nowrap; }
+.hero-hot-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 11px; background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 999px; font-size: 0.78rem; text-decoration: none; color: inherit; transition: border-color .15s; }
+.hero-hot-chip:hover { border-color: var(--amber, #f59e0b); }
+.hero-hot-chip b { color: var(--amber, #f59e0b); font-size: 0.72rem; }
+
+/* 순위 계산기 */
+.rank-calc { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 20px 24px; background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 16px; }
+.rank-calc-main { min-width: 220px; }
+.rank-calc-title { font-weight: 800; font-size: 1rem; }
+.rank-calc-sub { font-size: 0.78rem; color: var(--text-soft, #64748b); margin-top: 3px; }
+.rank-calc-form { display: flex; gap: 8px; flex: 1; min-width: 260px; }
+.rank-calc-form input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 10px; font-size: 0.9rem; outline: none; }
+.rank-calc-form input:focus { border-color: var(--amber, #f59e0b); }
+.rank-calc-result { width: 100%; font-size: 0.9rem; min-height: 1.2em; }
+.rank-calc-result .calc-rank { color: var(--amber, #f59e0b); font-size: 1.05rem; }
+.rank-calc-result .calc-err { color: #dc2626; font-size: 0.84rem; }
+
 /* 피처 타일 (mgf식 기능 메뉴) */
 .feature-tiles-block { padding-top: 18px; }
 .feature-tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }

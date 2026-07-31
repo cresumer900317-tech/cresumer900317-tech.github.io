@@ -1,3 +1,26 @@
+window.estimateRank = async function () {
+  const input = document.getElementById("calcPower");
+  const out = document.getElementById("calcResult");
+  const raw = (input.value || "").trim().replace(/,/g, "");
+  const m = raw.match(/^([\d.]+)\s*(조|억|만)?$/);
+  if (!m) { out.innerHTML = `<span class="calc-err">숫자 뒤에 조/억 단위로 입력해주세요 (예: 250조)</span>`; return; }
+  const mul = { "조": 1e12, "억": 1e8, "만": 1e4 }[m[2]] || 1;
+  const power = Math.round(parseFloat(m[1]) * mul);
+  if (!power || power <= 0) { out.innerHTML = `<span class="calc-err">전투력을 확인해주세요</span>`; return; }
+  out.textContent = "계산 중...";
+  try {
+    const r = await fetch(`${API_BASE}/api/rank-estimate?power=${power}`);
+    const d = await r.json();
+    if (!d.total) { out.innerHTML = `<span class="calc-err">서버 데이터를 불러오지 못했어요</span>`; return; }
+    const fmtP = (p) => p >= 1e12 ? (p / 1e12).toFixed(p >= 1e13 ? 0 : 1) + "조" : Math.round(p / 1e8) + "억";
+    let extra = "";
+    if (d.needed && d.needed.top100) extra = `TOP 100까지 <b>+${fmtP(d.needed.top100)}</b>`;
+    else if (d.needed && d.needed.top500) extra = `TOP 500까지 <b>+${fmtP(d.needed.top500)}</b>`;
+    else if (d.needed && d.needed.top1000) extra = `TOP 1000까지 <b>+${fmtP(d.needed.top1000)}</b>`;
+    out.innerHTML = `스카니아11 약 <b class="calc-rank">${d.rank.toLocaleString()}위</b> / ${d.total.toLocaleString()}명 (상위 ${d.percentile}%)${extra ? ` · ${extra}` : ""}`;
+  } catch (e) { out.innerHTML = `<span class="calc-err">잠시 후 다시 시도해주세요</span>`; }
+};
+
 window.showOfficialTab = function (btn, kind) {
   btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
   document.querySelectorAll("#officialList .official-row").forEach((r) => {
@@ -57,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>
   `;
 
-  const HOME_CACHE_KEY = "homeDataCache_v3";   // v3: 공식 소식 추가·사이드 정리
+  const HOME_CACHE_KEY = "homeDataCache_v4";   // v4: 인기 검색어 추가
 
   async function loadHomeData() {
     return Promise.all([
@@ -75,10 +98,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/coupons`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/home-videos`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/official-notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/popular-searches`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
   }
 
-  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes]) {
+  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes]) {
     const user = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
@@ -291,6 +315,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <input class="hero-search-input" name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
                 <button class="hero-search-btn" type="submit">전적검색</button>
               </form>
+              ${(Array.isArray(popularRes) && popularRes.length) ? `
+              <div class="hero-hot">
+                <span class="hero-hot-label">🔥 인기 검색어</span>
+                ${popularRes.slice(0, 6).map((p, i) => `<a class="hero-hot-chip" href="./profile?n=${encodeURIComponent(p.name)}"><b>${i + 1}</b> ${escapeHtml(p.name)}</a>`).join("")}
+              </div>` : ""}
               <div class="hero-proof-row">
                 <span class="hero-proof hero-proof-guild">🛡️ 운영 길드 <b>친구들</b></span>
                 ${serverTotal ? `<span class="hero-proof">👥 스카니아11 전체 <b>${formatNumber(serverTotal)}명</b></span>` : ""}
@@ -472,6 +501,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
+
+      <div class="section-block">
+        <div class="container">
+          <div class="rank-calc">
+            <div class="rank-calc-main">
+              <div class="rank-calc-title">⚔️ 내 순위 계산기</div>
+              <div class="rank-calc-sub">전투력을 입력하면 스카니아11 전체에서 몇 위쯤인지 알려드려요 (예: 250조, 3000억)</div>
+            </div>
+            <form class="rank-calc-form" onsubmit="event.preventDefault(); estimateRank();">
+              <input id="calcPower" type="text" placeholder="전투력 입력 (예: 250조)" autocomplete="off" />
+              <button type="submit" class="cta-btn">순위 확인</button>
+            </form>
+            <div class="rank-calc-result" id="calcResult"></div>
+          </div>
+        </div>
+      </div>
 
       ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
       <div class="section-block">

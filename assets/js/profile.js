@@ -346,6 +346,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindSearch();
   renderGrowth(me.nickname);
   renderChangeLog(me.nickname);
+  // 인기 검색어 집계용 (실패해도 무시)
+  fetch(`${API_BASE}/api/search-log`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: me.nickname }),
+  }).catch(() => {});
 
   // 전적 공유 (홍보 바이럴) — Web Share 우선, 없으면 링크 복사
   const shareBtn = document.getElementById("pfShareBtn");
