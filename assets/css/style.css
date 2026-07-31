@@ -1032,17 +1032,22 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .hero-hot-chip:hover { border-color: var(--amber, #f59e0b); }
 .hero-hot-chip b { color: var(--amber, #f59e0b); font-size: 0.72rem; }
 
-/* 순위 계산기 */
-.rank-calc { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 20px 24px; background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 16px; }
-.rank-calc-main { min-width: 220px; }
-.rank-calc-title { font-weight: 800; font-size: 1rem; }
-.rank-calc-sub { font-size: 0.78rem; color: var(--text-soft, #64748b); margin-top: 3px; }
-.rank-calc-form { display: flex; gap: 8px; flex: 1; min-width: 260px; }
-.rank-calc-form input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 10px; font-size: 0.9rem; outline: none; }
-.rank-calc-form input:focus { border-color: var(--amber, #f59e0b); }
-.rank-calc-result { width: 100%; font-size: 0.9rem; min-height: 1.2em; }
-.rank-calc-result .calc-rank { color: var(--amber, #f59e0b); font-size: 1.05rem; }
-.rank-calc-result .calc-err { color: #dc2626; font-size: 0.84rem; }
+/* 홈 위젯 그리드 — 커뮤니티|메키공식|영상·앱 나란히 (스크롤 절감) */
+.home-widgets { display: grid; grid-template-columns: 1.15fr 1.15fr 0.85fr; gap: 14px; align-items: start; }
+.hw-card { background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 14px; padding: 14px 16px; }
+.hw-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.hw-title { font-weight: 800; font-size: 0.95rem; }
+.hw-empty { color: #9ca3af; font-size: 0.84rem; padding: 14px 0; text-align: center; }
+.hw-more { display: block; text-align: right; font-size: 0.8rem; color: var(--amber, #f59e0b); text-decoration: none; font-weight: 700; margin-top: 8px; }
+.hw-side { display: flex; flex-direction: column; gap: 14px; }
+.hw-videos { display: flex; flex-direction: column; gap: 10px; }
+.hw-video { text-decoration: none; color: inherit; }
+.hw-video-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; display: block; }
+.hw-video-ttl { font-size: 0.82rem; font-weight: 600; margin-top: 5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hw-app-desc { font-size: 0.8rem; color: var(--text-soft, #64748b); margin-bottom: 10px; }
+.home-widgets .official-row { padding: 9px 2px; }
+.home-widgets #officialList { border: none; }
+@media (max-width: 1000px) { .home-widgets { grid-template-columns: 1fr; } }
 
 /* 피처 타일 (mgf식 기능 메뉴) */
 .feature-tiles-block { padding-top: 18px; }

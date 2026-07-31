@@ -1,26 +1,3 @@
-window.estimateRank = async function () {
-  const input = document.getElementById("calcPower");
-  const out = document.getElementById("calcResult");
-  const raw = (input.value || "").trim().replace(/,/g, "");
-  const m = raw.match(/^([\d.]+)\s*(조|억|만)?$/);
-  if (!m) { out.innerHTML = `<span class="calc-err">숫자 뒤에 조/억 단위로 입력해주세요 (예: 250조)</span>`; return; }
-  const mul = { "조": 1e12, "억": 1e8, "만": 1e4 }[m[2]] || 1;
-  const power = Math.round(parseFloat(m[1]) * mul);
-  if (!power || power <= 0) { out.innerHTML = `<span class="calc-err">전투력을 확인해주세요</span>`; return; }
-  out.textContent = "계산 중...";
-  try {
-    const r = await fetch(`${API_BASE}/api/rank-estimate?power=${power}`);
-    const d = await r.json();
-    if (!d.total) { out.innerHTML = `<span class="calc-err">서버 데이터를 불러오지 못했어요</span>`; return; }
-    const fmtP = (p) => p >= 1e12 ? (p / 1e12).toFixed(p >= 1e13 ? 0 : 1) + "조" : Math.round(p / 1e8) + "억";
-    let extra = "";
-    if (d.needed && d.needed.top100) extra = `TOP 100까지 <b>+${fmtP(d.needed.top100)}</b>`;
-    else if (d.needed && d.needed.top500) extra = `TOP 500까지 <b>+${fmtP(d.needed.top500)}</b>`;
-    else if (d.needed && d.needed.top1000) extra = `TOP 1000까지 <b>+${fmtP(d.needed.top1000)}</b>`;
-    out.innerHTML = `스카니아11 약 <b class="calc-rank">${d.rank.toLocaleString()}위</b> / ${d.total.toLocaleString()}명 (상위 ${d.percentile}%)${extra ? ` · ${extra}` : ""}`;
-  } catch (e) { out.innerHTML = `<span class="calc-err">잠시 후 다시 시도해주세요</span>`; }
-};
-
 window.showOfficialTab = function (btn, kind) {
   btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
   document.querySelectorAll("#officialList .official-row").forEach((r) => {
@@ -383,137 +360,72 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       ${user ? changesHtml : ""}
 
-      ${officialRows.length ? `
       <div class="section-block">
         <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">🍁 메키 공식 소식</div>
-              <div class="section-sub">넥슨 공식 커뮤니티 공지 · 패치노트</div>
-            </div>
-            <div class="mini-tabs">
-              <button class="mini-tab active" onclick="showOfficialTab(this, '전체')">전체</button>
-              <button class="mini-tab" onclick="showOfficialTab(this, '공지')">공지</button>
-              <button class="mini-tab" onclick="showOfficialTab(this, '패치')">패치노트</button>
-            </div>
-          </div>
-          <div class="official-list" id="officialList">
-            ${officialRows.map((n) => `
-              <a class="official-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
-                <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
-                <span class="official-ttl">${escapeHtml(n.title || "")}</span>
-                <span class="official-date">${escapeHtml(n.date || "")}</span>
-              </a>`).join("")}
-          </div>
-        </div>
-      </div>` : ""}
-
-      ${(Array.isArray(videosRes) && videosRes.length) ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">추천 영상</div>
-              <div class="section-sub">메이플키우기 볼만한 영상 모음</div>
-            </div>
-          </div>
-          <div class="video-grid">
-            ${videosRes.slice(0, 4).map((v) => `
-              <a class="video-card" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer">
-                <div class="video-thumb-wrap">
-                  <img class="video-thumb" src="https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg" alt="${escapeHtml(v.title || "영상")}" loading="lazy" />
-                  <span class="video-play">▶</span>
-                </div>
-                ${v.title ? `<div class="video-title">${escapeHtml(v.title)}</div>` : ""}
-              </a>`).join("")}
-          </div>
-        </div>
-      </div>` : ""}
-
-      <div class="section-block">
-        <div class="container">
-          <div class="home-portal">
-            <div class="portal-main">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">커뮤니티</div>
-                  <div class="section-sub">공지 · 공략</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div class="mini-tabs">
-                    <button class="mini-tab active" onclick="showCommTab(this, 'commLatest')">최신글</button>
-                    <button class="mini-tab" onclick="showCommTab(this, 'commPopular')">인기글</button>
-                  </div>
-                  <a class="section-link" href="./tips">공략 게시판 →</a>
+          <div class="home-widgets">
+            <div class="hw-card">
+              <div class="hw-head">
+                <span class="hw-title">💬 커뮤니티</span>
+                <div class="mini-tabs">
+                  <button class="mini-tab active" onclick="showCommTab(this, 'commLatest')">최신글</button>
+                  <button class="mini-tab" onclick="showCommTab(this, 'commPopular')">인기글</button>
                 </div>
               </div>
               ${(() => {
                 const feedRow = (p) => `
-                  <a class="feed-row" href="${p.href}">
-                    <span class="feed-badge" style="color:${p.color};background:${p.color}18;">${p.board}</span>
-                    <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
-                    ${Number(p.likes) > 0 ? `<span class="feed-likes">❤️ ${p.likes}</span>` : ""}
-                    <span class="feed-date">${feedDate(p.created_at)}</span>
-                  </a>`;
-                const emptyBox = (msg) => `
-                  <div class="feed-empty">
-                    <div class="feed-empty-icon">💬</div>
-                    <div>${msg}</div>
-                    <a class="feed-empty-btn" href="./tips-write">✏️ 글쓰기</a>
-                  </div>`;
+                <a class="feed-row" href="${p.href}">
+                  <span class="feed-badge" style="color:${p.color};background:${p.color}18;">${p.board}</span>
+                  <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
+                  ${Number(p.likes) > 0 ? `<span class="feed-likes">❤️ ${p.likes}</span>` : ""}
+                  <span class="feed-date">${feedDate(p.created_at)}</span>
+                </a>`;
+                const empty = (msg) => `<div class="hw-empty">${msg}</div>`;
                 return `
-              <div class="feed-list" id="commLatest">
-                ${communityFeed.length ? communityFeed.map(feedRow).join("") : emptyBox("아직 글이 없어요. 첫 글을 남기고 <b>포인트</b>도 받아가세요!")}
+              <div class="feed-list hw-list" id="commLatest">${communityFeed.length ? communityFeed.map(feedRow).join("") : empty("아직 글이 없어요 — 첫 글을 남겨보세요!")}</div>
+              <div class="feed-list hw-list" id="commPopular" style="display:none;">${popularFeed.length ? popularFeed.map(feedRow).join("") : empty("아직 좋아요 받은 글이 없어요")}</div>`;
+              })()}
+              <a class="hw-more" href="./tips">공략 게시판 →</a>
+            </div>
+
+            <div class="hw-card">
+              <div class="hw-head">
+                <span class="hw-title">🍁 메키 공식</span>
+                <div class="mini-tabs">
+                  <button class="mini-tab active" onclick="showOfficialTab(this, '전체')">전체</button>
+                  <button class="mini-tab" onclick="showOfficialTab(this, '공지')">공지</button>
+                  <button class="mini-tab" onclick="showOfficialTab(this, '패치')">패치</button>
+                </div>
               </div>
-              <div class="feed-list" id="commPopular" style="display:none;">
-                ${popularFeed.length ? popularFeed.map(feedRow).join("") : emptyBox("아직 좋아요를 받은 글이 없어요. 좋은 글에 ❤️를 눌러주세요!")}
-              </div>`;
-              })()}
+              <div class="hw-list" id="officialList">
+                ${officialRows.length ? officialRows.map((n) => `
+                <a class="official-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
+                  <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}">${n.kind || "공지"}</span>
+                  <span class="official-ttl">${escapeHtml(n.title || "")}</span>
+                  <span class="official-date">${(n.date || "").slice(5)}</span>
+                </a>`).join("") : `<div class="hw-empty">공식 소식을 불러오지 못했어요</div>`}
+              </div>
+              <a class="hw-more" href="https://forum.nexon.com/maplestoryidle-kr/" target="_blank" rel="noopener noreferrer">넥슨 공식 커뮤니티 →</a>
             </div>
-            <aside class="portal-aside">
-              ${(() => {
-                const appCard = `
-              <div class="side-card side-app">
-                <div class="side-card-title">📱 길드라운지 앱</div>
-                <p class="side-login-desc">일정 알림 푸시·랭킹·공략을 앱에서. 콘텐츠 시작/마감 알림을 놓치지 마세요.</p>
-                <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store 다운로드</a>
-                <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play 다운로드</a>
-              </div>`;
-                const noticeCard = `
-              <div class="side-card">
-                <div class="side-card-title">📢 최신 공지 <a class="side-card-more" href="./notice">더보기</a></div>
-                ${recentNotices.length ? `
-                <div class="side-notice-list">
-                  ${recentNotices.map((n) => `
-                    <a class="side-notice-row" href="./notice-view?id=${n.id}">
-                      ${n.is_pinned ? `<span class="side-pin">📌</span>` : ""}
-                      <span class="side-notice-ttl">${escapeHtml(n.title || "")}</span>
-                      <span class="side-notice-date">${feedDate(n.created_at)}</span>
-                    </a>
-                  `).join("")}
-                </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
-              </div>`;
-                // 공식 소식은 메인 섹션으로 승격 — 사이드는 우리 공지 + 앱만
-                return noticeCard + appCard;
-              })()}
-            </aside>
-          </div>
-        </div>
-      </div>
 
-
-      <div class="section-block">
-        <div class="container">
-          <div class="rank-calc">
-            <div class="rank-calc-main">
-              <div class="rank-calc-title">⚔️ 내 순위 계산기</div>
-              <div class="rank-calc-sub">전투력을 입력하면 스카니아11 전체에서 몇 위쯤인지 알려드려요 (예: 250조, 3000억)</div>
+            <div class="hw-side">
+              ${(Array.isArray(videosRes) && videosRes.length) ? `
+              <div class="hw-card">
+                <div class="hw-head"><span class="hw-title">▶️ 추천 영상</span></div>
+                <div class="hw-videos">
+                  ${videosRes.slice(0, 3).map((v) => `
+                  <a class="hw-video" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer">
+                    <img class="hw-video-thumb" src="https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg" alt="" loading="lazy" />
+                    ${v.title ? `<div class="hw-video-ttl">${escapeHtml(v.title)}</div>` : ""}
+                  </a>`).join("")}
+                </div>
+              </div>` : ""}
+              <div class="hw-card">
+                <div class="hw-head"><span class="hw-title">📱 길드라운지 앱</span></div>
+                <p class="hw-app-desc">콘텐츠 시작·마감 푸시 알림을 놓치지 마세요.</p>
+                <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store</a>
+                <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play</a>
+              </div>
             </div>
-            <form class="rank-calc-form" onsubmit="event.preventDefault(); estimateRank();">
-              <input id="calcPower" type="text" placeholder="전투력 입력 (예: 250조)" autocomplete="off" />
-              <button type="submit" class="cta-btn">순위 확인</button>
-            </form>
-            <div class="rank-calc-result" id="calcResult"></div>
           </div>
         </div>
       </div>
