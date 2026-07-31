@@ -322,104 +322,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       ${user ? changesHtml : ""}
 
-      ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="rank-2col rank-3">
-            ${serverTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">서버 전체 랭킹</div>
-                  <div class="section-sub">전투력 TOP ${serverTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">전체 랭킹 보기 →</a>
-              </div>
-              <div class="mini-card-list rank-scroll">
-                ${serverTop.map((item, i) => {
-                  const nm = item.nickname || "";
-                  const gn = (item.guild || "").normalize("NFC").trim();
-                  const hasGuild = gn && gn !== "길드 없음";
-                  const guildChip = hasGuild
-                    ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
-                    : "";
-                  const pop = Number(item.popularity || 0);
-                  return `
-                    <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
-                      <span class="mini-summary-rank">${i + 1}</span>
-                      ${characterAvatarHtml({ name: nm, guild: gn })}
-                      <div class="mini-summary-main">
-                        <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
-                        <div class="mini-summary-sub">
-                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}${pop ? " · ♥ " + formatNumber(pop) : ""}</span>
-                        </div>
-                      </div>
-                      <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
-                    </a>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
-            ${serverGuildTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">길드 랭킹</div>
-                  <div class="section-sub">스카니아11 서버 길드 TOP ${serverGuildTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
-              </div>
-              <div class="guild-rank-list rank-scroll">
-                ${serverGuildTop.map((g) => {
-                  const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
-                  return `
-                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
-                      <span class="guild-rank-no">${g.guildRank || "-"}</span>
-                      <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
-                      <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
-                      <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
-                    </div>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
-            ${healthTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">길드 건강도</div>
-                  <div class="section-sub">성장·활동·깊이·균형을 종합한 활력점수 TOP ${healthTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">건강도 상세보기 →</a>
-              </div>
-              <div class="guild-rank-list rank-scroll">
-                ${healthTop.map((g, i) => {
-                  const isFriend = FRIENDS.has(normalizeGuildName(g.name || ""));
-                  const col = g.score >= 70 ? "#16a34a" : g.score >= 55 ? "#f59e0b" : g.score >= 40 ? "#fb923c" : "#94a3b8";
-                  return `
-                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
-                      <span class="guild-rank-no">${i + 1}</span>
-                      <span class="guild-rank-name">${escapeHtml(g.name || "-")}</span>
-                      <span class="guild-rank-power" style="color:${col};">${g.score}</span>
-                    </div>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
-          </div>
-        </div>
-      </div>
-      ` : ""}
-
-      <div class="section-block">
-        <div class="container">
-          <div class="recruit-band">
-            <div class="recruit-band-main">
-              <div class="recruit-band-title">🛡️ 같이 할 길드 찾고 계신가요?</div>
-              <div class="recruit-band-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
-            </div>
-            <a class="cta-btn" href="./join">가입 문의하기 →</a>
-          </div>
-        </div>
-      </div>
-
       ${(Array.isArray(videosRes) && videosRes.length) ? `
       <div class="section-block">
         <div class="container">
@@ -528,6 +430,104 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
+
+      ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="rank-2col rank-3">
+            ${serverTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">서버 전체 랭킹</div>
+                  <div class="section-sub">전투력 TOP ${serverTop.length}</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 랭킹 보기 →</a>
+              </div>
+              <div class="mini-card-list rank-scroll">
+                ${serverTop.map((item, i) => {
+                  const nm = item.nickname || "";
+                  const gn = (item.guild || "").normalize("NFC").trim();
+                  const hasGuild = gn && gn !== "길드 없음";
+                  const guildChip = hasGuild
+                    ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
+                    : "";
+                  const pop = Number(item.popularity || 0);
+                  return `
+                    <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
+                      <span class="mini-summary-rank">${i + 1}</span>
+                      ${characterAvatarHtml({ name: nm, guild: gn })}
+                      <div class="mini-summary-main">
+                        <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
+                        <div class="mini-summary-sub">
+                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}${pop ? " · ♥ " + formatNumber(pop) : ""}</span>
+                        </div>
+                      </div>
+                      <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
+                    </a>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+            ${serverGuildTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">길드 랭킹</div>
+                  <div class="section-sub">스카니아11 서버 길드 TOP ${serverGuildTop.length}</div>
+                </div>
+                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
+              </div>
+              <div class="guild-rank-list rank-scroll">
+                ${serverGuildTop.map((g) => {
+                  const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
+                  return `
+                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
+                      <span class="guild-rank-no">${g.guildRank || "-"}</span>
+                      <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
+                      <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
+                      <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
+                    </div>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+            ${healthTop.length ? `
+            <div class="rank-col">
+              <div class="section-head">
+                <div>
+                  <div class="section-title">길드 건강도</div>
+                  <div class="section-sub">성장·활동·깊이·균형을 종합한 활력점수 TOP ${healthTop.length}</div>
+                </div>
+                <a class="section-link" href="./ranking">건강도 상세보기 →</a>
+              </div>
+              <div class="guild-rank-list rank-scroll">
+                ${healthTop.map((g, i) => {
+                  const isFriend = FRIENDS.has(normalizeGuildName(g.name || ""));
+                  const col = g.score >= 70 ? "#16a34a" : g.score >= 55 ? "#f59e0b" : g.score >= 40 ? "#fb923c" : "#94a3b8";
+                  return `
+                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
+                      <span class="guild-rank-no">${i + 1}</span>
+                      <span class="guild-rank-name">${escapeHtml(g.name || "-")}</span>
+                      <span class="guild-rank-power" style="color:${col};">${g.score}</span>
+                    </div>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+          </div>
+        </div>
+      </div>
+      ` : ""}
+
+      <div class="section-block">
+        <div class="container">
+          <div class="recruit-band">
+            <div class="recruit-band-main">
+              <div class="recruit-band-title">🛡️ 같이 할 길드 찾고 계신가요?</div>
+              <div class="recruit-band-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
+            </div>
+            <a class="cta-btn" href="./join">가입 문의하기 →</a>
+          </div>
+        </div>
+      </div>
 
       ${"" /* 홈에서 제거(2026-06-28): 길드별 현황(친구패밀리 5길드)·TOP30 배치 현황. 스카니아11 서버 길드 랭킹은 백엔드 서버길드 크롤 추가 후 신설 예정 */}
 
