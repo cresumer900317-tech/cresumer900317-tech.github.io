@@ -155,6 +155,16 @@
           <button class="add-btn" onclick="addTempMember()">등록</button>
         </div>
       </div>
+      <div class="input-section">
+        <h2>🔤 닉네임 변경 처리</h2>
+        <p style="font-size:0.78rem;color:#6b7280;margin-bottom:12px;">게임에서 닉변한 길드원의 계정·성장이력·포인트·게시글·배치보드를 새 이름으로 한 번에 이관합니다.<br>처리 후 해당 유저는 <b>새 이름으로 재로그인</b>해야 해요.</p>
+        <div class="input-row">
+          <div><label>이전 캐릭터명</label><input type="text" id="renameOld" placeholder="옛 이름" /></div>
+          <div><label>새 캐릭터명</label><input type="text" id="renameNew" placeholder="바뀐 이름" /></div>
+          <button class="add-btn" onclick="renameCharacter()">이관</button>
+        </div>
+        <div id="renameResult" style="font-size:0.78rem;color:#16a34a;margin-top:10px;"></div>
+      </div>
     </div>
   </div>
 
@@ -381,6 +391,31 @@ async function addTempMember() {
     showToast(`${name} 임시 등록 완료 (${guild})`);
     document.getElementById("tempName").value = "";
   } catch (e) { showToast(e.message || "등록 실패", false); }
+}
+
+async function renameCharacter() {
+  const oldName = document.getElementById("renameOld").value.trim();
+  const newName = document.getElementById("renameNew").value.trim();
+  const resultEl = document.getElementById("renameResult");
+  resultEl.textContent = "";
+  if (!oldName || !newName) { showToast("이전/새 이름을 모두 입력해주세요", false); return; }
+  if (!confirm(`'${oldName}' → '${newName}' 으로 모든 데이터를 이관할까요?`)) return;
+  try {
+    const res = await fetch(`${API}/api/admin/rename`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sessionStorage.getItem("token")}` },
+      body: JSON.stringify({ old_name: oldName, new_name: newName }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.detail || "이관 실패", false); return; }
+    const parts = Object.entries(data.changed || {}).map(([k, v]) => `${k} ${v}건`);
+    resultEl.textContent = parts.length
+      ? `✅ 이관 완료: ${parts.join(", ")}`
+      : "⚠️ 이관된 데이터가 없어요 — 이전 이름 철자를 확인해주세요";
+    showToast("닉변 처리 완료");
+    document.getElementById("renameOld").value = "";
+    document.getElementById("renameNew").value = "";
+  } catch (e) { showToast("서버 연결 실패", false); }
 }
 
 function showToast(msg, ok = true) {
