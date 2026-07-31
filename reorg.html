@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>메이플키우기 라운지 | 운영개편 배치 보드</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #fafafa; color: #1a1a1a; }
+
+    .lock-screen { position: fixed; inset: 0; background: #fffbeb; display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .lock-box { background: #fff; border: 2px solid #fde68a; border-radius: 16px; padding: 40px 32px; text-align: center; width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    .lock-box h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+    .lock-box p { font-size: 0.82rem; color: #6b7280; margin-bottom: 20px; }
+    .lock-box input { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; text-align: center; margin-bottom: 8px; }
+    .lock-box input:focus { outline: none; border-color: #f59e0b; }
+    .lock-btn { width: 100%; padding: 10px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .lock-btn:hover { background: #d97706; }
+    .lock-error { color: #dc2626; font-size: 0.82rem; margin-top: 8px; }
+
+    .main-ui { display: none; }
+    .main-ui.unlocked { display: block; }
+
+    .top-bar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 8px; }
+    .top-bar h1 { font-size: 1rem; font-weight: 700; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    .top-bar a { font-size: 0.82rem; color: #6b7280; text-decoration: none; }
+    .refresh-btn { padding: 5px 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: #6b7280; }
+    .lock-out-btn { font-size: 0.75rem; color: #dc2626; background: none; border: 1px solid #fca5a5; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px 16px; }
+
+    .summary-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; font-size: 0.85rem; }
+    .summary-chip { font-weight: 700; }
+    .summary-chip b { color: #b45309; }
+    .progress-wrap { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 8px; }
+    .progress-track { flex: 1; height: 8px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #16a34a; border-radius: 999px; transition: width .3s; }
+    .progress-label { font-size: 0.78rem; font-weight: 700; color: #16a34a; white-space: nowrap; }
+
+    .input-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+    .input-section h2 { font-size: 0.92rem; font-weight: 700; margin-bottom: 4px; color: #374151; }
+    .input-section .hint { font-size: 0.78rem; color: #9ca3af; margin-bottom: 10px; }
+    .input-flex { display: flex; gap: 8px; align-items: stretch; }
+    .input-flex textarea { flex: 1; min-height: 64px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.88rem; font-family: inherit; resize: vertical; }
+    .input-flex textarea:focus { outline: none; border-color: #f59e0b; }
+    .add-btn { padding: 0 20px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+    .add-btn:hover { background: #d97706; }
+
+    .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; align-items: start; }
+    .col { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+    .col-pool { background: #f8fafc; border-style: dashed; }
+    .col-head { padding: 11px 14px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+    .col-pool .col-head { background: #f1f5f9; }
+    .col-title { font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+    .col-count { font-size: 0.75rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 9px; border-radius: 999px; }
+    .col-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; font-size: 0.72rem; color: #6b7280; }
+    .col-stats b { color: #374151; }
+    .col-moved { color: #16a34a; font-weight: 700; }
+    .col-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 44px; max-height: 60vh; overflow-y: auto; }
+    .col-empty { text-align: center; color: #c0c7d1; font-size: 0.8rem; padding: 12px 0; }
+
+    .card { border: 1px solid #eef0f3; border-radius: 10px; padding: 8px 10px; background: #fff; }
+    .card.moved { background: #f0fdf4; border-color: #bbf7d0; }
+    .card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .card-name { font-weight: 700; font-size: 0.88rem; }
+    .badge { font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+    .badge-guild { background: #eef2f7; color: #4a5568; border: 1px solid #cbd5e1; }
+    .badge-active { background: #fee2e2; color: #dc2626; }
+    .badge-unknown { background: #f3f4f6; color: #9ca3af; }
+    .badge-stay { background: #dcfce7; color: #16a34a; }
+    .card-sub { font-size: 0.74rem; color: #6b7280; margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-sub .up { color: #16a34a; font-weight: 700; }
+    .card-actions { display: flex; align-items: center; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+    .gbtn { padding: 3px 8px; border: 1px solid #e5e7eb; border-radius: 7px; background: #fff; font-size: 0.72rem; font-weight: 700; color: #6b7280; cursor: pointer; }
+    .gbtn:hover { border-color: #fbbf24; color: #92400e; }
+    .gbtn.on { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
+    .gbtn-clear { color: #9ca3af; }
+    .gbtn-del { color: #dc2626; border-color: #fecaca; margin-left: auto; }
+    .moved-label { display: flex; align-items: center; gap: 4px; font-size: 0.74rem; font-weight: 700; color: #16a34a; cursor: pointer; margin-left: auto; white-space: nowrap; }
+    .moved-label input { accent-color: #16a34a; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+  <link rel="apple-touch-icon" href="./assets/img/apple-touch-icon.png" />
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+    <h2>운영개편 배치 보드</h2>
+    <p>운영진 계정으로 로그인해주세요</p>
+    <input type="text" id="adminName" placeholder="캐릭터명" maxlength="30" />
+    <input type="password" id="pwInput" placeholder="비밀번호" maxlength="20" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button class="lock-btn" onclick="checkPw()">입장</button>
+    <div class="lock-error" id="pwError"></div>
+  </div>
+</div>
+
+<div class="main-ui" id="mainUI">
+  <div class="top-bar">
+    <h1>📋 운영개편 배치 보드</h1>
+    <div class="top-bar-right">
+      <button class="refresh-btn" onclick="loadAll()">🔄 새로고침</button>
+      <a href="./admin">← 어드민</a>
+      <a href="./">홈</a>
+      <button class="lock-out-btn" onclick="lockOut()">🔒 잠금</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="summary-bar" id="summaryBar"></div>
+
+    <div class="input-section">
+      <h2>옵트인 명단 추가</h2>
+      <div class="hint">캐릭터명을 줄 단위(또는 쉼표)로 붙여넣으면 길드원 데이터와 자동 매칭돼요. 이미 있는 이름은 건너뜁니다.</div>
+      <div class="input-flex">
+        <textarea id="namesInput" placeholder="캐릭터명1&#10;캐릭터명2&#10;캐릭터명3"></textarea>
+        <button class="add-btn" onclick="addNames()">추가</button>
+      </div>
+    </div>
+
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://guild-backend-production-75a6.up.railway.app";
+const GUILDS = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"];
+const GUILD_SHORT = { "친구들": "들", "친구둘": "둘", "친구삼": "삼", "친구넷": "넷", "친구닷": "닷" };
+const POP_ACTIVE = 50;   // 백엔드 활동 기준과 동일 (인기도 ≥50 = 적극참여)
+
+let boardRows = [];      // reorg_board rows
+let memberMap = {};      // NFC 이름 → members 데이터
+
+const nfc = (s) => String(s || "").normalize("NFC").trim();
+const token = () => sessionStorage.getItem("token") || "";
+const authHdr = () => ({ "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" });
+
+function fmtPower(p) {
+  p = Number(p || 0);
+  if (p >= 1e12) return (p / 1e12).toFixed(p >= 1e13 ? 0 : 1) + "조";
+  if (p >= 1e8) return Math.round(p / 1e8) + "억";
+  return p.toLocaleString();
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+// ── 인증 (admin.html과 동일 흐름) ──
+async function checkPw() {
+  const name = document.getElementById("adminName").value.trim();
+  const pw = document.getElementById("pwInput").value;
+  const errEl = document.getElementById("pwError");
+  errEl.textContent = "";
+  if (!name || !pw) { errEl.textContent = "캐릭터명과 비밀번호를 입력해주세요"; return; }
+  try {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character_name: name, password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || "로그인 실패"; return; }
+    if (!data.token) { errEl.textContent = "토큰 발급 실패"; return; }
+    const role = data.user && data.user.role;
+    if (role !== "admin" && role !== "superadmin") { errEl.textContent = "운영진 계정이 아니에요"; return; }
+    sessionStorage.setItem("token", data.token);
+    sessionStorage.setItem("admin_ok", "1");
+    unlock();
+  } catch (e) { errEl.textContent = "서버 연결 실패"; }
+}
+
+function unlock() {
+  document.getElementById("lockScreen").style.display = "none";
+  document.getElementById("mainUI").classList.add("unlocked");
+  loadAll();
+}
+
+function lockOut() {
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("admin_ok");
+  location.reload();
+}
+
+// ── 데이터 ──
+async function loadAll() {
+  try {
+    const [membersRes, reorgRes] = await Promise.all([
+      fetch(`${API}/api/members`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/api/admin/reorg`, { cache: "no-store", headers: authHdr() }),
+    ]);
+    if (reorgRes.status === 401 || reorgRes.status === 403) { lockOut(); return; }
+    const reorgData = await reorgRes.json();
+    if (!reorgRes.ok) { toast(reorgData.detail || "보드 로드 실패"); return; }
+    boardRows = Array.isArray(reorgData) ? reorgData : [];
+    memberMap = {};
+    (Array.isArray(membersRes) ? membersRes : []).forEach(m => { memberMap[nfc(m.name)] = m; });
+    render();
+  } catch (e) { toast("데이터 로드 실패"); }
+}
+
+async function addNames() {
+  const raw = document.getElementById("namesInput").value;
+  const names = raw.split(/[\n,]/).map(nfc).filter(Boolean);
+  if (!names.length) { toast("추가할 이름이 없어요"); return; }
+  const res = await fetch(`${API}/api/admin/reorg`, { method: "POST", headers: authHdr(), body: JSON.stringify({ names }) });
+  const data = await res.json();
+  if (!res.ok) { toast(data.detail || "추가 실패"); return; }
+  document.getElementById("namesInput").value = "";
+  toast(`${names.length}명 처리 완료`);
+  loadAll();
+}
+
+async function patchRow(id, body) {
+  const res = await fetch(`${API}/api/admin/reorg/${id}`, { method: "PATCH", headers: authHdr(), body: JSON.stringify(body) });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); toast(d.detail || "저장 실패"); return false; }
+  return true;
+}
+
+async function assign(id, guild) {
+  const row = boardRows.find(r => r.id === id);
+  if (!row) return;
+  if (await patchRow(id, { assigned_guild: guild })) { row.assigned_guild = guild; render(); }
+}
+
+async function clearGuild(id) {
+  const row = boardRows.find(r => r.id === id);
+  if (!row) return;
+  if (await patchRow(id, { clear_guild: true })) { row.assigned_guild = null; row.moved = false; render(); }
+}
+
+async function toggleMoved(id, checked) {
+  const row = boardRows.find(r => r.id === id);
+  if (!row) return;
+  if (await patchRow(id, { moved: checked })) { row.moved = checked; render(); }
+}
+
+async function delRow(id) {
+  const row = boardRows.find(r => r.id === id);
+  if (!row) return;
+  if (!confirm(`'${row.character_name}' 명단에서 삭제할까요?`)) return;
+  const res = await fetch(`${API}/api/admin/reorg/${id}`, { method: "DELETE", headers: authHdr() });
+  if (!res.ok) { toast("삭제 실패"); return; }
+  boardRows = boardRows.filter(r => r.id !== id);
+  render();
+}
+
+// ── 렌더 ──
+function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
+function cardHtml(row) {
+  const m = memberMap[nfc(row.character_name)];
+  const pop = m ? Number(m.popularity || 0) : 0;
+  const isActive = m && pop >= POP_ACTIVE;
+  const weekly = m ? Number(m.weeklyDiff || 0) : 0;
+  const curGuild = m ? nfc(m.guild) : "";
+  const stay = row.assigned_guild && curGuild && row.assigned_guild === curGuild;
+
+  const badges = [
+    m && curGuild ? `<span class="badge badge-guild">${esc(curGuild)}</span>` : "",
+    !m ? `<span class="badge badge-unknown">미등록</span>` : "",
+    isActive ? `<span class="badge badge-active">♥ 활동</span>` : "",
+    stay ? `<span class="badge badge-stay">잔류</span>` : "",
+  ].join("");
+
+  const sub = m ? `
+    <div class="card-sub">
+      <span>⚔️ ${fmtPower(m.power)}</span>
+      <span>♥ ${pop.toLocaleString()}</span>
+      ${weekly > 0 ? `<span class="up">▲ 주간 +${fmtPower(weekly)}</span>` : ""}
+    </div>` : "";
+
+  const gbtns = GUILDS.map(g => `<button class="gbtn${row.assigned_guild === g ? " on" : ""}" onclick="assign(${row.id}, '${g}')">${GUILD_SHORT[g]}</button>`).join("");
+  const tail = row.assigned_guild
+    ? `<label class="moved-label"><input type="checkbox" ${row.moved ? "checked" : ""} onchange="toggleMoved(${row.id}, this.checked)" />이동 완료</label>`
+    : `<button class="gbtn gbtn-del" onclick="delRow(${row.id})">✕</button>`;
+
+  return `
+    <div class="card${row.moved ? " moved" : ""}">
+      <div class="card-top"><span class="card-name">${esc(row.character_name)}</span>${badges}</div>
+      ${sub}
+      <div class="card-actions">${gbtns}${row.assigned_guild ? `<button class="gbtn gbtn-clear" onclick="clearGuild(${row.id})">↩</button>` : ""}${tail}</div>
+    </div>`;
+}
+
+function colHtml(title, rows, isPool) {
+  const withData = rows.filter(r => memberMap[nfc(r.character_name)]);
+  const sumPower = withData.reduce((s, r) => s + Number(memberMap[nfc(r.character_name)].power || 0), 0);
+  const activeCnt = withData.filter(r => Number(memberMap[nfc(r.character_name)].popularity || 0) >= POP_ACTIVE).length;
+  const movedCnt = rows.filter(r => r.moved).length;
+  const stats = isPool
+    ? `<div class="col-stats"><span>배치 대기 인원이에요</span></div>`
+    : `<div class="col-stats">
+         <span>⚔️ 합계 <b>${fmtPower(sumPower)}</b></span>
+         <span>♥ 활동 <b>${activeCnt}</b></span>
+         <span class="col-moved">이동 ${movedCnt}/${rows.length}</span>
+       </div>`;
+  const body = rows.length
+    ? rows.map(cardHtml).join("")
+    : `<div class="col-empty">비어 있음</div>`;
+  return `
+    <div class="col${isPool ? " col-pool" : ""}">
+      <div class="col-head">
+        <div class="col-title"><span>${title}</span><span class="col-count">${rows.length}명</span></div>
+        ${stats}
+      </div>
+      <div class="col-body">${body}</div>
+    </div>`;
+}
+
+function render() {
+  // 정렬: 전투력 내림차순 (미등록은 뒤)
+  const sorted = [...boardRows].sort((a, b) => {
+    const pa = memberMap[nfc(a.character_name)] ? Number(memberMap[nfc(a.character_name)].power || 0) : -1;
+    const pb = memberMap[nfc(b.character_name)] ? Number(memberMap[nfc(b.character_name)].power || 0) : -1;
+    return pb - pa;
+  });
+  const pool = sorted.filter(r => !r.assigned_guild);
+  const cols = [colHtml("📥 미배치", pool, true)]
+    .concat(GUILDS.map(g => colHtml(esc(g), sorted.filter(r => r.assigned_guild === g), false)));
+  document.getElementById("board").innerHTML = cols.join("");
+
+  const total = boardRows.length;
+  const assigned = boardRows.filter(r => r.assigned_guild).length;
+  const moved = boardRows.filter(r => r.moved).length;
+  const pct = total ? Math.round(moved / total * 100) : 0;
+  document.getElementById("summaryBar").innerHTML = `
+    <span class="summary-chip">전체 <b>${total}</b>명</span>
+    <span class="summary-chip">배치 <b>${assigned}</b> / 미배치 <b>${total - assigned}</b></span>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <span class="progress-label">이동 ${moved}/${total} (${pct}%)</span>
+    </div>`;
+}
+
+// 초기 진입: 토큰 있으면 바로 잠금 해제
+if (token() && sessionStorage.getItem("admin_ok") === "1") unlock();
+</script>
+</body>
+</html>
