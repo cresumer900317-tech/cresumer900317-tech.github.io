@@ -21,7 +21,7 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
-  --container: 1200px;
+  --container: 1320px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -280,16 +280,16 @@ main { padding: 0 0 48px; }
 .hero-portal-row { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: center; }
 .hero-portal-main { min-width: 0; }
 .hero-login-card {
-  background: #fff; border: 1px solid var(--yellow-border, #fde68a); border-radius: 16px;
-  padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.07);
-  display: flex; flex-direction: column; gap: 10px;
+  background: #fff; border: 1px solid var(--yellow-border, #fde68a); border-radius: 14px;
+  padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+  display: flex; flex-direction: column; gap: 8px;
 }
-.hero-login-title { font-size: 1.05rem; font-weight: 800; color: var(--text); }
-.hero-login-desc { font-size: 0.8rem; color: var(--text-soft); margin-bottom: 4px; }
+.hero-login-title { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.hero-login-desc { font-size: 0.76rem; color: var(--text-soft); margin-bottom: 2px; }
 .hero-login-input {
-  width: 100%; height: 42px; padding: 0 14px; box-sizing: border-box;
-  border: 1px solid var(--border, #e5e7eb); border-radius: 10px;
-  font-size: 0.92rem; outline: none; transition: border-color .15s;
+  width: 100%; height: 36px; padding: 0 12px; box-sizing: border-box;
+  border: 1px solid var(--border, #e5e7eb); border-radius: 9px;
+  font-size: 0.88rem; outline: none; transition: border-color .15s;
 }
 .hero-login-input:focus { border-color: var(--amber); }
 .hero-login-btn { width: 100%; justify-content: center; margin-top: 2px; }
@@ -1024,6 +1024,34 @@ a.mini-summary-card:active { transform: translateY(1px); }
 @media (max-width: 860px) { .rank-2col { grid-template-columns: 1fr; gap: 28px; } .rank-scroll { max-height: 372px; } }
 /* 홈 랭킹 3단 (서버 전체 / 길드 랭킹 / 길드 건강도) */
 .rank-2col.rank-3 { grid-template-columns: 1.3fr 1fr 1fr; }
+
+/* 전적검색 변경 이력 */
+.pf-change-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid #f3f4f6; font-size: 0.86rem; flex-wrap: wrap; }
+.pf-change-row:last-child { border-bottom: none; }
+.pf-change-badge { font-size: 0.74rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pf-change-diff { flex: 1; min-width: 140px; }
+.pf-change-arrow { color: #9ca3af; }
+.pf-change-date { font-size: 0.76rem; color: #9ca3af; white-space: nowrap; }
+
+/* 쿠폰 바 — 라이브바 아래 (mgf 벤치마킹) */
+.coupon-bar { background: #fffbeb; border-bottom: 1px solid var(--yellow-border, #fde68a); }
+.coupon-bar-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 0; }
+.coupon-bar-label { font-size: 0.8rem; font-weight: 800; color: #92400e; white-space: nowrap; }
+.coupon-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border: 1px solid var(--yellow-border, #fde68a); border-radius: 999px; background: #fff; font-size: 0.8rem; cursor: pointer; transition: border-color .15s; font-family: inherit; }
+.coupon-chip:hover { border-color: var(--amber, #f59e0b); }
+.coupon-chip b { letter-spacing: 0.4px; }
+.coupon-reward { color: var(--text-soft, #64748b); font-size: 0.74rem; }
+.coupon-copy { color: var(--amber, #f59e0b); font-weight: 700; font-size: 0.74rem; }
+
+/* 홈 추천 영상 그리드 */
+.video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.video-card { text-decoration: none; color: inherit; }
+.video-thumb-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #f3f4f6; aspect-ratio: 16/9; }
+.video-thumb { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+.video-card:hover .video-thumb { transform: scale(1.04); }
+.video-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; background: rgba(0,0,0,0.18); opacity: 0; transition: opacity .15s; }
+.video-card:hover .video-play { opacity: 1; }
+.video-title { font-size: 0.84rem; font-weight: 600; margin-top: 7px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* 홈 가입 배너 — 랭킹 구경 직후 모집 퍼널 */
 .recruit-band { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 26px; border-radius: 16px; background: linear-gradient(135deg, #fffbeb, #fff7ed); border: 1px solid var(--yellow-border, #fde68a); }

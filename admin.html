@@ -130,6 +130,7 @@
     <div class="top-bar-right">
       <button class="section-tab active" id="tabUsers" onclick="showSection('users')">👥 유저 관리</button>
       <button class="section-tab" id="tabTemp" onclick="showSection('temp')">🆕 임시등록</button>
+      <button class="section-tab" id="tabHome" onclick="showSection('home')">🏠 홈 콘텐츠</button>
       <a href="./reorg" style="font-weight:700;color:#92400e;">📋 재편 보드</a>
       <a href="./">← 홈</a>
       <button class="lock-out-btn" onclick="lockOut()">🔒 잠금</button>
@@ -164,6 +165,42 @@
           <button class="add-btn" onclick="renameCharacter()">이관</button>
         </div>
         <div id="renameResult" style="font-size:0.78rem;color:#16a34a;margin-top:10px;"></div>
+      </div>
+      <div class="input-section">
+        <h2>🕵️ 닉변 의심 (크롤 자동 감지)</h2>
+        <p style="font-size:0.78rem;color:#6b7280;margin-bottom:12px;">매시간 크롤에서 사라진 이름↔새 이름의 직업·레벨·전투력이 일치하면 여기 떠요. 확정하면 위 이관과 동일하게 처리됩니다.</p>
+        <div id="suspectList"><div class="empty-box">불러오는 중...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 홈 콘텐츠 섹션 (쿠폰·영상) -->
+  <div id="homeSection" style="display:none;">
+    <div class="container">
+      <div style="padding:20px 0 16px;">
+        <h2 style="font-size:1rem;font-weight:700;margin-bottom:6px;">🏠 홈 콘텐츠 관리</h2>
+        <p style="font-size:0.82rem;color:#6b7280;">쿠폰과 유튜브 영상을 등록하면 홈 화면에 바로 노출됩니다.</p>
+      </div>
+      <div class="input-section">
+        <h2>🎟️ 쿠폰 등록</h2>
+        <div class="input-row">
+          <div><label>쿠폰 코드</label><input type="text" id="couponCode" placeholder="예: MAPLE2026" /></div>
+          <div><label>보상 (선택)</label><input type="text" id="couponReward" placeholder="예: 다이아 1000개" /></div>
+          <button class="add-btn" onclick="addCoupon()">등록</button>
+        </div>
+        <div class="input-row" style="margin-top:8px;grid-template-columns:1fr;">
+          <div><label>만료일 (선택 — 지나면 홈에서 자동 숨김)</label><input type="date" id="couponExpires" style="width:auto;" /></div>
+        </div>
+        <div id="couponList" style="margin-top:14px;"></div>
+      </div>
+      <div class="input-section">
+        <h2>▶️ 유튜브 영상 등록</h2>
+        <div class="input-row">
+          <div><label>유튜브 URL</label><input type="text" id="videoUrl" placeholder="https://youtu.be/... 또는 watch?v=..." /></div>
+          <div><label>표시 제목 (선택)</label><input type="text" id="videoTitle" placeholder="비우면 유튜브 제목 없이 썸네일만" /></div>
+          <button class="add-btn" onclick="addVideo()">등록</button>
+        </div>
+        <div id="videoList" style="margin-top:14px;"></div>
       </div>
     </div>
   </div>
@@ -234,9 +271,121 @@ if (sessionStorage.getItem("admin_ok") === "1" && sessionStorage.getItem("token"
 function showSection(sec) {
   document.getElementById("userSection").style.display = sec === "users" ? "block" : "none";
   document.getElementById("tempSection").style.display = sec === "temp" ? "block" : "none";
+  document.getElementById("homeSection").style.display = sec === "home" ? "block" : "none";
   document.getElementById("tabUsers").classList.toggle("active", sec === "users");
   document.getElementById("tabTemp").classList.toggle("active", sec === "temp");
+  document.getElementById("tabHome").classList.toggle("active", sec === "home");
   if (sec === "users") loadUsers("pending");
+  if (sec === "temp") loadSuspects();
+  if (sec === "home") { loadCoupons(); loadVideos(); }
+}
+
+const adminAuth = () => ({ "Content-Type": "application/json", "Authorization": `Bearer ${sessionStorage.getItem("token")}` });
+
+// ── 닉변 의심 목록 ──
+async function loadSuspects() {
+  const el = document.getElementById("suspectList");
+  try {
+    const res = await fetch(`${API}/api/admin/rename-suspects`, { headers: adminAuth() });
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<div class="empty-box">감지된 닉변 의심이 없어요</div>'; return; }
+    el.innerHTML = data.map(s => `
+      <div class="member-row" style="grid-template-columns:1fr auto auto;">
+        <div>
+          <div class="member-name">${s.old_name} → <b style="color:#b45309;">${s.new_name}</b></div>
+          <div style="font-size:0.74rem;color:#9ca3af;margin-top:2px;">${s.evidence || ""}</div>
+        </div>
+        <button class="approve-btn" onclick="confirmSuspect(${s.id})">✅ 확정 이관</button>
+        <button class="deactivate-btn" onclick="dismissSuspect(${s.id})">아님</button>
+      </div>`).join("");
+  } catch (e) { el.innerHTML = '<div class="empty-box">불러오기 실패</div>'; }
+}
+
+async function confirmSuspect(id) {
+  if (!confirm("이 닉변을 확정하고 모든 데이터를 이관할까요?")) return;
+  const res = await fetch(`${API}/api/admin/rename-suspects/${id}/confirm`, { method: "POST", headers: adminAuth() });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.detail || "이관 실패", false); return; }
+  showToast("닉변 확정 · 이관 완료");
+  loadSuspects();
+}
+
+async function dismissSuspect(id) {
+  await fetch(`${API}/api/admin/rename-suspects/${id}/dismiss`, { method: "POST", headers: adminAuth() });
+  loadSuspects();
+}
+
+// ── 쿠폰 관리 ──
+async function loadCoupons() {
+  const el = document.getElementById("couponList");
+  try {
+    const res = await fetch(`${API}/api/coupons`, { cache: "no-store" });
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<div class="empty-box">등록된 쿠폰이 없어요</div>'; return; }
+    el.innerHTML = data.map(c => `
+      <div class="member-row" style="grid-template-columns:1fr auto;">
+        <div><span class="member-name">${c.code}</span>
+          <span style="font-size:0.78rem;color:#6b7280;margin-left:8px;">${c.reward || ""}${c.expiresAt ? ` · ~${c.expiresAt}` : ""}</span></div>
+        <button class="del-btn" onclick="delCoupon(${c.id})">삭제</button>
+      </div>`).join("");
+  } catch (e) { el.innerHTML = '<div class="empty-box">불러오기 실패</div>'; }
+}
+
+async function addCoupon() {
+  const code = document.getElementById("couponCode").value.trim();
+  if (!code) { showToast("쿠폰 코드를 입력해주세요", false); return; }
+  const res = await fetch(`${API}/api/admin/coupons`, {
+    method: "POST", headers: adminAuth(),
+    body: JSON.stringify({
+      code, reward: document.getElementById("couponReward").value.trim() || null,
+      expires_at: document.getElementById("couponExpires").value || null,
+    }),
+  });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); showToast(d.detail || "등록 실패", false); return; }
+  showToast("쿠폰 등록 완료");
+  document.getElementById("couponCode").value = ""; document.getElementById("couponReward").value = "";
+  loadCoupons();
+}
+
+async function delCoupon(id) {
+  if (!confirm("쿠폰을 삭제할까요?")) return;
+  await fetch(`${API}/api/admin/coupons/${id}`, { method: "DELETE", headers: adminAuth() });
+  loadCoupons();
+}
+
+// ── 홈 영상 관리 ──
+async function loadVideos() {
+  const el = document.getElementById("videoList");
+  try {
+    const res = await fetch(`${API}/api/home-videos`, { cache: "no-store" });
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<div class="empty-box">등록된 영상이 없어요</div>'; return; }
+    el.innerHTML = data.map(v => `
+      <div class="member-row" style="grid-template-columns:auto 1fr auto;">
+        <img src="https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg" style="width:80px;border-radius:6px;" />
+        <div class="member-name" style="font-size:0.82rem;">${v.title || v.videoId}</div>
+        <button class="del-btn" onclick="delVideo(${v.id})">삭제</button>
+      </div>`).join("");
+  } catch (e) { el.innerHTML = '<div class="empty-box">불러오기 실패</div>'; }
+}
+
+async function addVideo() {
+  const url = document.getElementById("videoUrl").value.trim();
+  if (!url) { showToast("유튜브 URL을 입력해주세요", false); return; }
+  const res = await fetch(`${API}/api/admin/home-videos`, {
+    method: "POST", headers: adminAuth(),
+    body: JSON.stringify({ url, title: document.getElementById("videoTitle").value.trim() || null }),
+  });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); showToast(d.detail || "등록 실패", false); return; }
+  showToast("영상 등록 완료");
+  document.getElementById("videoUrl").value = ""; document.getElementById("videoTitle").value = "";
+  loadVideos();
+}
+
+async function delVideo(id) {
+  if (!confirm("영상을 삭제할까요?")) return;
+  await fetch(`${API}/api/admin/home-videos/${id}`, { method: "DELETE", headers: adminAuth() });
+  loadVideos();
 }
 
 async function init() {

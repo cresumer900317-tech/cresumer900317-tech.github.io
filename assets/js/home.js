@@ -1,3 +1,10 @@
+window.copyCoupon = function (code, btn) {
+  navigator.clipboard.writeText(code).then(() => {
+    const el = btn.querySelector(".coupon-copy");
+    if (el) { el.textContent = "복사됨!"; setTimeout(() => { el.textContent = "복사"; }, 1500); }
+  }).catch(() => { prompt("쿠폰 코드를 복사하세요:", code); });
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   renderShell();
 
@@ -35,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>
   `;
 
-  const HOME_CACHE_KEY = "homeDataCache_v1";
+  const HOME_CACHE_KEY = "homeDataCache_v2";   // v2: 쿠폰·영상 추가
 
   async function loadHomeData() {
     return Promise.all([
@@ -50,10 +57,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/guild-health?limit=30`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/coupons`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/home-videos`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
   }
 
-  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes]) {
+  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes]) {
     const user = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     // 길드명 → 서버 길드순위 (스카니아11)
@@ -275,7 +284,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <form id="heroLoginForm" class="hero-login-card">
               <div class="hero-login-title">로그인 / 가입</div>
-              <div class="hero-login-desc">스카니아11 캐릭터면 가입하고 출석·포인트·커뮤니티를 즐겨보세요.</div>
+              <div class="hero-login-desc">캐릭터명으로 간편 로그인 — 출석·포인트·커뮤니티</div>
               <input id="heroLoginName" class="hero-login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
               <input id="heroLoginPw" class="hero-login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
               <button type="submit" class="cta-btn hero-login-btn">로그인</button>
@@ -298,6 +307,18 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="live-bar-update">마지막 업데이트: ${lastUpdate}</span>
         </div>
       </div>
+
+      ${(Array.isArray(couponsRes) && couponsRes.length) ? `
+      <div class="coupon-bar">
+        <div class="container coupon-bar-inner">
+          <span class="coupon-bar-label">🎟️ 쿠폰</span>
+          ${couponsRes.map((c) => `
+            <button class="coupon-chip" onclick="copyCoupon('${escapeHtml(c.code).replace(/'/g, "\\'")}', this)" title="${escapeHtml(c.reward || "")}${c.expiresAt ? " · ~" + c.expiresAt : ""}">
+              <b>${escapeHtml(c.code)}</b>${c.reward ? `<span class="coupon-reward">${escapeHtml(c.reward)}</span>` : ""}
+              <span class="coupon-copy">복사</span>
+            </button>`).join("")}
+        </div>
+      </div>` : ""}
 
       ${user ? changesHtml : ""}
 
@@ -399,6 +420,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
+      ${(Array.isArray(videosRes) && videosRes.length) ? `
+      <div class="section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <div class="section-title">추천 영상</div>
+              <div class="section-sub">메이플키우기 볼만한 영상 모음</div>
+            </div>
+          </div>
+          <div class="video-grid">
+            ${videosRes.slice(0, 4).map((v) => `
+              <a class="video-card" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer">
+                <div class="video-thumb-wrap">
+                  <img class="video-thumb" src="https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg" alt="${escapeHtml(v.title || "영상")}" loading="lazy" />
+                  <span class="video-play">▶</span>
+                </div>
+                ${v.title ? `<div class="video-title">${escapeHtml(v.title)}</div>` : ""}
+              </a>`).join("")}
+          </div>
+        </div>
+      </div>` : ""}
+
       <div class="section-block">
         <div class="container">
           <div class="home-portal">
@@ -466,10 +509,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                   `).join("")}
                 </div>` : `<div class="side-empty">등록된 공지가 없어요</div>`}
               </div>`;
+                const officialCard = `
+              <div class="side-card">
+                <div class="side-card-title">🍁 메키 공식</div>
+                <div class="quick-menu">
+                  <a class="quick-link" href="https://forum.nexon.com/maplestoryidle-kr/board_list?board=6633" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">📢</span>공식 공지사항</a>
+                  <a class="quick-link" href="https://forum.nexon.com/maplestoryidle-kr/board_list?board=6698" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">🛠️</span>패치노트</a>
+                  <a class="quick-link" href="https://maplestoryidle.nexon.com/ko" target="_blank" rel="noopener noreferrer"><span class="quick-emoji">🏠</span>공식 홈페이지</a>
+                </div>
+              </div>`;
                 // 로그인 = 길드원: 공지 우선. 비로그인 = 방문자: 가입/앱 전환 우선.
                 return user
-                  ? noticeCard + quickCard + appCard
-                  : loginCard + appCard + quickCard + noticeCard;
+                  ? noticeCard + quickCard + officialCard + appCard
+                  : loginCard + appCard + quickCard + noticeCard + officialCard;
               })()}
             </aside>
           </div>

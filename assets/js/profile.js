@@ -147,6 +147,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // 변경 이력(길드/직업/닉변) — 데이터 있을 때만 섹션 노출
+  function renderChangeLog(name) {
+    const LABELS = { guild: ["🏰", "길드 이동"], job: ["💼", "직업 변경"], nickname: ["🔤", "닉네임 변경"] };
+    fetch(`${API_BASE}/api/change-log?name=${encodeURIComponent(name)}`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => {
+        if (!Array.isArray(rows) || !rows.length) return;
+        const sec = document.getElementById("pfChanges");
+        const body = sec && sec.querySelector(".pf-changes-body");
+        if (!body) return;
+        body.innerHTML = rows.map(r => {
+          const [emoji, label] = LABELS[r.field] || ["📝", r.field];
+          return `
+            <div class="pf-change-row">
+              <span class="pf-change-badge">${emoji} ${label}</span>
+              <span class="pf-change-diff">${escapeHtml(r.oldValue || "-")} <span class="pf-change-arrow">→</span> <b>${escapeHtml(r.newValue || "-")}</b></span>
+              <span class="pf-change-date">${(r.changedAt || "").slice(0, 10)}</span>
+            </div>`;
+        }).join("");
+        sec.style.display = "";
+      })
+      .catch(() => {});
+  }
+
   // ── 검색 전(빈 상태) ──
   if (!query) {
     main.innerHTML = searchBarHtml("") + `
@@ -308,11 +332,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
         <div class="pf-growth-body"><div class="loading-box" style="margin:0;">성장 데이터를 불러오는 중…</div></div>
       </div>
+
+      <div class="pf-section" id="pfChanges" style="display:none;">
+        <div class="pf-section-head">
+          <div class="pf-section-title">변경 이력</div>
+          <div class="pf-section-sub">길드 이동 · 직업 변경 · 닉네임 변경</div>
+        </div>
+        <div class="pf-changes-body"></div>
+      </div>
     </div>
   ` + footerHtml();
 
   bindSearch();
   renderGrowth(me.nickname);
+  renderChangeLog(me.nickname);
 
   // 전적 공유 (홍보 바이럴) — Web Share 우선, 없으면 링크 복사
   const shareBtn = document.getElementById("pfShareBtn");
