@@ -345,19 +345,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>` : ""}
 
-      <div class="section-block feature-tiles-block">
-        <div class="container">
-          <div class="feature-tiles">
-            <a class="feature-tile" href="./profile"><span class="ft-emoji">🔍</span><div class="ft-main"><div class="ft-title">전적검색</div><div class="ft-sub">캐릭터 정보 · 성장 그래프</div></div><span class="ft-arrow">→</span></a>
-            <a class="feature-tile" href="./ranking"><span class="ft-emoji">👑</span><div class="ft-main"><div class="ft-title">서버 랭킹</div><div class="ft-sub">전투력 · 인기도 · 보스</div></div><span class="ft-arrow">→</span></a>
-            <a class="feature-tile" href="./ranking"><span class="ft-emoji">🛡️</span><div class="ft-main"><div class="ft-title">길드 랭킹</div><div class="ft-sub">서버 길드 TOP30 · 건강도</div></div><span class="ft-arrow">→</span></a>
-            <a class="feature-tile" href="./weekly"><span class="ft-emoji">📈</span><div class="ft-main"><div class="ft-title">성장 리포트</div><div class="ft-sub">주간 · 월간 성장량</div></div><span class="ft-arrow">→</span></a>
-            <a class="feature-tile" href="./tips"><span class="ft-emoji">📖</span><div class="ft-main"><div class="ft-title">공략</div><div class="ft-sub">토벌전 · 대항전 · 세팅</div></div><span class="ft-arrow">→</span></a>
-            <a class="feature-tile" href="./points"><span class="ft-emoji">🔥</span><div class="ft-main"><div class="ft-title">포인트</div><div class="ft-sub">출석 · 활동 리워드</div></div><span class="ft-arrow">→</span></a>
-          </div>
-        </div>
-      </div>
-
       ${user ? changesHtml : ""}
 
       <div class="section-block">
