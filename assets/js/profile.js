@@ -52,6 +52,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return m ? `${Number(m[2])}/${Number(m[3])}` : String(d || "");
   }
 
+  // 차트별 메타 (호버 툴팁용) — id → {coords, points, fmt, betterIsLow, color, W, H}
+  const chartMeta = {};
+
   // 단순 SVG 라인차트. points:[{label,value}], opts:{id,color,betterIsLow}
   // betterIsLow=true(순위)면 작은 값이 위(=좋음), false(전투력)면 큰 값이 위.
   function buildLineChart(points, opts) {
@@ -69,13 +72,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       return padTop + t * innerH;                      // t=0 → 위(=좋음)
     };
     const coords = points.map((p, i) => [xAt(i), yAt(p.value)]);
+    chartMeta[opts.id] = { coords, points, fmt: opts.fmt, betterIsLow: !!opts.betterIsLow, color: opts.color, W, H };
     const linePts = coords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ");
     const areaPath = `M ${coords[0][0].toFixed(1)} ${(H - padBot).toFixed(1)} `
       + coords.map(c => `L ${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" ")
       + ` L ${coords[n - 1][0].toFixed(1)} ${(H - padBot).toFixed(1)} Z`;
+    // 점: 마지막만 강조, 중간 점은 작게 — 데이터 20개 초과 시 선만 (일별 값은 호버 툴팁이 담당)
     const dots = coords.map((c, i) => {
       const last = i === n - 1;
-      return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${last ? 4 : 2.5}" fill="${last ? opts.color : "#fff"}" stroke="${opts.color}" stroke-width="1.6"/>`;
+      if (!last && n > 20) return "";
+      return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${last ? 3 : 1.7}" fill="${last ? opts.color : "#fff"}" stroke="${opts.color}" stroke-width="1.2"/>`;
     }).join("");
     // 값 라벨: 시작점·현재(마지막)점의 실제 수치를 그래프 위에 표시 (점 위쪽, 잘림 방지)
     const labelY = (c) => Math.min(H - padBot - 6, Math.max(padTop - 6, c[1] - 8));
@@ -89,7 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <text x="${xAt(0).toFixed(1)}" y="${H - 6}" text-anchor="start" font-size="10" fill="#94a3b8">${escapeHtml(points[0].label)}</text>
       <text x="${xAt(n - 1).toFixed(1)}" y="${H - 6}" text-anchor="end" font-size="10" fill="#94a3b8">${escapeHtml(points[n - 1].label)}</text>`;
     return `
-      <svg class="pf-chart-svg" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="성장 추이 그래프">
+      <svg class="pf-chart-svg" data-chart="${opts.id}" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="성장 추이 그래프" style="touch-action:pan-y;">
         <defs>
           <linearGradient id="pfgrad-${opts.id}" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.22"/>
@@ -99,9 +105,70 @@ document.addEventListener("DOMContentLoaded", async () => {
         <path d="${areaPath}" fill="url(#pfgrad-${opts.id})"/>
         <polyline points="${linePts}" fill="none" stroke="${opts.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
+        <line class="pf-cursor-line" x1="0" y1="${padTop - 4}" x2="0" y2="${H - padBot}" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3 2" visibility="hidden"/>
+        <circle class="pf-cursor-dot" r="3.6" fill="${opts.color}" stroke="#fff" stroke-width="1.5" visibility="hidden"/>
         ${valLabels}
         ${xLabels}
       </svg>`;
+  }
+
+  // 호버/탭 시 해당 날짜의 실제 값 + 전일 대비 변화 툴팁
+  function attachChartHover(scope) {
+    scope.querySelectorAll(".pf-chart-svg").forEach((svg) => {
+      const meta = chartMeta[svg.dataset.chart];
+      if (!meta || meta.points.length < 2) return;
+      const chartEl = svg.closest(".pf-chart");
+      const tip = chartEl && chartEl.querySelector(".pf-tooltip");
+      if (!tip) return;
+      const cursorLine = svg.querySelector(".pf-cursor-line");
+      const cursorDot = svg.querySelector(".pf-cursor-dot");
+      const fmt = meta.fmt || ((v) => String(v));
+
+      const show = (ev) => {
+        const r = svg.getBoundingClientRect();
+        const xView = (ev.clientX - r.left) / r.width * meta.W;
+        const n = meta.points.length;
+        const t = (xView - 30) / (meta.W - 60);
+        const i = Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
+        const [cx, cy] = meta.coords[i];
+        const p = meta.points[i];
+
+        cursorLine.setAttribute("x1", cx); cursorLine.setAttribute("x2", cx);
+        cursorLine.setAttribute("visibility", "visible");
+        cursorDot.setAttribute("cx", cx); cursorDot.setAttribute("cy", cy);
+        cursorDot.setAttribute("visibility", "visible");
+
+        // 전일 대비 변화 (순위는 감소=상승)
+        let deltaHtml = "";
+        if (i > 0) {
+          const d = p.value - meta.points[i - 1].value;
+          if (d !== 0) {
+            const good = meta.betterIsLow ? d < 0 : d > 0;
+            const arrow = good ? "▲" : "▼";
+            const num = meta.betterIsLow ? Math.abs(d).toLocaleString() : fmt(Math.abs(d));
+            deltaHtml = ` <span style="color:${good ? "#16a34a" : "#dc2626"};font-weight:700;">${arrow}${num}</span>`;
+          }
+        }
+        tip.innerHTML = `<b>${escapeHtml(p.label)}</b> · ${escapeHtml(fmt(p.value))}${deltaHtml}`;
+
+        // 툴팁 위치: 점 위쪽, 좌우 잘림 방지
+        const px = cx / meta.W * r.width + (r.left - chartEl.getBoundingClientRect().left);
+        const py = cy / meta.H * r.height + (r.top - chartEl.getBoundingClientRect().top);
+        tip.style.display = "block";
+        const tw = tip.offsetWidth;
+        const maxLeft = chartEl.clientWidth - tw - 4;
+        tip.style.left = Math.max(4, Math.min(maxLeft, px - tw / 2)) + "px";
+        tip.style.top = Math.max(2, py - tip.offsetHeight - 12) + "px";
+      };
+      const hide = () => {
+        tip.style.display = "none";
+        cursorLine.setAttribute("visibility", "hidden");
+        cursorDot.setAttribute("visibility", "hidden");
+      };
+      svg.addEventListener("pointermove", show);
+      svg.addEventListener("pointerdown", show);
+      svg.addEventListener("pointerleave", hide);
+    });
   }
 
   // 캐릭터 이력을 받아 #pfGrowth 안에 그래프 렌더 (비동기)
@@ -128,6 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="pf-chart">
             <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
             ${buildLineChart(rankPts, { id: "rank", color: "#2563eb", betterIsLow: true, fmt: (v) => formatNumber(v) + "위" })}
+            <div class="pf-tooltip" style="display:none;"></div>
           </div>`;
       }
       if (powerPts.length >= 2) {
@@ -140,10 +208,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="pf-chart">
             <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
             ${buildLineChart(powerPts, { id: "power", color: "#f59e0b", betterIsLow: false, fmt: (v) => formatCompactPower(v) })}
+            <div class="pf-tooltip" style="display:none;"></div>
           </div>`;
       }
-      html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
+      html += `<div class="pf-chart-note">하루 2회 자동 수집 · 그래프에 마우스를 올리거나 터치하면 날짜별 수치가 보여요</div>`;
       body.innerHTML = html;
+      attachChartHover(body);
     });
   }
 

@@ -1080,6 +1080,11 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .side-official-kind.patch { background: #dbeafe; color: #1d4ed8; }
 .side-official-kind.event { background: #dcfce7; color: #16a34a; }
 
+/* 성장 그래프 호버 툴팁 */
+.pf-chart { position: relative; }
+.pf-tooltip { position: absolute; z-index: 5; pointer-events: none; background: #1f2937; color: #fff; font-size: 0.76rem; padding: 5px 10px; border-radius: 8px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+.pf-tooltip b { color: #fbbf24; }
+
 /* 전적검색 변경 이력 */
 .pf-change-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid #f3f4f6; font-size: 0.86rem; flex-wrap: wrap; }
 .pf-change-row:last-child { border-bottom: none; }
