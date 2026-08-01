@@ -138,6 +138,7 @@ function renderShell() {
     ${navLink("./profile", "profile", "전적검색", page)}
     ${navLink("./notice", "notice", "공지", page)}
     ${navLink("./tips", "tips", "공략", page)}
+    ${navLink("./level-calc", "level-calc", "계산기", page)}
     <div class="nav-group ${inGroup(["members", "weekly", "rivals", "points"])}">
       <button class="nav-group-label" type="button">길드<span class="nav-caret">▾</span></button>
       <div class="nav-group-menu">

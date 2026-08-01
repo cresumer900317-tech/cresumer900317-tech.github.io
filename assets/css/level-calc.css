@@ -1,0 +1,140 @@
+/* ===== 레벨업 계산기 ===== */
+.lc-wrap { padding-top: 28px; }
+.lc-head { text-align: center; margin-bottom: 22px; }
+.lc-title { font-size: 1.5rem; font-weight: 800; color: var(--amber-darker); }
+.lc-sub { font-size: 0.85rem; color: var(--text-soft); margin-top: 6px; }
+
+.lc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 860px) { .lc-grid { grid-template-columns: 1fr; } }
+
+.lc-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.lc-pq { margin-top: 16px; }
+
+.lc-block + .lc-block { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--border); }
+.lc-block-title {
+  font-size: 0.95rem; font-weight: 700; color: var(--text);
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.lc-buff-total {
+  font-size: 0.8rem; font-weight: 700; color: var(--amber-dark);
+  background: var(--yellow-pale); border: 1px solid var(--yellow-border);
+  padding: 2px 10px; border-radius: 999px;
+}
+
+/* 필드 */
+.lc-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lc-field-row + .lc-field, .lc-field + .lc-field-row, .lc-field-row + .lc-field-row { margin-top: 12px; }
+.lc-field + .lc-field { margin-top: 12px; }
+.lc-field { display: flex; flex-direction: column; gap: 6px; }
+.lc-field > span {
+  font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
+  display: flex; align-items: center; gap: 6px;
+}
+.lc-field > span em { font-style: normal; font-weight: 400; color: var(--text-faint); font-size: 0.72rem; }
+.lc-field input[type="number"], .lc-field select {
+  width: 100%; height: 42px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--white); color: var(--text); font-size: 0.9rem; font-weight: 600;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.lc-field input[type="number"]:focus, .lc-field select:focus {
+  outline: none; border-color: var(--yellow-light);
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.18);
+}
+
+/* 체크박스 */
+.lc-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.lc-check {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font-size: 0.8rem; font-weight: 600; color: var(--text-soft);
+  border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+  transition: all 0.15s ease; user-select: none;
+}
+.lc-check input { accent-color: var(--yellow); width: 15px; height: 15px; }
+.lc-check:has(input:checked) {
+  background: var(--yellow-pale); border-color: var(--yellow-border); color: var(--amber-dark);
+}
+
+/* 탭 */
+.lc-tabs { display: flex; gap: 6px; background: var(--yellow-bg); padding: 4px; border-radius: var(--radius-md); margin-bottom: 16px; }
+.lc-tab {
+  flex: 1; height: 38px; border: none; background: none; cursor: pointer;
+  font-size: 0.85rem; font-weight: 700; color: var(--text-soft); border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+.lc-tab.lc-active { background: var(--white); color: var(--amber-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.lc-tabpanel { display: none; }
+.lc-tabpanel.lc-active { display: block; }
+
+/* 히어로 결과 */
+.lc-hero {
+  text-align: center; padding: 20px;
+  background: linear-gradient(135deg, var(--yellow-bg), var(--yellow-pale));
+  border: 1px solid var(--yellow-border); border-radius: var(--radius-lg); margin-bottom: 14px;
+}
+.lc-hero-label { font-size: 0.82rem; font-weight: 700; color: var(--amber); }
+.lc-hero-time { font-size: 1.9rem; font-weight: 800; color: var(--amber-darker); margin: 4px 0; line-height: 1.1; }
+.lc-hero-cap { font-size: 0.72rem; color: var(--text-faint); }
+
+/* 경험치 바 */
+.lc-expbar-wrap { margin-bottom: 14px; }
+.lc-expbar-top { display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+.lc-expbar { height: 10px; background: var(--border-light); border-radius: 999px; overflow: hidden; }
+.lc-expfill { height: 100%; background: linear-gradient(90deg, var(--yellow-light), var(--yellow)); border-radius: 999px; transition: width 0.3s ease; }
+
+/* 통계 그리드 */
+.lc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lc-stat {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); padding: 10px 12px;
+}
+.lc-stat-wide { grid-column: 1 / -1; }
+.lc-stat span { font-size: 0.72rem; color: var(--text-faint); font-weight: 600; }
+.lc-stat b { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+
+/* 파티퀘 비교 */
+.lc-badge-wrap { margin: 14px 0; }
+.lc-badge {
+  text-align: center; font-size: 0.88rem; font-weight: 700;
+  padding: 10px; border-radius: var(--radius-md);
+}
+.lc-badge-hunt { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.lc-badge-pq   { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+.lc-badge-tie  { background: var(--border-light); color: var(--text-soft); border: 1px solid var(--border); }
+
+.lc-compare { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.lc-cmp-row { display: grid; grid-template-columns: 64px 1fr 96px; align-items: center; gap: 10px; }
+.lc-cmp-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.lc-cmp-track { height: 14px; background: var(--border-light); border-radius: 999px; overflow: hidden; }
+.lc-cmp-fill { height: 100%; border-radius: 999px; transition: width 0.35s ease; min-width: 2px; }
+.lc-cmp-hunt { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+.lc-cmp-pq   { background: linear-gradient(90deg, #f472b6, #db2777); }
+.lc-cmp-val { font-size: 0.8rem; font-weight: 700; color: var(--text-soft); text-align: right; }
+
+/* 슬라이더 */
+#clearSlider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 999px; background: var(--border); cursor: pointer;
+  padding: 0; margin-top: 8px;
+}
+#clearSlider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--yellow); border: 2px solid var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+#clearSlider::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--yellow); border: 2px solid var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
