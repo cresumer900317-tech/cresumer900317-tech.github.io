@@ -1,10 +1,18 @@
+/* ============================================================
+   메이플키우기 라운지 — 프리미엄 홈 (Warm Editorial)
+   자체 완결형: home-premium.css만 사용, 공용 style.css/renderShell 미사용.
+   실데이터 매핑 + SWR 캐싱 유지.
+   ============================================================ */
+
+const FRIENDS = new Set(["친구들", "친구둘", "친구삼", "친구넷", "친구닷"]);
+
+// ── 탭 전환 ─────────────────────────────────────────────────
 window.showOfficialTab = function (btn, kind) {
   btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
-  document.querySelectorAll("#officialList .official-row").forEach((r) => {
+  document.querySelectorAll("#officialList .feed-row").forEach((r) => {
     r.style.display = (kind === "전체" || r.dataset.kind === kind) ? "" : "none";
   });
 };
-
 window.showCommTab = function (btn, id) {
   btn.parentElement.querySelectorAll(".mini-tab").forEach((b) => b.classList.toggle("active", b === btn));
   ["commLatest", "commPopular"].forEach((x) => {
@@ -12,60 +20,133 @@ window.showCommTab = function (btn, id) {
     if (el) el.style.display = x === id ? "" : "none";
   });
 };
-
 window.copyCoupon = function (code, btn) {
   navigator.clipboard.writeText(code).then(() => {
-    const el = btn.querySelector(".coupon-copy");
+    const el = btn.querySelector(".copy");
     if (el) { el.textContent = "복사됨!"; setTimeout(() => { el.textContent = "복사"; }, 1500); }
   }).catch(() => { prompt("쿠폰 코드를 복사하세요:", code); });
 };
 
+// ── 아이콘 ──────────────────────────────────────────────────
+const ICON = {
+  leaf: '🍁',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+  trend: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 8 4-16 2 8h6"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 9.5 8.5 4 9l4 4-1 6 5-3 5 3-1-6 4-4-5.5-.5z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m10 8 6 4-6 4V8Z"/><rect x="2" y="4" width="20" height="16" rx="4"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+  apple: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .7 1.1 1.6 2.3 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7 1.9-1.1 2.6-2.1c.8-1.2 1.2-2.4 1.2-2.4s-2.4-.9-2.4-3.5zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.5.6-1 1.6-.9 2.6 1 .1 2-.5 2.6-1.2z"/></svg>',
+  play2: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1L13 12.1v-.2L3.7 2.2zM16.3 15.4l-3.1-3.1v-.2l3.1-3.1.1.1 3.7 2.1c1.1.6 1.1 1.6 0 2.2zM15.6 16.1l-3.2-3.2-9.4 9.4c.4.4 1 .4 1.7.1z"/></svg>',
+};
+
+// ── 아바타 (이미지 위 초성 폴백) ───────────────────────────
+function av(name, cls) {
+  const nm = String(name || "").trim();
+  const url = `https://mgf.gg/ranking/ranking_image.php?n=${encodeURIComponent(nm)}`;
+  const init = escapeHtml((nm || "?").slice(0, 1));
+  return `<span class="av ${cls || ""}"><span>${init}</span><img src="${url}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></span>`;
+}
+
+function guildChip(guild) {
+  const gn = String(guild || "").normalize("NFC").trim();
+  if (!gn || gn === "길드 없음") return "";
+  return FRIENDS.has(gn)
+    ? `<span class="guild-chip">${escapeHtml(gn)}</span>`
+    : `<span class="guild-chip neutral">${escapeHtml(gn)}</span>`;
+}
+
+// ── 헤더 ────────────────────────────────────────────────────
+function premiumHeader(user) {
+  const NAV = [
+    ["./", "홈", true], ["./ranking", "랭킹"], ["./profile", "전적검색"],
+    ["./notice", "공지"], ["./tips", "공략"], ["./level-calc", "계산기"],
+  ];
+  const navLinks = NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("");
+  const guildDrop = `<div class="nav-drop"><button type="button">길드${ICON.chev}</button></div>`;
+
+  const auth = user
+    ? `<div class="user-menu" id="userMenu">
+         <button class="user-btn" type="button" id="userBtn">${escapeHtml(user.character_name)}${ICON.chev}</button>
+         <div class="user-pop">
+           <div class="user-pop-head"><strong>${escapeHtml(user.character_name)}</strong><span>${escapeHtml(user.guild || "라운지 회원")}</span></div>
+           <a href="./mypage">회원정보</a>
+           <a href="./login?tab=changepw">비밀번호 변경</a>
+           <button class="logout" onclick="logout()">로그아웃</button>
+         </div>
+       </div>`
+    : `<a class="btn-login" href="./login">로그인</a>`;
+
+  return `
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="./">
+          <span class="brand-mark">🍁</span>
+          <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
+        </a>
+        <nav class="nav">${navLinks}${guildDrop}</nav>
+        <div class="header-right">
+          <form class="search-pill" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+          </form>
+          ${auth}
+          <button class="mnav-btn" type="button" id="mnavBtn" aria-label="메뉴">${ICON.menu}</button>
+        </div>
+      </div>
+      <div class="mnav-panel" id="mnavPanel">
+        <div class="container mnav-links">
+          ${NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("")}
+          <a href="./members">길드원</a><a href="./weekly">월간성장</a>
+          ${user ? `<a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>` : `<a href="./login">로그인 / 회원가입</a>`}
+        </div>
+      </div>
+    </header>`;
+}
+
+function bindHeader() {
+  const mnavBtn = document.getElementById("mnavBtn");
+  const mnavPanel = document.getElementById("mnavPanel");
+  if (mnavBtn && mnavPanel) mnavBtn.addEventListener("click", () => mnavPanel.classList.toggle("open"));
+  const userBtn = document.getElementById("userBtn");
+  const userMenu = document.getElementById("userMenu");
+  if (userBtn && userMenu) {
+    userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
+  }
+}
+
+// ── 페이지 부트 ─────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  const user = getUser();
+  document.getElementById("app-shell").innerHTML = premiumHeader(user);
+  bindHeader();
+  pingVisitor();
+  setInterval(pingVisitor, 3 * 60 * 1000);
 
-  // 스켈레톤 로딩 표시
   document.querySelector("main").innerHTML = `
-    <div class="home-hero home-hero-slim" style="padding:28px 0 24px;">
-      <div class="container hero-inner">
-        <div class="skeleton skeleton-badge"></div>
-        <div class="skeleton skeleton-title"></div>
-      </div>
-    </div>
-    <div class="section-block">
-      <div class="container">
-        <div class="skeleton skeleton-section-title"></div>
-        <div class="kpi-grid kpi-grid-overview">
-          ${Array(5).fill('<div class="kpi-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div></div>').join("")}
-        </div>
-      </div>
-    </div>
-    <div class="section-block">
-      <div class="container">
-        <div class="skeleton skeleton-section-title"></div>
-        <div class="kpi-grid kpi-grid-dashboard">
-          ${Array(7).fill('<div class="kpi-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div></div>').join("")}
-        </div>
-      </div>
-    </div>
-    <div class="section-block">
-      <div class="container">
-        <div class="skeleton skeleton-section-title"></div>
-        <div class="family-board-grid">
-          ${Array(5).fill('<div class="guild-board-card"><div class="skeleton skeleton-label"></div><div class="skeleton skeleton-value"></div><div class="skeleton skeleton-label" style="margin-top:8px;"></div></div>').join("")}
-        </div>
-      </div>
-    </div>
-  `;
+    <section class="hero"><div class="container">
+      <div class="hero-card"><div style="width:100%"><div class="sk sk-line" style="width:180px"></div><div class="sk sk-title" style="margin-top:16px;height:52px"></div><div class="sk sk-line" style="width:260px;margin-top:16px"></div></div></div>
+    </div></section>
+    <section class="section" style="padding-top:20px"><div class="container">
+      <div class="kpi-row">${Array(4).fill('<div class="kpi"><div class="sk sk-line" style="width:60%"></div><div class="sk sk-title" style="margin-top:12px;height:36px;width:50%"></div></div>').join("")}</div>
+    </div></section>
+    <section class="section"><div class="container"><div class="grid-3">${Array(3).fill('<div class="panel"><div class="sk sk-card" style="margin:16px;height:220px"></div></div>').join("")}</div></div></section>`;
 
-  const HOME_CACHE_KEY = "homeDataCache_v4";   // v4: 인기 검색어 추가
+  const HOME_CACHE_KEY = "homeDataCache_v5";
 
   async function loadHomeData() {
     return Promise.all([
       getHomeData(),
       getGuildsData(),
-      fetch(`${API_BASE}/api/monthly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}),
-      fetch(`${API_BASE}/api/guild-ranks`, { cache: "no-store" }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders() }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-ranking?limit=15`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -79,481 +160,298 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
   }
 
-  function renderHome([summary, members, monthlyRes, visitorRes, guildRanksRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes]) {
-    const user = getUser();
+  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes]) {
+    const u = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
-    // 길드명 → 서버 길드순위 (스카니아11)
-    const guildRankMap = {};
-    (Array.isArray(guildRanksRes) ? guildRanksRes : []).forEach((g) => { guildRankMap[g.guildName] = g; });
     const visitorStats = visitorRes || {};
-    const monthlyRows = Array.isArray(monthlyRes) ? monthlyRes : [];
-
     const rows = Array.isArray(members) ? members : [];
-    const sortedRanking = [...rows].sort((a, b) => Number(b.power||0) - Number(a.power||0));
-    const grouped = byGuild(rows);
-    const guilds = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"];
-    const FRIENDS = new Set(guilds);
-    // 스카니아11 서버 전체 랭킹 TOP15 — 홈은 미리보기, 전체는 랭킹 페이지 담당
+    const memberCount = (summary && summary.member_count) || rows.length;
+
+    // 친구패밀리 이번 주 성장률 (실데이터)
+    const sumWeekly = rows.reduce((s, r) => s + Number(r.weeklyDiff || 0), 0);
+    const curTotal = rows.reduce((s, r) => s + Number(r.power || 0), 0);
+    const prevTotal = curTotal - sumWeekly;
+    const familyGrowthPct = prevTotal > 0 ? (sumWeekly / prevTotal * 100) : 0;
+    const growers = rows.filter(r => Number(r.weeklyDiff || 0) > 0).length;
+
+    const growthTop = [...rows].filter(x => Number(x.weeklyDiff || 0) > 0)
+      .sort((a, b) => Number(b.weeklyDiff || 0) - Number(a.weeklyDiff || 0)).slice(0, 4);
+
     const serverTop = (Array.isArray(serverTopRes) ? serverTopRes : [])
-      .filter((r) => r && r.nickname)
-      .sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0))
-      .slice(0, 15);
-    // 스카니아11 서버 전체 길드 랭킹 (최대 30)
+      .filter(r => r && r.nickname).sort((a, b) => Number(a.serverRank || 0) - Number(b.serverRank || 0)).slice(0, 12);
     const serverGuildTop = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
-      .filter((g) => g && g.guildName)
-      .sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0))
-      .slice(0, 30);
-    // 길드 건강도 순위 (활력 점수 — ranking.js와 동일 공식. 성장축 가동: 성장30·활동25·깊이25·균형20)
-    const clampH = (v) => Math.max(0, Math.min(100, v));
+      .filter(g => g && g.guildName).sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0)).slice(0, 12);
+
+    const clampH = v => Math.max(0, Math.min(100, v));
     const healthTop = (Array.isArray(serverHealthRes) ? serverHealthRes : [])
-      .filter((g) => g && g.guildName && Number(g.memberSampled || 0) >= 3)
-      .map((g) => {
+      .filter(g => g && g.guildName && Number(g.memberSampled || 0) >= 3)
+      .map(g => {
         const depth = Number(g.medianPower || 0) > 0 ? clampH(50 + 12.5 * Math.log10(Number(g.medianPower) / 1e12)) : 0;
         const bal = g.effContributors != null ? clampH((Number(g.effContributors) - 1) / 9 * 100) : null;
         const act = g.activeRatio != null ? Number(g.activeRatio) * 100 : null;
         const grow = g.growthRatio != null ? Number(g.growthRatio) * 100 : null;
         const parts = (grow != null && bal != null && act != null)
           ? [[grow, 0.30], [act, 0.25], [depth, 0.25], [bal, 0.20]]
-          : [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter((p) => p[0] != null);
+          : [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter(p => p[0] != null);
         const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
-        const score = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
-        return { name: g.guildName, score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 30);
+        return { name: g.guildName, score: Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum) };
+      }).sort((a, b) => b.score - a.score).slice(0, 12);
 
-    const avgPower = rows.length
-      ? Math.round(rows.reduce((sum, r) => sum + Number(r.power || 0), 0) / rows.length)
-      : 0;
-    const totalMonthlyGrowth = monthlyRows.reduce((sum, r) => sum + Number(r.monthlyDiff || 0), 0);
-
-    const growthTop = [...rows]
-      .filter((x) => Number(x.weeklyDiff || 0) > 0)
-      .sort((a, b) => Number(b.weeklyDiff || 0) - Number(a.weeklyDiff || 0))
-      .slice(0, 5);
-
-    const riseTop = [...rows]
-      .filter((x) => Number(x.serverRankDiff || 0) > 0)
-      .sort((a, b) => Number(b.serverRankDiff || 0) - Number(a.serverRankDiff || 0))
-      .slice(0, 5);
-
-    const lastUpdate = rows.length && rows[0].capturedAt
-      ? new Date(rows[0].capturedAt).toLocaleString("ko-KR", {
-          year: "numeric", month: "2-digit", day: "2-digit",
-          hour: "2-digit", minute: "2-digit",
-        })
-      : "-";
-
-    const memberCount = summary.member_count || rows.length;
-    const guildCount = summary.guild_count || 5;
-    const top500Count = rows.filter((r) => Number(r.serverRank || 0) > 0 && Number(r.serverRank) <= 500).length;
-    const top500Rate = memberCount > 0 ? ((top500Count / memberCount) * 100).toFixed(1) : "0.0";
-
-    // 영입 후크: 스카니아11 서버에서의 친구패밀리 지배력
-    const membersWithRank = rows.filter((r) => Number(r.serverRank || 0) > 0);
-    const top100Count = membersWithRank.filter((r) => Number(r.serverRank) <= 100).length;
-    const bestServerRank = membersWithRank.length ? Math.min(...membersWithRank.map((r) => Number(r.serverRank))) : 0;
-    const guildServerRanks = Object.values(guildRankMap).map((g) => Number(g.serverRank || 0)).filter((n) => n > 0);
-    const bestGuildServerRank = guildServerRanks.length ? Math.min(...guildServerRanks) : 0;
-
-    // 커뮤니티 통합 피드 (공지 + 공략) — 최신글·인기글 탭
-    const noticeRows = Array.isArray(noticesRes) ? noticesRes : [];
-    const tipsRows = Array.isArray(tipsRes) ? tipsRes : [];
-    const mergedFeed = [
-      ...noticeRows.map((p) => ({ ...p, board: "공지", href: `./notice-view?id=${p.id}`, color: "#f59e0b" })),
-      ...tipsRows.map((p) => ({ ...p, board: "공략", href: `./tips-view?id=${p.id}`, color: "#22c55e" })),
-    ].filter((p) => p.created_at);
-    const communityFeed = [...mergedFeed].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
-    const popularFeed = [...mergedFeed].filter((p) => Number(p.likes) > 0)
-      .sort((a, b) => Number(b.likes || 0) - Number(a.likes || 0) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
-    // 메키 공식 소식 (넥슨 커뮤니티 프록시)
-    const officialRows = Array.isArray(officialRes) ? officialRes : [];
-    // 사이드바 최신 공지 (고정글 우선)
-    const recentNotices = [...noticeRows]
-      .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0) || new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 4);
+    // 커뮤니티 피드
     const feedDate = (iso) => {
       if (!iso) return "";
-      const d = new Date(iso), now = new Date();
-      const diffH = (now - d) / 36e5;
+      const d = new Date(iso), now = new Date(), diffH = (now - d) / 36e5;
       if (diffH < 1) return "방금";
       if (diffH < 24) return `${Math.floor(diffH)}시간 전`;
       if (diffH < 24 * 7) return `${Math.floor(diffH / 24)}일 전`;
       return d.toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
     };
+    const noticeRows = Array.isArray(noticesRes) ? noticesRes : [];
+    const tipsRows = Array.isArray(tipsRes) ? tipsRes : [];
+    const merged = [
+      ...noticeRows.map(p => ({ ...p, board: "공지", href: `./notice-view?id=${p.id}` })),
+      ...tipsRows.map(p => ({ ...p, board: "공략", href: `./tips-view?id=${p.id}` })),
+    ].filter(p => p.created_at);
+    const communityFeed = [...merged].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
+    const popularFeed = [...merged].filter(p => Number(p.likes) > 0)
+      .sort((a, b) => Number(b.likes || 0) - Number(a.likes || 0) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
+    const officialRows = Array.isArray(officialRes) ? officialRes : [];
+    const videos = Array.isArray(videosRes) ? videosRes : [];
+    const coupons = Array.isArray(couponsRes) ? couponsRes : [];
+    const popular = Array.isArray(popularRes) ? popularRes : [];
 
-    const visitorHtml = (() => {
-      const online = visitorStats.online || 0;
-      const list = visitorStats.online_list || [];
-      const me = user ? user.character_name : null;
-      if (online === 0) return `<span class="live-bar-text">함께 보고 있는 멤버들이 있어요</span>`;
-      if (me && list.some(u => u.name === me)) {
-        const others = online - 1;
-        return `<span class="live-bar-text"><strong>${escapeHtml(me)}</strong>님${others > 0 ? ` 외 ${others}명` : ""}이 함께 보고 있어요</span>`;
-      }
-      return `<span class="live-bar-text">지금 <strong>${online}명</strong>이 함께 보고 있어요</span>`;
-    })();
+    const lastUpdate = rows.length && rows[0].capturedAt
+      ? new Date(rows[0].capturedAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      : "-";
 
-    // 이번 주 변화 — 로그인(길드원)은 서버랭킹보다 위, 비로그인(방문자)은 하단
-    const changesHtml = (growthTop.length || riseTop.length) ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <div class="section-title">이번 주 변화</div>
-              <div class="section-sub">성장량 · 서버 순위 상승 TOP 5</div>
-            </div>
-            <a class="section-link" href="./weekly">월간성장 보기 →</a>
+    const online = visitorStats.online || 0;
+    const feedTagClass = (b) => b === "공지" ? "notice" : b === "공략" ? "guide" : "notice";
+    const officialTagClass = (k) => k === "이벤트" ? "event" : k === "패치" ? "patch" : "notice";
+    const feedRow = (p) => `
+      <a class="feed-row" href="${p.href}">
+        <span class="feed-tag ${feedTagClass(p.board)}">${p.board}</span>
+        <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
+        ${Number(p.likes) > 0 ? `<span class="feed-date" style="color:var(--amber)">❤ ${p.likes}</span>` : ""}
+        <span class="feed-date">${feedDate(p.created_at)}</span>
+      </a>`;
+
+    // ── 히어로 ──
+    const heroLoggedOut = `
+      <div class="hero-card portal">
+        <div class="hero-copy">
+          <span class="hero-badge"><span class="pulse"></span> 메이플키우기 · 스카니아11 서버 포털</span>
+          <h1 class="hero-title-portal">스카니아11, <span class="accent">한눈에</span></h1>
+          <p class="hero-desc">전적 검색 · 서버 랭킹 · 커뮤니티를 한 곳에서.</p>
+          <form class="hero-search-big" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명으로 전적 검색" autocomplete="off" /><button type="submit">검색</button>
+          </form>
+          ${popular.length ? `<div class="hero-chips"><span class="hero-chips-label">인기 검색</span>${popular.slice(0, 5).map((p, i) => `<a class="hero-chip" href="./profile?n=${encodeURIComponent(p.name)}"><b>${i + 1}</b> ${escapeHtml(p.name)}</a>`).join("")}</div>` : ""}
+          <div class="hero-proof-row">
+            <span class="hero-proof">🛡️ 운영 길드 <b>친구들</b></span>
+            ${serverTotal ? `<span class="hero-proof">👥 스카니아11 <b>${formatNumber(serverTotal)}명</b></span>` : ""}
           </div>
-          <div class="summary-split">
-            <div class="summary-panel">
-              <div class="sub-head">성장 TOP 5</div>
-              <div class="mini-card-list">
-                ${growthTop.map((item, i) => `
-                  <div class="mini-summary-card">
-                    <span class="mini-summary-rank">${i + 1}</span>
-                    ${characterAvatarHtml(item)}
-                    <div class="mini-summary-main">
-                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
-                      <div class="mini-summary-sub">
-                        ${guildBadgeHtml(item.guild)}
-                        <span>성장률 ${escapeHtml(formatRate(item.growthRate || 0))}</span>
-                      </div>
-                    </div>
-                    <div class="mini-summary-side">${metricHtml(item.weeklyDiff || 0)}</div>
-                  </div>
-                `).join("")}
-              </div>
-            </div>
-            <div class="summary-panel">
-              <div class="sub-head">서버 순위 상승 TOP 5</div>
-              <div class="mini-card-list">
-                ${riseTop.map((item, i) => `
-                  <div class="mini-summary-card">
-                    <span class="mini-summary-rank">${i + 1}</span>
-                    ${characterAvatarHtml(item)}
-                    <div class="mini-summary-main">
-                      <div class="mini-summary-name">${escapeHtml(item.name || "-")}</div>
-                      <div class="mini-summary-sub">
-                        ${guildBadgeHtml(item.guild)}
-                        <span>현재 ${item.serverRank ? formatNumber(item.serverRank) + "위" : "-"}</span>
-                      </div>
-                    </div>
-                    <div class="mini-summary-side">${rankTrendHtml(item)}</div>
-                  </div>
-                `).join("")}
-              </div>
-            </div>
+          <div class="hero-cta-row">
+            <a class="cta primary" href="./ranking">서버 전체 랭킹 ${ICON.arrow}</a>
+            <a class="cta ghost" href="./join">길드 가입 문의</a>
           </div>
         </div>
-      </div>
-      ` : "";
+        <form id="heroLoginForm" class="login-card">
+          <div class="login-card-title">로그인 / 가입</div>
+          <div class="login-card-desc">캐릭터명으로 간편 로그인 — 출석·포인트·커뮤니티</div>
+          <input id="heroLoginName" class="login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
+          <input id="heroLoginPw" class="login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
+          <button type="submit" class="cta primary" style="width:100%">로그인</button>
+          <div id="heroLoginErr" class="login-err"></div>
+          <div class="login-sub">계정이 없으신가요? <a href="./login?tab=register">회원가입</a></div>
+        </form>
+      </div>`;
+
+    const heroLoggedIn = `
+      <div class="hero-card">
+        <div class="hero-copy">
+          <span class="hero-badge"><span class="pulse"></span> 반갑습니다, <b style="margin-left:2px">${escapeHtml(u ? u.character_name : "")}</b>님</span>
+          ${familyGrowthPct > 0
+            ? `<h1 class="hero-title">친구패밀리, 이번 주<br><span class="pct">+${familyGrowthPct.toFixed(1)}%</span> 컸어요</h1>
+               <p class="hero-sub">전투력 합 <b>${formatCompactPower(prevTotal)}</b><span class="arrow">→</span><b>${formatCompactPower(curTotal)}</b> · ${growers}명 성장</p>`
+            : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
+               <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
+          <div style="margin-top:16px"><a class="cta ghost" href="./profile?n=${encodeURIComponent(u ? u.character_name : "")}">내 전적 보기 ${ICON.arrow}</a></div>
+        </div>
+        ${growthTop.length ? `
+        <div class="hero-side-panel">
+          <div class="hero-side-title">이번 주 성장 TOP <a href="./weekly">더보기</a></div>
+          ${growthTop.map((it, i) => `
+            <a class="mini-item" href="./profile?n=${encodeURIComponent(it.name || "")}">
+              <span class="mini-rank">${i + 1}</span>${av(it.name, "sm")}
+              <div class="mini-main"><div class="mini-name">${escapeHtml(it.name || "-")}</div><div class="mini-sub">${escapeHtml((it.guild || "").normalize("NFC").trim() || "라운지")}</div></div>
+              <span class="mini-val" style="color:var(--green)">+${formatCompactPower(it.weeklyDiff || 0)}</span>
+            </a>`).join("")}
+        </div>` : ""}
+      </div>`;
+
+    // ── KPI ──
+    const kpi = (label, icon, value, unit, foot) => `
+      <div class="kpi">
+        <div class="kpi-label">${icon} ${label}</div>
+        <div class="kpi-value">${value}${unit ? `<span class="unit">${unit}</span>` : ""}</div>
+        <div class="kpi-foot">${foot}</div>
+      </div>`;
+    const kpiRow = `
+      <div class="kpi-row">
+        ${kpi("스카니아11 전체", ICON.users, formatNumber(serverTotal || memberCount), "명", "서버 등록 캐릭터")}
+        ${kpi("친구패밀리", ICON.trophy, formatNumber(rows.length), "명", "5개 길드 길드원")}
+        ${kpi("지금 접속", ICON.bolt, `<span style="color:var(--green)">${formatNumber(online)}</span>`, "명", `<span class="live-dot" style="width:7px;height:7px"></span> 실시간`)}
+        ${familyGrowthPct > 0
+          ? kpi("이번 주 성장", ICON.trend, `<span style="color:var(--green)">+${familyGrowthPct.toFixed(1)}</span>`, "%", `${growers}명이 전투력 상승`)
+          : kpi("최고 순위", ICON.trend, formatNumber(rows.filter(r => Number(r.serverRank || 0) > 0).length), "명", "서버 랭킹 등재")}
+      </div>`;
+
+    // ── 랭킹 3열 ──
+    const rankSection = (serverTop.length || serverGuildTop.length || healthTop.length) ? `
+      <section class="section"><div class="container">
+        <div class="section-head">
+          <div><span class="section-eyebrow">SCANIA 11</span><div class="section-title">서버 랭킹</div><div class="section-sub">스카니아11 서버 실시간 순위</div></div>
+          <a class="section-link" href="./ranking">전체 랭킹 보기 ${ICON.arrow}</a>
+        </div>
+        <div class="rank-3">
+          ${serverTop.length ? `
+          <div class="panel" style="padding:6px 10px 10px">
+            <div style="padding:12px 8px 6px;font-size:0.82rem;font-weight:700;color:var(--ink-soft)">전투력 TOP</div>
+            <div class="rank-list rank-scroll">
+              ${serverTop.map((it, i) => `
+                <a class="rank-row${i < 3 ? " top" : ""}" href="./profile?n=${encodeURIComponent(it.nickname || "")}">
+                  <span class="rank-no">${i + 1}</span>${av(it.nickname)}
+                  <div class="rank-main"><div class="rank-name">${escapeHtml(it.nickname || "")} ${guildChip(it.guild)}</div><div class="rank-meta">${it.job ? escapeHtml(it.job) + " · " : ""}Lv ${it.level || "-"}</div></div>
+                  <span class="rank-power">${escapeHtml(getPowerDisplay(it))}</span>
+                </a>`).join("")}
+            </div>
+          </div>` : ""}
+          ${serverGuildTop.length ? `
+          <div class="panel" style="padding:6px 10px 10px">
+            <div style="padding:12px 8px 6px;font-size:0.82rem;font-weight:700;color:var(--ink-soft)">길드 TOP</div>
+            <div class="rank-list rank-scroll">
+              ${serverGuildTop.map(g => {
+                const isF = FRIENDS.has(normalizeGuildName(g.guildName || ""));
+                return `<div class="grank-row${isF ? " friend" : ""}"><span class="grank-no">${g.guildRank || "-"}</span><span class="grank-name">${escapeHtml(g.guildName || "-")}</span><span class="grank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span><span class="grank-val">${formatCompactPower(g.power || 0)}</span></div>`;
+              }).join("")}
+            </div>
+          </div>` : ""}
+          ${healthTop.length ? `
+          <div class="panel" style="padding:6px 10px 10px">
+            <div style="padding:12px 8px 6px;font-size:0.82rem;font-weight:700;color:var(--ink-soft)">길드 건강도</div>
+            <div class="rank-list rank-scroll">
+              ${healthTop.map((g, i) => {
+                const isF = FRIENDS.has(normalizeGuildName(g.name || ""));
+                const col = g.score >= 70 ? "var(--green)" : g.score >= 55 ? "var(--amber)" : g.score >= 40 ? "#fb923c" : "var(--ink-faint)";
+                return `<div class="grank-row${isF ? " friend" : ""}"><span class="grank-no">${i + 1}</span><span class="grank-name">${escapeHtml(g.name || "-")}</span><span class="grank-val" style="color:${col}">${g.score}</span></div>`;
+              }).join("")}
+            </div>
+          </div>` : ""}
+        </div>
+      </div></section>` : "";
+
+    // ── 사이드 (내 이번주 / 앱) ──
+    const myRow = u ? rows.find(r => String(r.name || "").normalize("NFC") === String(u.character_name || "").normalize("NFC")) : null;
+    const myWeek = u ? `
+      <div class="myweek">
+        <div class="myweek-label">내 이번 주</div>
+        <div class="myweek-value">${myRow && Number(myRow.weeklyDiff || 0) > 0 ? "+" + formatCompactPower(myRow.weeklyDiff) : (myRow ? "±0" : "—")}</div>
+        <div class="myweek-foot">${myRow ? (Number(myRow.weeklyDiff || 0) > 0 ? "꾸준히 성장 중이에요 🔥" : "오늘은 아직 변화가 없어요") : "전적 데이터를 찾지 못했어요"}</div>
+      </div>` : "";
 
     document.querySelector("main").innerHTML = `
-      ${user ? `
-      <div class="home-hero home-hero-slim">
-        <div class="container hero-inner">
-          <div class="hero-slim-row">
-            <div>
-              <div class="hero-badge">
-                <span class="hero-dot"></span>
-                메이플키우기 · 스카니아 11서버
-              </div>
-              <h1 class="hero-title-slim">반갑습니다, <span class="accent">${escapeHtml(user.character_name)}</span>님</h1>
-              <a class="hero-myprofile-link" href="./profile?n=${encodeURIComponent(user.character_name)}">👤 내 전적 보기 →</a>
-            </div>
-            <div class="hero-slim-stats">
-              <span class="hero-slim-stat">${formatNumber(memberCount)}명 활동 중</span>
-            </div>
+      <section class="hero"><div class="container">${u ? heroLoggedIn : heroLoggedOut}</div></section>
+
+      <div class="live-bar"><div class="container live-bar-inner">
+        <div class="live-bar-left"><span class="live-dot"></span>
+          ${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : "함께 보고 있는 멤버들이 있어요"}
+          <span class="live-sep">·</span><span class="live-extra">누적 ${formatNumber(visitorStats.total || 0)}명 방문</span>
+        </div>
+        <span class="live-update">마지막 업데이트 ${lastUpdate}</span>
+      </div></div>
+
+      ${coupons.length ? `<div class="coupon-bar"><div class="container coupon-bar-inner"><span class="coupon-label">🎟 쿠폰</span>
+        ${coupons.map(c => `<button class="coupon-chip" onclick="copyCoupon('${escapeHtml(c.code).replace(/'/g, "\\'")}', this)"><b>${escapeHtml(c.code)}</b>${c.reward ? `<span class="reward">${escapeHtml(c.reward)}</span>` : ""}<span class="copy">복사</span></button>`).join("")}
+      </div></div>` : ""}
+
+      <section class="section" style="padding-top:20px"><div class="container">${kpiRow}</div></section>
+
+      <section class="section"><div class="container"><div class="grid-3">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">${ICON.chat} 커뮤니티</span>
+            <div class="mini-tabs"><button class="mini-tab active" onclick="showCommTab(this,'commLatest')">최신</button><button class="mini-tab" onclick="showCommTab(this,'commPopular')">인기</button></div>
           </div>
+          <div class="feed" id="commLatest">${communityFeed.length ? communityFeed.map(feedRow).join("") : '<div style="padding:24px;text-align:center;color:var(--ink-faint);font-size:0.85rem">아직 글이 없어요 — 첫 글을 남겨보세요!</div>'}</div>
+          <div class="feed" id="commPopular" style="display:none">${popularFeed.length ? popularFeed.map(feedRow).join("") : '<div style="padding:24px;text-align:center;color:var(--ink-faint);font-size:0.85rem">아직 좋아요 받은 글이 없어요</div>'}</div>
+          <a class="panel-foot" href="./tips">공략 게시판 →</a>
         </div>
-      </div>
-      ${recentNotices.length ? `
-      <div class="container" style="margin-top:14px;">
-        <a href="./notice-view?id=${recentNotices[0].id}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;text-decoration:none;">
-          <span style="flex-shrink:0;font-size:0.72rem;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:999px;">📢 공지</span>
-          <span style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(recentNotices[0].title || "")}</span>
-          <span style="flex-shrink:0;font-size:0.78rem;color:var(--text-soft);">보기 →</span>
-        </a>
-      </div>` : ""}
-      ` : `
-      <div class="home-hero home-hero-portal">
-        <div class="container hero-inner">
-          <div class="hero-portal-row">
-            <div class="hero-portal-main">
-              <div class="hero-badge">
-                <span class="hero-dot"></span>
-                메이플키우기 · 스카니아 11서버
-              </div>
-              <h1 class="hero-title">메이플키우기 <span class="accent">라운지</span></h1>
-              <p class="hero-desc">전적 · 서버랭킹 · 커뮤니티</p>
-              <form class="hero-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-                <span class="hero-search-icon">🔎</span>
-                <input class="hero-search-input" name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" aria-label="스카니아11 캐릭터명 검색" />
-                <button class="hero-search-btn" type="submit">전적검색</button>
-              </form>
-              ${(Array.isArray(popularRes) && popularRes.length) ? `
-              <div class="hero-hot">
-                <span class="hero-hot-label">🔥 인기 검색어</span>
-                ${popularRes.slice(0, 6).map((p, i) => `<a class="hero-hot-chip" href="./profile?n=${encodeURIComponent(p.name)}"><b>${i + 1}</b> ${escapeHtml(p.name)}</a>`).join("")}
-              </div>` : ""}
-              <div class="hero-proof-row">
-                <span class="hero-proof hero-proof-guild">🛡️ 운영 길드 <b>친구들</b></span>
-                ${serverTotal ? `<span class="hero-proof">👥 스카니아11 전체 <b>${formatNumber(serverTotal)}명</b></span>` : ""}
-                <span class="hero-proof">📊 전적 · 랭킹 · 커뮤니티</span>
-              </div>
-              <div class="hero-cta-row">
-                <a class="cta-btn" href="./ranking">서버 전체 랭킹</a>
-                <a class="cta-btn cta-btn-outline" href="./join">친구패밀리 길드 가입</a>
-              </div>
-            </div>
-            <form id="heroLoginForm" class="hero-login-card">
-              <div class="hero-login-title">로그인 / 가입</div>
-              <div class="hero-login-desc">캐릭터명으로 간편 로그인 — 출석·포인트·커뮤니티</div>
-              <input id="heroLoginName" class="hero-login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
-              <input id="heroLoginPw" class="hero-login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
-              <button type="submit" class="cta-btn hero-login-btn">로그인</button>
-              <div id="heroLoginErr" class="hero-login-err"></div>
-              <div class="hero-login-sub">계정이 없으신가요? <a href="./login?tab=register">회원가입</a></div>
-            </form>
+
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">${ICON.star} 메키 공식</span>
+            <div class="mini-tabs"><button class="mini-tab active" onclick="showOfficialTab(this,'전체')">전체</button><button class="mini-tab" onclick="showOfficialTab(this,'공지')">공지</button><button class="mini-tab" onclick="showOfficialTab(this,'패치')">패치</button></div>
           </div>
-        </div>
-      </div>
-      `}
-
-      <div class="live-bar">
-        <div class="container live-bar-inner">
-          <div class="live-bar-left">
-            <span class="live-dot"></span>
-            ${visitorHtml}
-            <span class="live-bar-divider">·</span>
-            <span class="live-bar-extra">누적 ${formatNumber(visitorStats.total||0)}명 방문</span>
+          <div class="feed" id="officialList">
+            ${officialRows.length ? officialRows.slice(0, 6).map(n => `
+              <a class="feed-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
+                <span class="feed-tag ${officialTagClass(n.kind)}">${n.kind || "공지"}</span>
+                <span class="feed-ttl">${escapeHtml(n.title || "")}</span>
+                <span class="feed-date">${(n.date || "").slice(5)}</span>
+              </a>`).join("") : '<div style="padding:24px;text-align:center;color:var(--ink-faint);font-size:0.85rem">공식 소식을 불러오지 못했어요</div>'}
           </div>
-          <span class="live-bar-update">마지막 업데이트: ${lastUpdate}</span>
+          <a class="panel-foot" href="https://forum.nexon.com/maplestoryidle-kr/" target="_blank" rel="noopener noreferrer">넥슨 공식 커뮤니티 →</a>
         </div>
-      </div>
 
-      ${(Array.isArray(couponsRes) && couponsRes.length) ? `
-      <div class="coupon-bar">
-        <div class="container coupon-bar-inner">
-          <span class="coupon-bar-label">🎟️ 쿠폰</span>
-          ${couponsRes.map((c) => `
-            <button class="coupon-chip" onclick="copyCoupon('${escapeHtml(c.code).replace(/'/g, "\\'")}', this)" title="${escapeHtml(c.reward || "")}${c.expiresAt ? " · ~" + c.expiresAt : ""}">
-              <b>${escapeHtml(c.code)}</b>${c.reward ? `<span class="coupon-reward">${escapeHtml(c.reward)}</span>` : ""}
-              <span class="coupon-copy">복사</span>
-            </button>`).join("")}
-        </div>
-      </div>` : ""}
-
-      ${user ? changesHtml : ""}
-
-      <div class="section-block">
-        <div class="container">
-          <div class="home-widgets">
-            <div class="hw-card">
-              <div class="hw-head">
-                <span class="hw-title">💬 커뮤니티</span>
-                <div class="mini-tabs">
-                  <button class="mini-tab active" onclick="showCommTab(this, 'commLatest')">최신글</button>
-                  <button class="mini-tab" onclick="showCommTab(this, 'commPopular')">인기글</button>
-                </div>
-              </div>
-              ${(() => {
-                const feedRow = (p) => `
-                <a class="feed-row" href="${p.href}">
-                  <span class="feed-badge" style="color:${p.color};background:${p.color}18;">${p.board}</span>
-                  <span class="feed-ttl">${escapeHtml(p.title || "(제목 없음)")}</span>
-                  ${Number(p.likes) > 0 ? `<span class="feed-likes">❤️ ${p.likes}</span>` : ""}
-                  <span class="feed-date">${feedDate(p.created_at)}</span>
-                </a>`;
-                const empty = (msg) => `<div class="hw-empty">${msg}</div>`;
-                return `
-              <div class="feed-list hw-list" id="commLatest">${communityFeed.length ? communityFeed.map(feedRow).join("") : empty("아직 글이 없어요 — 첫 글을 남겨보세요!")}</div>
-              <div class="feed-list hw-list" id="commPopular" style="display:none;">${popularFeed.length ? popularFeed.map(feedRow).join("") : empty("아직 좋아요 받은 글이 없어요")}</div>`;
-              })()}
-              <a class="hw-more" href="./tips">공략 게시판 →</a>
-            </div>
-
-            <div class="hw-card">
-              <div class="hw-head">
-                <span class="hw-title">🍁 메키 공식</span>
-                <div class="mini-tabs">
-                  <button class="mini-tab active" onclick="showOfficialTab(this, '전체')">전체</button>
-                  <button class="mini-tab" onclick="showOfficialTab(this, '공지')">공지</button>
-                  <button class="mini-tab" onclick="showOfficialTab(this, '이벤트')">이벤트</button>
-                  <button class="mini-tab" onclick="showOfficialTab(this, '패치')">패치</button>
-                </div>
-              </div>
-              <div class="hw-list" id="officialList">
-                ${officialRows.length ? officialRows.map((n) => `
-                <a class="official-row" data-kind="${n.kind || "공지"}" href="${escapeHtml(n.url || "#")}" target="_blank" rel="noopener noreferrer">
-                  <span class="side-official-kind${n.kind === "패치" ? " patch" : ""}${n.kind === "이벤트" ? " event" : ""}">${n.kind || "공지"}</span>
-                  <span class="official-ttl">${escapeHtml(n.title || "")}</span>
-                  <span class="official-date">${(n.date || "").slice(5)}</span>
-                </a>`).join("") : `<div class="hw-empty">공식 소식을 불러오지 못했어요</div>`}
-              </div>
-              <a class="hw-more" href="https://forum.nexon.com/maplestoryidle-kr/" target="_blank" rel="noopener noreferrer">넥슨 공식 커뮤니티 →</a>
-            </div>
-
-            <div class="hw-side">
-              ${(Array.isArray(videosRes) && videosRes.length) ? `
-              <div class="hw-card">
-                <div class="hw-head"><span class="hw-title">▶️ 추천 영상</span></div>
-                <div class="hw-videos">
-                  ${videosRes.slice(0, 4).map((v) => `
-                  <a class="hw-video" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer">
-                    <img class="hw-video-thumb" src="https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg" alt="" loading="lazy" />
-                    ${v.title ? `<div class="hw-video-ttl">${escapeHtml(v.title)}</div>` : ""}
-                  </a>`).join("")}
-                </div>
-              </div>` : ""}
-              <div class="hw-card">
-                <div class="hw-head"><span class="hw-title">📱 길드라운지 앱</span></div>
-                <p class="hw-app-desc">콘텐츠 시작·마감 푸시 알림을 놓치지 마세요.</p>
-                <a class="cta-btn side-login-btn" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">App Store</a>
-                <a class="cta-btn side-login-btn cta-btn-outline" style="margin-top:8px;" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">Google Play</a>
-              </div>
+        <div class="side">
+          ${myWeek}
+          ${videos.length ? `<div class="side-card"><div class="side-card-title">${ICON.play} 추천 영상</div><div class="videos">${videos.slice(0, 2).map(v => `<a class="video-thumb" href="https://www.youtube.com/watch?v=${escapeHtml(v.videoId)}" target="_blank" rel="noopener noreferrer" style="background-image:url('https://i.ytimg.com/vi/${escapeHtml(v.videoId)}/mqdefault.jpg');background-size:cover;background-position:center"></a>`).join("")}</div></div>` : ""}
+          <div class="side-card">
+            <div class="side-card-title">${ICON.phone} 길드라운지 앱</div>
+            <p class="app-desc">콘텐츠 시작·마감 푸시 알림을 놓치지 마세요.</p>
+            <div class="app-btns">
+              <a class="app-btn dark" href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">${ICON.apple} App Store</a>
+              <a class="app-btn ghost" href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">${ICON.play2} Google Play</a>
             </div>
           </div>
         </div>
-      </div>
+      </div></div></section>
 
-      ${(serverTop.length || serverGuildTop.length || healthTop.length) ? `
-      <div class="section-block">
-        <div class="container">
-          <div class="rank-2col rank-3">
-            ${serverTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">서버 전체 랭킹</div>
-                  <div class="section-sub">전투력 TOP ${serverTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">전체 랭킹 보기 →</a>
-              </div>
-              <div class="mini-card-list rank-scroll">
-                ${serverTop.map((item, i) => {
-                  const nm = item.nickname || "";
-                  const gn = (item.guild || "").normalize("NFC").trim();
-                  const hasGuild = gn && gn !== "길드 없음";
-                  const guildChip = hasGuild
-                    ? (FRIENDS.has(gn) ? guildBadgeHtml(gn) : `<span class="guild-badge guild-badge-neutral">${escapeHtml(gn)}</span>`)
-                    : "";
-                  const pop = Number(item.popularity || 0);
-                  return `
-                    <a class="mini-summary-card" href="./profile?n=${encodeURIComponent(nm)}">
-                      <span class="mini-summary-rank">${i + 1}</span>
-                      ${characterAvatarHtml({ name: nm, guild: gn })}
-                      <div class="mini-summary-main">
-                        <div class="mini-summary-name">${escapeHtml(nm)} ${guildChip}</div>
-                        <div class="mini-summary-sub">
-                          <span>${item.job ? escapeHtml(item.job) + " · " : ""}Lv ${item.level || "-"}${pop ? " · ♥ " + formatNumber(pop) : ""}</span>
-                        </div>
-                      </div>
-                      <div class="mini-summary-side">${escapeHtml(getPowerDisplay(item))}</div>
-                    </a>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
-            ${serverGuildTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">길드 랭킹</div>
-                  <div class="section-sub">스카니아11 서버 길드 TOP ${serverGuildTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">전체 랭킹 상세보기 →</a>
-              </div>
-              <div class="guild-rank-list rank-scroll">
-                ${serverGuildTop.map((g) => {
-                  const isFriend = FRIENDS.has(normalizeGuildName(g.guildName || ""));
-                  return `
-                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
-                      <span class="guild-rank-no">${g.guildRank || "-"}</span>
-                      <span class="guild-rank-name">${escapeHtml(g.guildName || "-")}</span>
-                      <span class="guild-rank-meta">Lv.${g.level || "-"} · ${formatNumber(g.members || 0)}명</span>
-                      <span class="guild-rank-power">${formatCompactPower(g.power || 0)}</span>
-                    </div>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
-            ${healthTop.length ? `
-            <div class="rank-col">
-              <div class="section-head">
-                <div>
-                  <div class="section-title">길드 건강도</div>
-                  <div class="section-sub">성장·활동·깊이·균형을 종합한 활력점수 TOP ${healthTop.length}</div>
-                </div>
-                <a class="section-link" href="./ranking">건강도 상세보기 →</a>
-              </div>
-              <div class="guild-rank-list rank-scroll">
-                ${healthTop.map((g, i) => {
-                  const isFriend = FRIENDS.has(normalizeGuildName(g.name || ""));
-                  const col = g.score >= 70 ? "#16a34a" : g.score >= 55 ? "#f59e0b" : g.score >= 40 ? "#fb923c" : "#94a3b8";
-                  return `
-                    <div class="guild-rank-row${isFriend ? " guild-rank-friend" : ""}">
-                      <span class="guild-rank-no">${i + 1}</span>
-                      <span class="guild-rank-name">${escapeHtml(g.name || "-")}</span>
-                      <span class="guild-rank-power" style="color:${col};">${g.score}</span>
-                    </div>`;
-                }).join("")}
-              </div>
-            </div>` : ""}
+      ${rankSection}
+
+      <section class="section" style="padding-top:8px"><div class="container">
+        <div class="recruit">
+          <div>
+            <div class="recruit-title">같이 할 길드, 찾고 계신가요?</div>
+            <div class="recruit-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께 성장하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
           </div>
+          <a class="btn-amber" href="./join">가입 문의하기 ${ICON.arrow}</a>
         </div>
-      </div>
-      ` : ""}
+      </div></section>
 
-      <div class="section-block">
-        <div class="container">
-          <div class="recruit-band">
-            <div class="recruit-band-main">
-              <div class="recruit-band-title">🛡️ 같이 할 길드 찾고 계신가요?</div>
-              <div class="recruit-band-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
-            </div>
-            <a class="cta-btn" href="./join">가입 문의하기 →</a>
-          </div>
+      <footer class="footer"><div class="container footer-inner">
+        <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
+        <div class="footer-links">
+          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">계산기</a>
+          <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">앱 (iOS)</a>
+          <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">앱 (Android)</a>
+          <a href="./join">친구패밀리 가입 문의</a>
         </div>
-      </div>
+        <div class="footer-copy">© ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
+      </div></footer>`;
 
-      ${"" /* 홈에서 제거(2026-06-28): 길드별 현황(친구패밀리 5길드)·TOP30 배치 현황. 스카니아11 서버 길드 랭킹은 백엔드 서버길드 크롤 추가 후 신설 예정 */}
-
-      ${user ? "" : changesHtml}
-
-      <footer class="site-footer">
-        <div class="container footer-inner">
-          <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
-          <div class="footer-links">
-            <a href="./profile" class="footer-link">전적검색</a>
-            <a href="./ranking" class="footer-link">서버 랭킹</a>
-            <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer" class="footer-link">앱 (iOS)</a>
-            <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer" class="footer-link">앱 (Android)</a>
-            <a href="./join" class="footer-link">친구패밀리 가입 문의</a>
-          </div>
-          <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
-        </div>
-      </footer>
-
-    `;
-
-    // 히어로 로그인 (로그아웃 상태일 때만 폼 존재)
-    const heroLoginForm = document.getElementById("heroLoginForm");
-    if (heroLoginForm) {
-      heroLoginForm.addEventListener("submit", async (e) => {
+    // 히어로 로그인 폼
+    const form = document.getElementById("heroLoginForm");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const name = document.getElementById("heroLoginName").value.trim();
         const pw = document.getElementById("heroLoginPw").value;
         const errEl = document.getElementById("heroLoginErr");
         errEl.textContent = "";
         if (!name || !pw) { errEl.textContent = "캐릭터명과 비밀번호를 입력해주세요."; return; }
-        const btn = heroLoginForm.querySelector(".hero-login-btn");
+        const btn = form.querySelector("button[type=submit]");
         btn.disabled = true; btn.textContent = "로그인 중...";
         try {
-          const res = await fetch(`${API_BASE}/api/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ character_name: name, password: pw }),
-          });
+          const res = await fetch(`${API_BASE}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ character_name: name, password: pw }) });
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || "로그인에 실패했습니다.");
           sessionStorage.setItem("user", JSON.stringify(data.user));
@@ -565,28 +463,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     }
-
   }
 
-  // stale-while-revalidate: 캐시본 즉시 렌더(재방문 체감 0초) → 최신 데이터 백그라운드 갱신 후 재렌더
-  let cachedStr = null;
-  let renderedFromCache = false;
+  // SWR: 캐시 즉시 렌더 → 최신 데이터 백그라운드 갱신
+  let cachedStr = null, fromCache = false;
   try {
     const c = JSON.parse(localStorage.getItem(HOME_CACHE_KEY) || "null");
-    if (c && Array.isArray(c.d) && Date.now() - c.t < 3600000) {   // 데이터 갱신주기(1h) 넘은 캐시는 스켈레톤이 낫다
-      renderHome(c.d);
-      cachedStr = JSON.stringify(c.d);
-      renderedFromCache = true;
-    }
+    if (c && Array.isArray(c.d) && Date.now() - c.t < 3600000) { renderHome(c.d); cachedStr = JSON.stringify(c.d); fromCache = true; }
   } catch (_) {}
-
   try {
     const fresh = await loadHomeData();
     try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ t: Date.now(), d: fresh })); } catch (_) {}
-    // 내용이 캐시와 동일하면 재렌더 생략 (로그인 폼 입력 초기화·깜빡임 방지)
-    if (!renderedFromCache || JSON.stringify(fresh) !== cachedStr) renderHome(fresh);
+    if (!fromCache || JSON.stringify(fresh) !== cachedStr) renderHome(fresh);
   } catch (error) {
     console.error(error);
-    if (!renderedFromCache) renderError(null, error);
+    if (!fromCache) document.querySelector("main").innerHTML = `<div class="container" style="padding:60px 0;text-align:center;color:var(--ink-faint)">데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.</div>`;
   }
 });

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>메이플키우기 라운지 · 프리미엄 홈 시안</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,600&display=swap" />
+  <link rel="stylesheet" href="./home-premium.css?v=1" />
+</head>
+<body>
+
+  <!-- ══ 헤더 ══ -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./">
+        <span class="brand-mark">🍁</span>
+        <span class="brand-text">
+          <span class="brand-name">메이플키우기 라운지</span>
+          <span class="brand-sub">스카니아11 서버</span>
+        </span>
+      </a>
+      <nav class="nav">
+        <a href="./" class="active">홈</a>
+        <a href="./ranking">랭킹</a>
+        <a href="./profile">전적검색</a>
+        <a href="./notice">공지</a>
+        <a href="./tips">공략</a>
+        <a href="./level-calc">계산기</a>
+        <div class="nav-drop"><button type="button">길드<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div>
+      </nav>
+      <div class="header-right">
+        <label class="search-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="캐릭터명 검색" />
+        </label>
+        <a class="btn-login" href="./login">로그인</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ══ 히어로 (내러티브) ══ -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-card">
+          <div class="hero-copy">
+            <span class="hero-live"><span class="pulse"></span> 어제 <b>78명</b>이 전투력을 올렸어요</span>
+            <h1 class="hero-title">이번 주 다같이<br><span class="pct">4.2%</span> 컸습니다</h1>
+            <p class="hero-sub">7일간 길드 전투력 합 <b>81.6경</b><span class="arrow">→</span><b>85.0경</b></p>
+          </div>
+          <div class="hero-chart">
+            <svg viewBox="0 0 340 132" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#f0a53a" stop-opacity="0.32"/>
+                  <stop offset="1" stop-color="#f0a53a" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line x1="0" y1="131" x2="340" y2="131" stroke="#ece8e1" stroke-width="1"/>
+              <path d="M10,110 L65,100 L120,82 L175,72 L230,59 L285,42 L330,24 L330,132 L10,132 Z" fill="url(#areaFill)"/>
+              <path d="M10,110 L65,100 L120,82 L175,72 L230,59 L285,42 L330,24" fill="none" stroke="#e8890c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="330" cy="24" r="5" fill="#fff" stroke="#e8890c" stroke-width="3"/>
+            </svg>
+            <div class="hero-chart-caption"><span>7일 전</span><span>어제</span><span>오늘</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ KPI ══ -->
+    <section class="section" style="padding-top:20px;">
+      <div class="container">
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg> 어제 활동한 길드원</div>
+            <div class="kpi-value">78<span class="unit">/105</span></div>
+            <div class="kpi-foot">전투력이 오른 사람 수</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg> 7일 연속 성장</div>
+            <div class="kpi-value">41<span class="unit">명</span></div>
+            <div class="kpi-foot">하루도 안 쉰 사람</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> 길드 순위</div>
+            <div class="kpi-value">3<span class="unit">위</span></div>
+            <div class="kpi-foot"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>1</span> 이번 주</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2 8 4-16 2 8h6"/></svg> 건강도</div>
+            <div class="kpi-value">88</div>
+            <div class="kpi-foot">30개 길드 중 3위</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 컨텐츠 기록 ══ -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="section-eyebrow">GUILD ACTIVITY</span>
+            <div class="section-title">컨텐츠 기록</div>
+            <div class="section-sub">운영진이 회차마다 등록 · 18주 연속</div>
+          </div>
+          <a class="section-link" href="#">전체 기록 보기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+
+        <div class="sub-eyebrow">고정 컨텐츠 <span class="tag">상시 운영</span></div>
+        <div class="content-grid">
+          <div class="content-card lead">
+            <div class="cc-top"><span class="cc-name">길드 대항전</span><span class="cc-badge live">진행 중</span></div>
+            <div class="cc-score"><b>860</b><span class="unit">점 · 34회차</span></div>
+            <div class="cc-meta"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>지난 회차 +9%</span> · 최고 920</div>
+            <div class="cc-bars">
+              <div class="cc-bar" style="height:46%"></div><div class="cc-bar" style="height:58%"></div>
+              <div class="cc-bar" style="height:52%"></div><div class="cc-bar" style="height:64%"></div>
+              <div class="cc-bar" style="height:60%"></div><div class="cc-bar" style="height:74%"></div>
+              <div class="cc-bar on" style="height:100%"></div>
+            </div>
+            <div class="cc-foot"><span>참여 72명</span><span class="go">기록 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></div>
+          </div>
+
+          <div class="content-card">
+            <div class="cc-top"><span class="cc-name">토벌전</span><span class="cc-badge">주 1회</span></div>
+            <div class="cc-score"><b>1,920</b><span class="unit">점 · 8/1</span></div>
+            <div class="cc-meta"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>지난주 +14%</span> · 최고 1,920</div>
+            <div class="cc-bars">
+              <div class="cc-bar" style="height:40%"></div><div class="cc-bar" style="height:52%"></div>
+              <div class="cc-bar" style="height:48%"></div><div class="cc-bar" style="height:60%"></div>
+              <div class="cc-bar" style="height:66%"></div><div class="cc-bar" style="height:78%"></div>
+              <div class="cc-bar on" style="height:100%"></div>
+            </div>
+            <div class="cc-foot"><span>참여 88명</span><span class="go">기록 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></div>
+          </div>
+
+          <div class="content-card">
+            <div class="cc-top"><span class="cc-name">길드수련장</span><span class="cc-badge">상시</span></div>
+            <div class="cc-score"><b>2,480</b><span class="unit">점 · 8/1</span></div>
+            <div class="cc-meta"><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>지난주 +4%</span> · 최고 2,510</div>
+            <div class="cc-bars">
+              <div class="cc-bar" style="height:62%"></div><div class="cc-bar" style="height:70%"></div>
+              <div class="cc-bar" style="height:66%"></div><div class="cc-bar" style="height:78%"></div>
+              <div class="cc-bar" style="height:74%"></div><div class="cc-bar" style="height:88%"></div>
+              <div class="cc-bar on" style="height:100%"></div>
+            </div>
+            <div class="cc-foot"><span>참여 61명</span><span class="go">기록 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></div>
+          </div>
+        </div>
+
+        <div class="sub-eyebrow" style="margin-top:22px;">시즌 컨텐츠 <span class="tag">시즌 12 · ~8/19</span></div>
+        <div class="season-grid">
+          <div class="season-card">
+            <div class="sc-head"><span class="sc-name">여름 온타임 레이스</span><span class="sc-tag">시즌</span></div>
+            <div class="sc-body">
+              <div class="sc-score"><b>4,310</b><span>점 · 3주차</span></div>
+              <div class="sc-prog">
+                <div class="sc-prog-top"><span>목표 5,000점</span><span>86%</span></div>
+                <div class="sc-track"><div class="sc-fill" style="width:86%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="season-card">
+            <div class="sc-head"><span class="sc-name">깜짝 필드 부스터</span><span class="sc-tag">시즌</span></div>
+            <div class="sc-body">
+              <div class="sc-score"><b>1,180</b><span>점 · 1주차</span></div>
+              <div class="sc-prog">
+                <div class="sc-prog-top"><span>이번 주 시작</span><span>참여 38명</span></div>
+                <div class="sc-track"><div class="sc-fill" style="width:24%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 하단 3열 ══ -->
+    <section class="section">
+      <div class="container">
+        <div class="grid-3">
+          <!-- 커뮤니티 -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> 커뮤니티</span>
+              <div class="mini-tabs"><span class="mini-tab active">최신</span><span class="mini-tab">인기</span></div>
+            </div>
+            <div class="feed">
+              <a class="feed-row" href="#"><span class="feed-tag guide">공략</span><span class="feed-ttl">컨텐츠별 스킬세팅 공략</span><span class="feed-date">1일 전</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag notice">공지</span><span class="feed-ttl">친구길드 운영 개편 안내</span><span class="feed-date">3일 전</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag guide">공략</span><span class="feed-ttl">길드수련장 딜 극대화 팁</span><span class="feed-date">04.13</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag guide">공략</span><span class="feed-ttl">낭만 김갑룡의 장신구 종결 세팅</span><span class="feed-date">04.11</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag guide">공략</span><span class="feed-ttl">산책로 투명 발판 위치 정리</span><span class="feed-date">04.11</span></a>
+            </div>
+            <a class="panel-foot" href="./tips">공략 게시판 →</a>
+          </div>
+
+          <!-- 메키 공식 -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 9.5 8.5 4 9l4 4-1 6 5-3 5 3-1-6 4-4-5.5-.5z"/></svg> 메키 공식</span>
+              <div class="mini-tabs"><span class="mini-tab active">전체</span><span class="mini-tab">공지</span><span class="mini-tab">패치</span></div>
+            </div>
+            <div class="feed">
+              <a class="feed-row" href="#"><span class="feed-tag event">이벤트</span><span class="feed-ttl">월간 출석 이벤트</span><span class="feed-date">08.01</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag notice">공지</span><span class="feed-ttl">애플 앱스토어 결제 불가 안내</span><span class="feed-date">07.30</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag event">이벤트</span><span class="feed-ttl">여름 깜짝 쿠폰 (~8/19)</span><span class="feed-date">07.30</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag patch">패치</span><span class="feed-ttl">7/23(목) 패치노트</span><span class="feed-date">07.23</span></a>
+              <a class="feed-row" href="#"><span class="feed-tag patch">패치</span><span class="feed-ttl">(추가) 7/2(목) 패치노트</span><span class="feed-date">07.02</span></a>
+            </div>
+            <a class="panel-foot" href="#">넥슨 공식 커뮤니티 →</a>
+          </div>
+
+          <!-- 사이드 -->
+          <div class="side">
+            <div class="myweek">
+              <div class="myweek-label">내 이번 주</div>
+              <div class="myweek-value">+12%<span class="rank">길드 내 8위</span></div>
+              <div class="myweek-foot">오늘은 아직 변화가 없어요</div>
+            </div>
+            <div class="side-card">
+              <div class="side-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m10 8 6 4-6 4V8Z"/><rect x="2" y="4" width="20" height="16" rx="4"/></svg> 추천 영상</div>
+              <div class="videos"><div class="video-thumb"></div><div class="video-thumb"></div></div>
+            </div>
+            <div class="side-card">
+              <div class="side-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg> 길드라운지 앱</div>
+              <p class="app-desc">콘텐츠 시작·마감 푸시 알림을 놓치지 마세요.</p>
+              <div class="app-btns">
+                <a class="app-btn dark" href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .7 1.1 1.6 2.3 2.7 2.2 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7 1.9-1.1 2.6-2.1c.8-1.2 1.2-2.4 1.2-2.4s-2.4-.9-2.4-3.5zM14.2 5.9c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.5.6-1 1.6-.9 2.6 1 .1 2-.5 2.6-1.2z"/></svg> App Store</a>
+                <a class="app-btn ghost" href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1L13 12.1v-.2L3.7 2.2zM16.3 15.4l-3.1-3.1v-.2l3.1-3.1.1.1 3.7 2.1c1.1.6 1.1 1.6 0 2.2zM15.6 16.1l-3.2-3.2-9.4 9.4c.4.4 1 .4 1.7.1z"/></svg> Google Play</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 서버 랭킹 미리보기 ══ -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="section-eyebrow">SCANIA 11</span>
+            <div class="section-title">서버 랭킹</div>
+            <div class="section-sub">전투력 · 길드 TOP 5 미리보기</div>
+          </div>
+          <a class="section-link" href="./ranking">전체 랭킹 보기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+        <div class="rank-2">
+          <div class="panel" style="padding:8px 10px;">
+            <div class="rank-list">
+              <a class="rank-row top" href="#"><span class="rank-no">1</span><span class="rank-av">싸</span><div class="rank-main"><div class="rank-name">싸이코패스 <span class="guild-chip neutral">싸이월드</span></div><div class="rank-meta">나이트로드 · Lv 139</div></div><span class="rank-power">6,240경</span></a>
+              <a class="rank-row top" href="#"><span class="rank-no">2</span><span class="rank-av">리</span><div class="rank-main"><div class="rank-name">리안전설 <span class="guild-chip neutral">리안</span></div><div class="rank-meta">아크메이지 · Lv 138</div></div><span class="rank-power">5,910경</span></a>
+              <a class="rank-row top" href="#"><span class="rank-no">3</span><span class="rank-av">친</span><div class="rank-main"><div class="rank-name">친구닷최강 <span class="guild-chip">친구닷</span></div><div class="rank-meta">보우마스터 · Lv 138</div></div><span class="rank-power">5,430경</span></a>
+              <a class="rank-row" href="#"><span class="rank-no">4</span><span class="rank-av">돌</span><div class="rank-main"><div class="rank-name">돌풍의핵 <span class="guild-chip neutral">돌풍</span></div><div class="rank-meta">팔라딘 · Lv 137</div></div><span class="rank-power">5,120경</span></a>
+              <a class="rank-row" href="#"><span class="rank-no">5</span><span class="rank-av">친</span><div class="rank-main"><div class="rank-name">친구들에이스 <span class="guild-chip">친구들</span></div><div class="rank-meta">비숍 · Lv 137</div></div><span class="rank-power">4,880경</span></a>
+            </div>
+          </div>
+          <div class="panel" style="padding:8px 10px;">
+            <div class="rank-list">
+              <a class="rank-row top" href="#"><span class="rank-no">1</span><span class="rank-av">싸</span><div class="rank-main"><div class="rank-name">싸이월드</div><div class="rank-meta">Lv.30 · 98명</div></div><span class="rank-power">124경</span></a>
+              <a class="rank-row top" href="#"><span class="rank-no">2</span><span class="rank-av">리</span><div class="rank-main"><div class="rank-name">리안</div><div class="rank-meta">Lv.30 · 96명</div></div><span class="rank-power">118경</span></a>
+              <a class="rank-row top" href="#"><span class="rank-no">3</span><span class="rank-av">친</span><div class="rank-main"><div class="rank-name">친구닷 <span class="guild-chip">운영</span></div><div class="rank-meta">Lv.29 · 105명</div></div><span class="rank-power">109경</span></a>
+              <a class="rank-row" href="#"><span class="rank-no">4</span><span class="rank-av">돌</span><div class="rank-main"><div class="rank-name">돌풍</div><div class="rank-meta">Lv.29 · 92명</div></div><span class="rank-power">101경</span></a>
+              <a class="rank-row" href="#"><span class="rank-no">5</span><span class="rank-av">낭</span><div class="rank-main"><div class="rank-name">낭만</div><div class="rank-meta">Lv.28 · 88명</div></div><span class="rank-power">97경</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 영입 밴드 ══ -->
+    <section class="section" style="padding-top:8px;">
+      <div class="container">
+        <div class="recruit">
+          <div>
+            <div class="recruit-title">같이 할 길드, 찾고 계신가요?</div>
+            <div class="recruit-desc">스카니아11에서 친구패밀리 5개 길드, 길드원 480명이 함께 성장하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
+          </div>
+          <a class="btn-amber" href="./join">가입 문의하기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ══ 푸터 ══ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
+      <div class="footer-links">
+        <a href="./profile">전적검색</a>
+        <a href="./ranking">서버 랭킹</a>
+        <a href="./level-calc">계산기</a>
+        <a href="#">앱 (iOS)</a>
+        <a href="#">앱 (Android)</a>
+        <a href="./join">친구패밀리 가입 문의</a>
+      </div>
+      <div class="footer-copy">© 2026 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
+    </div>
+  </footer>
+
+</body>
+</html>
