@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ticks = niceTicks(min + pad, max - pad, 3).map((v) => {
       const y = yAt(v).toFixed(1);
       return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#eef2f7" stroke-width="1"/>
-        <text x="${padL - 6}" y="${Number(y) + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${escapeHtml(fmtTick(v))}</text>`;
+        <text x="${padL - 6}" y="${Number(y) + 3}" text-anchor="end" font-size="8" fill="#a3aebc">${escapeHtml(fmtTick(v))}</text>`;
     }).join("");
 
     // 점: 20개 초과 시 마지막만 (일별 값은 크로스헤어 툴팁 담당)
@@ -140,30 +140,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       const [bx, by] = coords[bestIdx];
       const anchor = bx > W - 90 ? "end" : (bx < padL + 40 ? "start" : "middle");
       bestMark = `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="2.6" fill="${opts.color}" stroke="#fff" stroke-width="1.4"/>
-        <text x="${bx.toFixed(1)}" y="${Math.max(10, by - 8).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="700" fill="#64748b">★ 최고 ${escapeHtml(fmt(points[bestIdx].value))}</text>`;
+        <text x="${bx.toFixed(1)}" y="${Math.max(10, by - 8).toFixed(1)}" text-anchor="${anchor}" font-size="8" font-weight="700" fill="#8a94a3" letter-spacing="0.2">★ 최고 ${escapeHtml(fmt(points[bestIdx].value))}</text>`;
     }
 
     // 끝값 라벨 (텍스트는 잉크색 — 정체성은 점이 표현)
     const lc = coords[n - 1];
-    const endLabel = `<text x="${Math.min(W - padR, lc[0]).toFixed(1)}" y="${Math.max(padTop - 8, lc[1] - 10).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#334155">${escapeHtml(fmt(points[n-1].value))}</text>`;
+    const endLabel = `<text x="${Math.min(W - padR, lc[0]).toFixed(1)}" y="${Math.max(padTop - 8, lc[1] - 10).toFixed(1)}" text-anchor="end" font-size="10" font-weight="800" fill="#334155" letter-spacing="-0.2">${escapeHtml(fmt(points[n-1].value))}</text>`;
 
     // X축 날짜 (처음·중간·끝)
     const midI = Math.floor((n - 1) / 2);
     const xLabels = [[0, "start"], [midI, "middle"], [n - 1, "end"]]
       .filter(([i], idx, arr) => arr.findIndex(a => a[0] === i) === idx)
-      .map(([i, a]) => `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="${a}" font-size="9" fill="#94a3b8">${escapeHtml(points[i].label)}</text>`).join("");
+      .map(([i, a]) => `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="${a}" font-size="8" fill="#a3aebc">${escapeHtml(points[i].label)}</text>`).join("");
 
     return `
       <svg class="pf-chart-svg" data-chart="${opts.id}" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="성장 추이 그래프" style="touch-action:pan-y;">
         <defs>
           <linearGradient id="pfgrad-${opts.id}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.14"/>
+            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.13"/>
             <stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="pfline-${opts.id}" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="${opts.color}" stop-opacity="1"/>
           </linearGradient>
         </defs>
         ${ticks}
         <path class="pf-anim-area" d="${areaD}" fill="url(#pfgrad-${opts.id})"/>
-        <path class="pf-anim-line" pathLength="1" d="${lineD}" fill="none" stroke="${opts.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="pf-anim-line" pathLength="1" d="${lineD}" fill="none" stroke="url(#pfline-${opts.id})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
         ${bestMark}
         <line class="pf-cursor-line" x1="0" y1="${padTop - 4}" x2="0" y2="${H - padBot}" stroke="#cbd5e1" stroke-width="1" visibility="hidden"/>
@@ -283,6 +287,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         let html = tabs + `<div class="pf-stat-chips">${chips.join("")}</div>`;
+        let chartsHtml = "";
 
         if (rankPts.length >= 2) {
           const f = rankPts[0].value, l = rankPts[rankPts.length - 1].value;
@@ -290,7 +295,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const trend = diff > 0 ? `<span class="pf-trend up">▲ ${formatNumber(diff)}계단 상승</span>`
                       : diff < 0 ? `<span class="pf-trend down">▼ ${formatNumber(-diff)}계단 하락</span>`
                       : `<span class="pf-trend flat">— 변동 없음</span>`;
-          html += `
+          chartsHtml += `
             <div class="pf-chart">
               <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
               ${buildLineChart(rankPts, { id: "rank", kind: "rank", color: "#2563eb", betterIsLow: true,
@@ -304,7 +309,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const trend = d > 0 ? `<span class="pf-trend up">▲ ${formatCompactPower(d)} 성장</span>`
                       : d < 0 ? `<span class="pf-trend down">▼ ${formatCompactPower(-d)} 감소</span>`
                       : `<span class="pf-trend flat">— 변동 없음</span>`;
-          html += `
+          chartsHtml += `
             <div class="pf-chart">
               <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
               ${buildLineChart(powerPts, { id: "power", kind: "power", color: "#f59e0b", betterIsLow: false,
@@ -312,6 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="pf-tooltip" style="display:none;"></div>
             </div>`;
         }
+        html += `<div class="pf-charts-grid">${chartsHtml}</div>`;
         html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
         body.innerHTML = html;
         attachChartHover(body);

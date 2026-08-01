@@ -1080,27 +1080,40 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .side-official-kind.patch { background: #dbeafe; color: #1d4ed8; }
 .side-official-kind.event { background: #dcfce7; color: #16a34a; }
 
-/* 성장 그래프 — 프리미엄 차트 */
-.pf-chart { position: relative; }
-.pf-tooltip { position: absolute; z-index: 5; pointer-events: none; background: rgba(23,30,42,0.94); color: #fff; font-size: 0.76rem; padding: 7px 11px; border-radius: 10px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,0.22); backdrop-filter: blur(2px); line-height: 1.45; }
-.pf-tip-date { font-size: 0.7rem; font-weight: 700; color: #fbbf24; }
-.pf-tip-main { font-size: 0.92rem; font-weight: 800; }
-.pf-tip-delta { font-size: 0.72rem; font-weight: 700; margin-left: 3px; }
+/* 성장 그래프 — 1등석 사양 */
+.pf-charts-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 860px) { .pf-charts-grid { grid-template-columns: 1fr 1fr; } }
+.pf-chart { position: relative; background: linear-gradient(180deg, #fff, #fcfdff); border: 1px solid #eef2f7; border-radius: 14px; padding: 12px 14px 8px; }
+.pf-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.pf-chart-title { font-size: 0.78rem; font-weight: 800; color: #475569; letter-spacing: -0.01em; }
+.pf-chart-head .pf-trend { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.pf-chart-head .pf-trend.up { background: #f0fdf4; color: #16a34a; }
+.pf-chart-head .pf-trend.down { background: #fef2f2; color: #dc2626; }
+.pf-chart-head .pf-trend.flat { background: #f8fafc; color: #94a3b8; }
+
+.pf-tooltip { position: absolute; z-index: 5; pointer-events: none; background: rgba(20,27,38,0.95); color: #fff; font-size: 0.72rem; padding: 6px 10px; border-radius: 9px; white-space: nowrap; box-shadow: 0 8px 24px rgba(15,23,42,0.25); backdrop-filter: blur(3px); line-height: 1.4; animation: pfTipIn 0.12s ease-out; font-variant-numeric: tabular-nums; }
+.pf-tip-date { font-size: 0.64rem; font-weight: 700; color: #fbbf24; letter-spacing: 0.02em; }
+.pf-tip-main { font-size: 0.86rem; font-weight: 800; letter-spacing: -0.01em; }
+.pf-tip-delta { font-size: 0.66rem; font-weight: 700; margin-left: 3px; }
 .pf-tip-delta.up { color: #4ade80; }
 .pf-tip-delta.down { color: #f87171; }
 .pf-tip-delta.flat { color: #94a3b8; }
-.pf-tip-exact { font-size: 0.68rem; color: #cbd5e1; font-variant-numeric: tabular-nums; }
-.pf-tip-sub { font-size: 0.7rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.12); margin-top: 4px; padding-top: 4px; }
+.pf-tip-exact { font-size: 0.62rem; color: #cbd5e1; }
+.pf-tip-sub { font-size: 0.64rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px; padding-top: 3px; }
+@keyframes pfTipIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 
-/* 기간 필터 + 통계 칩 */
+/* 기간 필터 + 통계 스트립 */
 .pf-range-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.pf-chart-note-inline { font-size: 0.72rem; color: #9ca3af; }
-.pf-stat-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 14px; }
-.pf-chip { background: #f8fafc; border: 1px solid #eef2f7; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
-.pf-chip-k { font-size: 0.68rem; color: #94a3b8; font-weight: 700; }
-.pf-chip-v { font-size: 0.92rem; font-weight: 800; color: #334155; font-variant-numeric: tabular-nums; }
+.pf-range-row .mini-tab { font-size: 0.7rem; padding: 3px 11px; }
+.pf-chart-note-inline { font-size: 0.66rem; color: #a3aebc; }
+.pf-stat-chips { display: flex; flex-wrap: wrap; background: #fff; border: 1px solid #eef2f7; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.pf-chip { flex: 1 1 0; min-width: 96px; padding: 9px 14px; display: flex; flex-direction: column; gap: 1px; border-right: 1px solid #f1f5f9; }
+.pf-chip:last-child { border-right: none; }
+.pf-chip-k { font-size: 0.6rem; color: #a3aebc; font-weight: 700; letter-spacing: 0.03em; }
+.pf-chip-v { font-size: 0.86rem; font-weight: 800; color: #334155; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .pf-chip-v.up { color: #16a34a; }
 .pf-chip-v.down { color: #dc2626; }
+@media (max-width: 560px) { .pf-chip { min-width: 45%; border-bottom: 1px solid #f1f5f9; } .pf-chip:nth-last-child(-n+2) { border-bottom: none; } }
 
 /* 차트 애니메이션 */
 .pf-anim-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: pfDraw 0.9s ease-out forwards; }
