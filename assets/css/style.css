@@ -1080,10 +1080,39 @@ a.mini-summary-card:active { transform: translateY(1px); }
 .side-official-kind.patch { background: #dbeafe; color: #1d4ed8; }
 .side-official-kind.event { background: #dcfce7; color: #16a34a; }
 
-/* 성장 그래프 호버 툴팁 */
+/* 성장 그래프 — 프리미엄 차트 */
 .pf-chart { position: relative; }
-.pf-tooltip { position: absolute; z-index: 5; pointer-events: none; background: #1f2937; color: #fff; font-size: 0.76rem; padding: 5px 10px; border-radius: 8px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
-.pf-tooltip b { color: #fbbf24; }
+.pf-tooltip { position: absolute; z-index: 5; pointer-events: none; background: rgba(23,30,42,0.94); color: #fff; font-size: 0.76rem; padding: 7px 11px; border-radius: 10px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,0.22); backdrop-filter: blur(2px); line-height: 1.45; }
+.pf-tip-date { font-size: 0.7rem; font-weight: 700; color: #fbbf24; }
+.pf-tip-main { font-size: 0.92rem; font-weight: 800; }
+.pf-tip-delta { font-size: 0.72rem; font-weight: 700; margin-left: 3px; }
+.pf-tip-delta.up { color: #4ade80; }
+.pf-tip-delta.down { color: #f87171; }
+.pf-tip-delta.flat { color: #94a3b8; }
+.pf-tip-exact { font-size: 0.68rem; color: #cbd5e1; font-variant-numeric: tabular-nums; }
+.pf-tip-sub { font-size: 0.7rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.12); margin-top: 4px; padding-top: 4px; }
+
+/* 기간 필터 + 통계 칩 */
+.pf-range-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.pf-chart-note-inline { font-size: 0.72rem; color: #9ca3af; }
+.pf-stat-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.pf-chip { background: #f8fafc; border: 1px solid #eef2f7; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.pf-chip-k { font-size: 0.68rem; color: #94a3b8; font-weight: 700; }
+.pf-chip-v { font-size: 0.92rem; font-weight: 800; color: #334155; font-variant-numeric: tabular-nums; }
+.pf-chip-v.up { color: #16a34a; }
+.pf-chip-v.down { color: #dc2626; }
+
+/* 차트 애니메이션 */
+.pf-anim-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: pfDraw 0.9s ease-out forwards; }
+.pf-anim-area { opacity: 0; animation: pfFade 0.7s ease-out 0.35s forwards; }
+.pf-last-halo { opacity: 0.18; animation: pfPulse 2.2s ease-in-out infinite; }
+@keyframes pfDraw { to { stroke-dashoffset: 0; } }
+@keyframes pfFade { to { opacity: 1; } }
+@keyframes pfPulse { 0%, 100% { opacity: 0.06; } 50% { opacity: 0.22; } }
+@media (prefers-reduced-motion: reduce) {
+  .pf-anim-line, .pf-anim-area { animation: none; stroke-dashoffset: 0; opacity: 1; }
+  .pf-last-halo { animation: none; }
+}
 
 /* 전적검색 변경 이력 */
 .pf-change-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid #f3f4f6; font-size: 0.86rem; flex-wrap: wrap; }

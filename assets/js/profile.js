@@ -52,67 +52,128 @@ document.addEventListener("DOMContentLoaded", async () => {
     return m ? `${Number(m[2])}/${Number(m[3])}` : String(d || "");
   }
 
-  // 차트별 메타 (호버 툴팁용) — id → {coords, points, fmt, betterIsLow, color, W, H}
+  // 차트별 메타 (호버 툴팁용) — id → 렌더 정보
   const chartMeta = {};
+  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-  // 단순 SVG 라인차트. points:[{label,value}], opts:{id,color,betterIsLow}
-  // betterIsLow=true(순위)면 작은 값이 위(=좋음), false(전투력)면 큰 값이 위.
+  // 깔끔한 눈금값 계산 (nice numbers)
+  function niceTicks(min, max, count) {
+    const raw = (max - min) / (count || 3);
+    if (!(raw > 0)) return [];
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const step = mag * (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10);
+    const out = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(v);
+    return out;
+  }
+
+  // 모노톤 큐빅 보간 (오버슈트 없는 부드러운 곡선)
+  function monotonePath(coords) {
+    const n = coords.length;
+    if (n < 3) return "M " + coords.map(c => `${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" L ");
+    const xs = coords.map(c => c[0]), ys = coords.map(c => c[1]);
+    const dx = [], dy = [], m = [];
+    for (let i = 0; i < n - 1; i++) { dx.push(xs[i+1]-xs[i]); dy.push(ys[i+1]-ys[i]); m.push(dy[i]/dx[i]); }
+    const t = [m[0]];
+    for (let i = 1; i < n - 1; i++) {
+      t.push(m[i-1] * m[i] <= 0 ? 0 : (m[i-1] + m[i]) / 2);
+    }
+    t.push(m[n-2]);
+    for (let i = 0; i < n - 1; i++) {   // Fritsch–Carlson 제한
+      if (m[i] === 0) { t[i] = 0; t[i+1] = 0; continue; }
+      const a = t[i]/m[i], b = t[i+1]/m[i], h = Math.hypot(a, b);
+      if (h > 3) { t[i] = 3*m[i]*a/h; t[i+1] = 3*m[i]*b/h; }
+    }
+    let d = `M ${xs[0].toFixed(1)} ${ys[0].toFixed(1)}`;
+    for (let i = 0; i < n - 1; i++) {
+      const h3 = dx[i] / 3;
+      d += ` C ${(xs[i]+h3).toFixed(1)} ${(ys[i]+t[i]*h3).toFixed(1)}, ${(xs[i+1]-h3).toFixed(1)} ${(ys[i+1]-t[i+1]*h3).toFixed(1)}, ${xs[i+1].toFixed(1)} ${ys[i+1].toFixed(1)}`;
+    }
+    return d;
+  }
+
+  // 프리미엄 SVG 라인차트. points:[{label,date,value,extra}], opts:{id,color,betterIsLow,fmt,fmtTick,kind}
   function buildLineChart(points, opts) {
-    const W = 320, H = 132, padX = 30, padTop = 24, padBot = 26;
+    const W = 340, H = 150, padL = 48, padR = 14, padTop = 26, padBot = 28;
     const fmt = opts.fmt || ((v) => String(v));
+    const fmtTick = opts.fmtTick || fmt;
     const vals = points.map(p => p.value);
     let min = Math.min(...vals), max = Math.max(...vals);
-    if (min === max) { min -= 1; max += 1; }          // 평평한 선 방지
+    if (min === max) { min -= 1; max += 1; }
+    const pad = (max - min) * 0.06;                    // 위아래 살짝 여백
+    min -= pad; max += pad;
     const span = max - min;
-    const innerW = W - padX * 2, innerH = H - padTop - padBot;
+    const innerW = W - padL - padR, innerH = H - padTop - padBot;
     const n = points.length;
-    const xAt = (i) => padX + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+    const xAt = (i) => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
     const yAt = (v) => {
       const t = opts.betterIsLow ? (v - min) / span : (max - v) / span;
-      return padTop + t * innerH;                      // t=0 → 위(=좋음)
+      return padTop + t * innerH;
     };
     const coords = points.map((p, i) => [xAt(i), yAt(p.value)]);
-    chartMeta[opts.id] = { coords, points, fmt: opts.fmt, betterIsLow: !!opts.betterIsLow, color: opts.color, W, H };
-    const linePts = coords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ");
-    const areaPath = `M ${coords[0][0].toFixed(1)} ${(H - padBot).toFixed(1)} `
-      + coords.map(c => `L ${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" ")
-      + ` L ${coords[n - 1][0].toFixed(1)} ${(H - padBot).toFixed(1)} Z`;
-    // 점: 마지막만 강조, 중간 점은 작게 — 데이터 20개 초과 시 선만 (일별 값은 호버 툴팁이 담당)
+    chartMeta[opts.id] = { coords, points, fmt, betterIsLow: !!opts.betterIsLow, color: opts.color, W, H, padL, padR, kind: opts.kind };
+
+    const lineD = monotonePath(coords);
+    const areaD = lineD + ` L ${coords[n-1][0].toFixed(1)} ${(H-padBot).toFixed(1)} L ${coords[0][0].toFixed(1)} ${(H-padBot).toFixed(1)} Z`;
+
+    // Y 그리드 + 눈금 (헤어라인 실선, 차분한 회색)
+    const ticks = niceTicks(min + pad, max - pad, 3).map((v) => {
+      const y = yAt(v).toFixed(1);
+      return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#eef2f7" stroke-width="1"/>
+        <text x="${padL - 6}" y="${Number(y) + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${escapeHtml(fmtTick(v))}</text>`;
+    }).join("");
+
+    // 점: 20개 초과 시 마지막만 (일별 값은 크로스헤어 툴팁 담당)
     const dots = coords.map((c, i) => {
       const last = i === n - 1;
       if (!last && n > 20) return "";
-      return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${last ? 3 : 1.7}" fill="${last ? opts.color : "#fff"}" stroke="${opts.color}" stroke-width="1.2"/>`;
+      if (!last) return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="1.7" fill="#fff" stroke="${opts.color}" stroke-width="1.2"/>`;
+      return `<circle class="pf-last-halo" cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="8" fill="${opts.color}"/>
+        <circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="4" fill="${opts.color}" stroke="#fff" stroke-width="2"/>`;
     }).join("");
-    // 값 라벨: 시작점·현재(마지막)점의 실제 수치를 그래프 위에 표시 (점 위쪽, 잘림 방지)
-    const labelY = (c) => Math.min(H - padBot - 6, Math.max(padTop - 6, c[1] - 8));
-    const valLabels = points.map((p, i) => {
-      if (i !== 0 && i !== n - 1) return "";           // 시작·끝만 (중간점 과밀 방지)
-      const c = coords[i], last = i === n - 1;
-      const anchor = i === 0 && n > 1 ? "start" : (last && n > 1 ? "end" : "middle");
-      return `<text x="${c[0].toFixed(1)}" y="${labelY(c).toFixed(1)}" text-anchor="${anchor}" font-size="${last ? 11 : 10}" font-weight="${last ? 800 : 700}" fill="${last ? opts.color : "#94a3b8"}">${escapeHtml(fmt(p.value))}</text>`;
-    }).join("");
-    const xLabels = `
-      <text x="${xAt(0).toFixed(1)}" y="${H - 6}" text-anchor="start" font-size="10" fill="#94a3b8">${escapeHtml(points[0].label)}</text>
-      <text x="${xAt(n - 1).toFixed(1)}" y="${H - 6}" text-anchor="end" font-size="10" fill="#94a3b8">${escapeHtml(points[n - 1].label)}</text>`;
+
+    // 최고 기록 마커 (시작/끝 제외 중간에 있을 때만)
+    let bestMark = "";
+    const bestIdx = vals.reduce((bi, v, i) => (opts.betterIsLow ? v < vals[bi] : v > vals[bi]) ? i : bi, 0);
+    if (bestIdx !== 0 && bestIdx !== n - 1) {
+      const [bx, by] = coords[bestIdx];
+      const anchor = bx > W - 90 ? "end" : (bx < padL + 40 ? "start" : "middle");
+      bestMark = `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="2.6" fill="${opts.color}" stroke="#fff" stroke-width="1.4"/>
+        <text x="${bx.toFixed(1)}" y="${Math.max(10, by - 8).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="700" fill="#64748b">★ 최고 ${escapeHtml(fmt(points[bestIdx].value))}</text>`;
+    }
+
+    // 끝값 라벨 (텍스트는 잉크색 — 정체성은 점이 표현)
+    const lc = coords[n - 1];
+    const endLabel = `<text x="${Math.min(W - padR, lc[0]).toFixed(1)}" y="${Math.max(padTop - 8, lc[1] - 10).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#334155">${escapeHtml(fmt(points[n-1].value))}</text>`;
+
+    // X축 날짜 (처음·중간·끝)
+    const midI = Math.floor((n - 1) / 2);
+    const xLabels = [[0, "start"], [midI, "middle"], [n - 1, "end"]]
+      .filter(([i], idx, arr) => arr.findIndex(a => a[0] === i) === idx)
+      .map(([i, a]) => `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="${a}" font-size="9" fill="#94a3b8">${escapeHtml(points[i].label)}</text>`).join("");
+
     return `
       <svg class="pf-chart-svg" data-chart="${opts.id}" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="성장 추이 그래프" style="touch-action:pan-y;">
         <defs>
           <linearGradient id="pfgrad-${opts.id}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.22"/>
+            <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.14"/>
             <stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        <path d="${areaPath}" fill="url(#pfgrad-${opts.id})"/>
-        <polyline points="${linePts}" fill="none" stroke="${opts.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${ticks}
+        <path class="pf-anim-area" d="${areaD}" fill="url(#pfgrad-${opts.id})"/>
+        <path class="pf-anim-line" pathLength="1" d="${lineD}" fill="none" stroke="${opts.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
-        <line class="pf-cursor-line" x1="0" y1="${padTop - 4}" x2="0" y2="${H - padBot}" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3 2" visibility="hidden"/>
-        <circle class="pf-cursor-dot" r="3.6" fill="${opts.color}" stroke="#fff" stroke-width="1.5" visibility="hidden"/>
-        ${valLabels}
+        ${bestMark}
+        <line class="pf-cursor-line" x1="0" y1="${padTop - 4}" x2="0" y2="${H - padBot}" stroke="#cbd5e1" stroke-width="1" visibility="hidden"/>
+        <circle class="pf-cursor-dot" r="4.2" fill="${opts.color}" stroke="#fff" stroke-width="2" visibility="hidden"/>
+        ${endLabel}
         ${xLabels}
       </svg>`;
   }
 
-  // 호버/탭 시 해당 날짜의 실제 값 + 전일 대비 변화 툴팁
+  // 크로스헤어 + 툴팁: 날짜(요일)·값·전일 대비·정확한 수치·교차 지표
   function attachChartHover(scope) {
     scope.querySelectorAll(".pf-chart-svg").forEach((svg) => {
       const meta = chartMeta[svg.dataset.chart];
@@ -122,13 +183,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!tip) return;
       const cursorLine = svg.querySelector(".pf-cursor-line");
       const cursorDot = svg.querySelector(".pf-cursor-dot");
-      const fmt = meta.fmt || ((v) => String(v));
 
       const show = (ev) => {
         const r = svg.getBoundingClientRect();
         const xView = (ev.clientX - r.left) / r.width * meta.W;
         const n = meta.points.length;
-        const t = (xView - 30) / (meta.W - 60);
+        const t = (xView - meta.padL) / (meta.W - meta.padL - meta.padR);
         const i = Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
         const [cx, cy] = meta.coords[i];
         const p = meta.points[i];
@@ -138,27 +198,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         cursorDot.setAttribute("cx", cx); cursorDot.setAttribute("cy", cy);
         cursorDot.setAttribute("visibility", "visible");
 
-        // 전일 대비 변화 (순위는 감소=상승)
         let deltaHtml = "";
         if (i > 0) {
           const d = p.value - meta.points[i - 1].value;
           if (d !== 0) {
             const good = meta.betterIsLow ? d < 0 : d > 0;
-            const arrow = good ? "▲" : "▼";
-            const num = meta.betterIsLow ? Math.abs(d).toLocaleString() : fmt(Math.abs(d));
-            deltaHtml = ` <span style="color:${good ? "#16a34a" : "#dc2626"};font-weight:700;">${arrow}${num}</span>`;
+            const num = meta.kind === "rank" ? Math.abs(d).toLocaleString() : formatCompactPower(Math.abs(d));
+            deltaHtml = `<span class="pf-tip-delta ${good ? "up" : "down"}">${good ? "▲" : "▼"} ${num}</span>`;
+          } else {
+            deltaHtml = `<span class="pf-tip-delta flat">— 변동 없음</span>`;
           }
         }
-        tip.innerHTML = `<b>${escapeHtml(p.label)}</b> · ${escapeHtml(fmt(p.value))}${deltaHtml}`;
+        const wd = p.date ? ` (${WEEKDAYS[new Date(p.date).getDay()]})` : "";
+        const exact = meta.kind === "power"
+          ? `<div class="pf-tip-exact">${Number(p.value).toLocaleString("ko-KR")}</div>` : "";
+        const extra = p.extra
+          ? `<div class="pf-tip-sub">${meta.kind === "rank" ? "전투력 " + formatCompactPower(p.extra) : "서버 " + Number(p.extra).toLocaleString() + "위"}</div>` : "";
+        tip.innerHTML = `
+          <div class="pf-tip-date">${escapeHtml(p.label)}${wd}</div>
+          <div class="pf-tip-main">${escapeHtml(meta.fmt(p.value))} ${deltaHtml}</div>
+          ${exact}${extra}`;
 
-        // 툴팁 위치: 점 위쪽, 좌우 잘림 방지
-        const px = cx / meta.W * r.width + (r.left - chartEl.getBoundingClientRect().left);
-        const py = cy / meta.H * r.height + (r.top - chartEl.getBoundingClientRect().top);
+        const cRect = chartEl.getBoundingClientRect();
+        const px = cx / meta.W * r.width + (r.left - cRect.left);
+        const py = cy / meta.H * r.height + (r.top - cRect.top);
         tip.style.display = "block";
         const tw = tip.offsetWidth;
-        const maxLeft = chartEl.clientWidth - tw - 4;
-        tip.style.left = Math.max(4, Math.min(maxLeft, px - tw / 2)) + "px";
-        tip.style.top = Math.max(2, py - tip.offsetHeight - 12) + "px";
+        tip.style.left = Math.max(4, Math.min(chartEl.clientWidth - tw - 4, px - tw / 2)) + "px";
+        tip.style.top = Math.max(2, py - tip.offsetHeight - 14) + "px";
       };
       const hide = () => {
         tip.style.display = "none";
@@ -171,49 +238,93 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 캐릭터 이력을 받아 #pfGrowth 안에 그래프 렌더 (비동기)
+  // 캐릭터 이력을 받아 #pfGrowth 안에 그래프 렌더 (기간 필터 + 통계 칩 + 차트 2종)
   function renderGrowth(name) {
     getServerRankingHistory(name).then(hist => {
       const body = document.querySelector("#pfGrowth .pf-growth-body");
       if (!body) return;
-      const rankPts = hist.filter(h => Number(h.serverRank) > 0).map(h => ({ label: fmtDateShort(h.date), value: Number(h.serverRank) }));
-      const powerPts = hist.filter(h => Number(h.power) > 0).map(h => ({ label: fmtDateShort(h.date), value: Number(h.power) }));
+      const all = (hist || []).filter(h => h && h.date);
+      let range = 0;   // 0 = 전체
 
-      if (rankPts.length < 2 && powerPts.length < 2) {
-        body.innerHTML = `<div class="pf-growth-empty">📈 아직 추이를 그릴 데이터가 부족해요.<br>매일 자동으로 쌓여서 며칠 뒤면 성장 그래프가 나타나요.</div>`;
-        return;
-      }
+      const render = () => {
+        const rows = range ? all.slice(-range) : all;
+        const rankPts = rows.filter(h => Number(h.serverRank) > 0)
+          .map(h => ({ label: fmtDateShort(h.date), date: h.date, value: Number(h.serverRank), extra: Number(h.power) || 0 }));
+        const powerPts = rows.filter(h => Number(h.power) > 0)
+          .map(h => ({ label: fmtDateShort(h.date), date: h.date, value: Number(h.power), extra: Number(h.serverRank) || 0 }));
 
-      let html = "";
-      if (rankPts.length >= 2) {
-        const f = rankPts[0].value, l = rankPts[rankPts.length - 1].value;
-        const diff = f - l;   // +면 순위 상승(숫자 작아짐)
-        const trend = diff > 0 ? `<span class="pf-trend up">▲ ${formatNumber(diff)}계단 상승</span>`
-                    : diff < 0 ? `<span class="pf-trend down">▼ ${formatNumber(-diff)}계단 하락</span>`
-                    : `<span class="pf-trend flat">— 변동 없음</span>`;
-        html += `
-          <div class="pf-chart">
-            <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
-            ${buildLineChart(rankPts, { id: "rank", color: "#2563eb", betterIsLow: true, fmt: (v) => formatNumber(v) + "위" })}
-            <div class="pf-tooltip" style="display:none;"></div>
+        const tabs = `
+          <div class="pf-range-row">
+            <div class="mini-tabs">
+              ${[[7, "7일"], [30, "30일"], [0, "전체"]].map(([d, l]) =>
+                `<button class="mini-tab${range === d ? " active" : ""}" data-range="${d}">${l}</button>`).join("")}
+            </div>
+            <span class="pf-chart-note-inline">그래프를 짚으면 날짜별 수치가 보여요</span>
           </div>`;
-      }
-      if (powerPts.length >= 2) {
-        const f = powerPts[0].value, l = powerPts[powerPts.length - 1].value;
-        const d = l - f;
-        const trend = d > 0 ? `<span class="pf-trend up">▲ ${formatCompactPower(d)} 성장</span>`
-                    : d < 0 ? `<span class="pf-trend down">▼ ${formatCompactPower(-d)} 감소</span>`
-                    : `<span class="pf-trend flat">— 변동 없음</span>`;
-        html += `
-          <div class="pf-chart">
-            <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
-            ${buildLineChart(powerPts, { id: "power", color: "#f59e0b", betterIsLow: false, fmt: (v) => formatCompactPower(v) })}
-            <div class="pf-tooltip" style="display:none;"></div>
-          </div>`;
-      }
-      html += `<div class="pf-chart-note">하루 2회 자동 수집 · 그래프에 마우스를 올리거나 터치하면 날짜별 수치가 보여요</div>`;
-      body.innerHTML = html;
-      attachChartHover(body);
+
+        if (rankPts.length < 2 && powerPts.length < 2) {
+          body.innerHTML = tabs + `<div class="pf-growth-empty">📈 이 기간에는 추이를 그릴 데이터가 부족해요.<br>매일 자동으로 쌓여서 며칠 뒤면 성장 그래프가 나타나요.</div>`;
+          bindTabs();
+          return;
+        }
+
+        // 통계 칩
+        const chips = [];
+        if (rankPts.length >= 2) {
+          const diff = rankPts[0].value - rankPts[rankPts.length - 1].value;
+          chips.push(`<div class="pf-chip"><span class="pf-chip-k">기간 순위</span><span class="pf-chip-v ${diff > 0 ? "up" : diff < 0 ? "down" : ""}">${diff > 0 ? "▲ " + formatNumber(diff) : diff < 0 ? "▼ " + formatNumber(-diff) : "—"}</span></div>`);
+          chips.push(`<div class="pf-chip"><span class="pf-chip-k">최고 순위</span><span class="pf-chip-v">${formatNumber(Math.min(...rankPts.map(p => p.value)))}위</span></div>`);
+        }
+        if (powerPts.length >= 2) {
+          const d = powerPts[powerPts.length - 1].value - powerPts[0].value;
+          const days = Math.max(1, powerPts.length - 1);
+          chips.push(`<div class="pf-chip"><span class="pf-chip-k">전투력 성장</span><span class="pf-chip-v ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d >= 0 ? "+" : "-"}${formatCompactPower(Math.abs(d))}</span></div>`);
+          chips.push(`<div class="pf-chip"><span class="pf-chip-k">일평균</span><span class="pf-chip-v">${d >= 0 ? "+" : "-"}${formatCompactPower(Math.abs(Math.round(d / days)))}</span></div>`);
+        }
+
+        let html = tabs + `<div class="pf-stat-chips">${chips.join("")}</div>`;
+
+        if (rankPts.length >= 2) {
+          const f = rankPts[0].value, l = rankPts[rankPts.length - 1].value;
+          const diff = f - l;
+          const trend = diff > 0 ? `<span class="pf-trend up">▲ ${formatNumber(diff)}계단 상승</span>`
+                      : diff < 0 ? `<span class="pf-trend down">▼ ${formatNumber(-diff)}계단 하락</span>`
+                      : `<span class="pf-trend flat">— 변동 없음</span>`;
+          html += `
+            <div class="pf-chart">
+              <div class="pf-chart-head"><span class="pf-chart-title">서버 전투력 순위</span>${trend}</div>
+              ${buildLineChart(rankPts, { id: "rank", kind: "rank", color: "#2563eb", betterIsLow: true,
+                fmt: (v) => formatNumber(Math.round(v)) + "위", fmtTick: (v) => formatNumber(Math.round(v)) })}
+              <div class="pf-tooltip" style="display:none;"></div>
+            </div>`;
+        }
+        if (powerPts.length >= 2) {
+          const f = powerPts[0].value, l = powerPts[powerPts.length - 1].value;
+          const d = l - f;
+          const trend = d > 0 ? `<span class="pf-trend up">▲ ${formatCompactPower(d)} 성장</span>`
+                      : d < 0 ? `<span class="pf-trend down">▼ ${formatCompactPower(-d)} 감소</span>`
+                      : `<span class="pf-trend flat">— 변동 없음</span>`;
+          html += `
+            <div class="pf-chart">
+              <div class="pf-chart-head"><span class="pf-chart-title">전투력</span>${trend}</div>
+              ${buildLineChart(powerPts, { id: "power", kind: "power", color: "#f59e0b", betterIsLow: false,
+                fmt: (v) => formatCompactPower(v), fmtTick: (v) => formatCompactPower(v) })}
+              <div class="pf-tooltip" style="display:none;"></div>
+            </div>`;
+        }
+        html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
+        body.innerHTML = html;
+        attachChartHover(body);
+        bindTabs();
+      };
+
+      const bindTabs = () => {
+        body.querySelectorAll(".pf-range-row .mini-tab").forEach((b) => {
+          b.addEventListener("click", () => { range = Number(b.dataset.range); render(); });
+        });
+      };
+
+      render();
     });
   }
 
