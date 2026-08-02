@@ -347,6 +347,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       return { total, cur, pct, endStr: `${e.getMonth() + 1}/${e.getDate()}` };
     };
     const crFixedCard = (c) => {
+      if (c.pending || c.score == null) {
+        return `<div class="content-card cc-pending">
+          <div class="cc-top"><span class="cc-name">${escapeHtml(c.name || "")}</span><span class="cc-badge">고정</span></div>
+          <div class="cc-score"><b>—</b><span class="unit">점</span></div>
+          <div class="cc-meta">아직 기록이 없어요</div>
+          <div class="cc-bars">${Array(7).fill('<div class="cc-bar" style="height:26%"></div>').join("")}</div>
+          <div class="cc-foot"><span>운영진 점수 입력 대기</span><span class="go">곧 업데이트</span></div>
+        </div>`;
+      }
       const d = c.prevScore != null ? crPct(c.score, c.prevScore) : null;
       return `<div class="content-card">
         <div class="cc-top"><span class="cc-name">${escapeHtml(c.name || "")}</span><span class="cc-badge">고정</span></div>

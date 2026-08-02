@@ -277,6 +277,12 @@ svg { display: block; }
 .cc-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6b24d, var(--amber-bright)); }
 .cc-prog-cap { margin-top: 9px; font-size: 0.76rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
+/* 기록 대기중(고정 컨텐츠 점수 미입력) */
+.content-card.cc-pending { background: var(--surface); }
+.content-card.cc-pending .cc-score b { color: var(--ink-ghost); }
+.content-card.cc-pending .cc-bar { background: var(--surface-3); opacity: 0.6; }
+.content-card.cc-pending .cc-name { color: var(--ink-soft); }
+
 /* 시즌 컨텐츠 */
 .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .season-card {
