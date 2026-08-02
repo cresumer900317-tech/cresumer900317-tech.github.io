@@ -1,3 +1,5 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
 /* ===== 친구패밀리 · 시그니처 옐로우 테마 ===== */
 :root {
   --yellow: #f59e0b;
@@ -29,8 +31,11 @@ html { font-size: 16px; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   line-height: 1.5;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 img { display: block; max-width: 100%; }
 a { text-decoration: none; color: inherit; }
