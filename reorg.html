@@ -109,6 +109,7 @@
     <h1>📋 운영개편 배치 보드</h1>
     <div class="top-bar-right">
       <button class="refresh-btn" onclick="loadAll()">🔄 새로고침</button>
+      <button class="refresh-btn" onclick="copyShareTable()">📋 공유용 명단 복사</button>
       <a href="./admin">← 어드민</a>
       <a href="./">홈</a>
       <button class="lock-out-btn" onclick="lockOut()">🔒 잠금</button>
@@ -269,6 +270,40 @@ async function delRow(id) {
 
 // ── 렌더 ──
 function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
+// 길드별 배치 명단을 공유용 텍스트로 → 클립보드 복사 (카톡·디코 붙여넣기용)
+function copyShareTable() {
+  const nf = s => String(s == null ? "" : s).normalize("NFC").trim();
+  const powOf = r => { const m = memberMap[nf(r.character_name)]; return m ? Number(m.power || 0) : -1; };
+  const d = new Date();
+  const lines = [`📋 길드 재배치 명단 (${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()})`, ""];
+  let assigned = 0, movedCnt = 0;
+  GUILDS.forEach(g => {
+    const rows = boardRows.filter(r => nf(r.assigned_guild) === nf(g)).sort((a, b) => powOf(b) - powOf(a));
+    assigned += rows.length;
+    lines.push(`■ ${g} (${rows.length}명)`);
+    if (!rows.length) lines.push("   (없음)");
+    rows.forEach((r, i) => {
+      const m = memberMap[nf(r.character_name)];
+      const lv = m && m.level ? ` Lv.${m.level}` : "";
+      if (r.moved) movedCnt++;
+      lines.push(`   ${i + 1}. ${r.character_name}${lv}${r.moved ? " ✅" : ""}`);
+    });
+    lines.push("");
+  });
+  const pool = boardRows.filter(r => !r.assigned_guild);
+  if (pool.length) {
+    lines.push(`■ 미배치 (${pool.length}명)`);
+    pool.forEach((r, i) => lines.push(`   ${i + 1}. ${r.character_name}`));
+    lines.push("");
+  }
+  lines.push(`— 배치 ${assigned}명 · 이동 완료 ${movedCnt}명 (✅ 표시)`);
+  lines.push("아직 이동 안 하신 분은 위 길드로 이동 부탁드려요!");
+  const text = lines.join("\n");
+  navigator.clipboard.writeText(text)
+    .then(() => toast("공유용 명단이 복사됐어요! 카톡·디코에 붙여넣기 하세요"))
+    .catch(() => window.prompt("아래 명단을 복사하세요:", text));
+}
 
 function cardHtml(row) {
   const m = memberMap[nfc(row.character_name)];
