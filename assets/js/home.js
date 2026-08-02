@@ -20,6 +20,10 @@ window.showCommTab = function (btn, id) {
     if (el) el.style.display = x === id ? "" : "none";
   });
 };
+window.showCrTab = function (i) {
+  document.querySelectorAll(".cr-tab").forEach((b, idx) => b.classList.toggle("active", idx === i));
+  document.querySelectorAll(".cr-panel").forEach((p, idx) => p.classList.toggle("active", idx === i));
+};
 window.copyCoupon = function (code, btn) {
   navigator.clipboard.writeText(code).then(() => {
     const el = btn.querySelector(".copy");
@@ -324,10 +328,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
 
-    // ── 컨텐츠 기록 (고정 2 + 현재 시즌 1) ──
+    // ── 컨텐츠 기록 (길드 탭: 친구들·친구둘, 각 고정 2 + 현재 시즌 1) ──
     const crData = (crRes && typeof crRes === "object" && !Array.isArray(crRes)) ? crRes : {};
-    const crFixed = Array.isArray(crData.fixed) ? crData.fixed : [];
-    const crSeasonCur = crData.season || null;
+    const crGuilds = Array.isArray(crData.guilds) ? crData.guilds : [];
     const crPrevSeason = crData.prevSeason || null;
     const fmtScore = (n) => Number(n || 0).toLocaleString("ko-KR");
     const crPct = (a, b) => (b > 0 ? Math.round((a - b) / b * 100) : null);
@@ -379,14 +382,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="cc-foot">${crPrevSeason ? `<span>이전 시즌 <b style="color:var(--ink-soft)">${escapeHtml(crPrevSeason)}</b></span>` : `<span>&nbsp;</span>`}<a class="go" href="./archive">아카이브 ${ICON.arrow}</a></div>
       </div>`;
     };
-    const crCards = [...crFixed.map(crFixedCard), ...(crSeasonCur ? [crSeasonCard(crSeasonCur)] : [])];
-    const contentSection = crCards.length ? `
+    const crGuildCards = (gd) => [...(gd.fixed || []).map(crFixedCard), ...(gd.season ? [crSeasonCard(gd.season)] : [])];
+    const crHasAny = crGuilds.some(gd => (gd.fixed && gd.fixed.length) || gd.season);
+    const contentSection = crHasAny ? `
       <section class="section"><div class="container">
         <div class="section-head">
-          <div><span class="section-eyebrow">GUILD ACTIVITY</span><div class="section-title">컨텐츠 기록</div><div class="section-sub">운영진이 회차마다 등록</div></div>
+          <div><span class="section-eyebrow">GUILD ACTIVITY</span><div class="section-title">컨텐츠 기록</div><div class="section-sub">친구들·친구둘 컨텐츠 참여 기록</div></div>
           <a class="section-link" href="./archive">전체 기록 보기 ${ICON.arrow}</a>
         </div>
-        <div class="content-grid">${crCards.join("")}</div>
+        <div class="cr-tabs">${crGuilds.map((gd, i) => `<button class="cr-tab${i === 0 ? " active" : ""}" onclick="showCrTab(${i})">${escapeHtml(gd.guild)}</button>`).join("")}</div>
+        ${crGuilds.map((gd, i) => `<div class="cr-panel${i === 0 ? " active" : ""}" id="cr-panel-${i}"><div class="content-grid">${crGuildCards(gd).join("")}</div></div>`).join("")}
       </div></section>` : "";
 
     // ── 랭킹 3열 ──

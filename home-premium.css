@@ -277,6 +277,13 @@ svg { display: block; }
 .cc-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6b24d, var(--amber-bright)); }
 .cc-prog-cap { margin-top: 9px; font-size: 0.76rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
+/* 컨텐츠 기록 길드 탭 (친구들·친구둘) */
+.cr-tabs { display: inline-flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: var(--r-pill); margin-bottom: 16px; }
+.cr-tab { padding: 8px 20px; border-radius: var(--r-pill); font-size: 0.86rem; font-weight: 650; color: var(--ink-soft); transition: all .15s ease; }
+.cr-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-xs); }
+.cr-panel { display: none; }
+.cr-panel.active { display: block; }
+
 /* 기록 대기중(고정 컨텐츠 점수 미입력) */
 .content-card.cc-pending { background: var(--surface); }
 .content-card.cc-pending .cc-score b { color: var(--ink-ghost); }

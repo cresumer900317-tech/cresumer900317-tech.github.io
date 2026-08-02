@@ -216,6 +216,7 @@
       <div class="input-section">
         <h2>➕ 회차 점수 등록</h2>
         <div class="input-row" style="flex-wrap:wrap;">
+          <div><label>길드</label><select id="crGuild"><option>친구들</option><option>친구둘</option></select></div>
           <div><label>컨텐츠</label><select id="crContent"></select></div>
           <div><label>회차/날짜 라벨</label><input type="text" id="crRound" placeholder="예: 34회차 또는 8/1" /></div>
           <div><label>점수</label><input type="number" id="crScore" placeholder="예: 860" /></div>
@@ -485,8 +486,8 @@ async function loadContentRecords() {
     if (!Array.isArray(data) || !data.length) { el.innerHTML = '<div class="empty-box">등록된 기록이 없어요</div>'; return; }
     el.innerHTML = data.map(r => `
       <div class="member-row" style="grid-template-columns:1fr auto;">
-        <div><span class="member-name">${r.content_id}</span>
-          <span style="font-size:0.78rem;color:#6b7280;margin-left:8px;">${r.round_label || ""} · ${Number(r.score).toLocaleString()}점${r.participants ? ` · ${r.participants}명` : ""}${r.goal ? ` · 목표 ${Number(r.goal).toLocaleString()}` : ""} · ${r.recorded_date}</span></div>
+        <div><span class="member-name">${r.guild ? `[${r.guild}] ` : ""}${r.content_id}</span>
+          <span style="font-size:0.78rem;color:#6b7280;margin-left:8px;">${r.round_label || ""} · ${Number(r.score).toLocaleString()}점${r.participants ? ` · ${r.participants}명` : ""} · ${r.recorded_date}</span></div>
         <button class="del-btn" onclick="delContentRecord(${r.id})">삭제</button>
       </div>`).join("");
   } catch (e) { el.innerHTML = '<div class="empty-box">불러오기 실패</div>'; }
@@ -499,6 +500,7 @@ async function addContentRecord() {
   if (score === "") { showToast("점수를 입력해주세요", false); return; }
   const body = {
     contentId,
+    guild: document.getElementById("crGuild").value,
     roundLabel: document.getElementById("crRound").value.trim() || null,
     score: parseInt(score) || 0,
     participants: document.getElementById("crPart").value ? parseInt(document.getElementById("crPart").value) : null,
