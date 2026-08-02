@@ -52,9 +52,9 @@ main { padding: 0 0 48px; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.95);
-  border-bottom: 1px solid var(--yellow-border);
-  backdrop-filter: blur(12px);
+  background: rgba(252,251,249,0.85);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: saturate(180%) blur(16px);
 }
 .site-header-inner {
   min-height: 60px;
@@ -77,8 +77,8 @@ main { padding: 0 0 48px; }
   display: inline-flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 6px rgba(245,158,11,0.2);
 }
-.brand-title { font-size: 1.1rem; font-weight: 700; color: var(--amber-darker); line-height: 1; }
-.brand-sub { font-size: 0.72rem; color: var(--amber); margin-top: 2px; }
+.brand-title { font-size: 1.05rem; font-weight: 750; color: var(--text); line-height: 1; letter-spacing: -0.02em; }
+.brand-sub { font-size: 0.72rem; color: var(--text-faint); margin-top: 2px; }
 
 .nav-menu { display: flex; align-items: center; gap: 4px; }
 .nav-link {
@@ -3234,20 +3234,20 @@ a.mini-summary-card:active { transform: translateY(1px); }
 
 .nav-auth-btns { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .nav-register-btn {
-  font-size: 0.82rem; font-weight: 600; padding: 5px 14px;
-  background: var(--white); color: var(--amber-dark);
-  border: 1.5px solid var(--yellow-border);
+  font-size: 0.82rem; font-weight: 600; padding: 6px 15px;
+  background: var(--white); color: var(--text-soft);
+  border: 1px solid var(--border);
   border-radius: 999px; text-decoration: none;
   transition: all 0.15s;
 }
-.nav-register-btn:hover { background: var(--yellow-bg); }
+.nav-register-btn:hover { border-color: var(--text-faint); color: var(--text); }
 .nav-login-btn {
-  font-size: 0.82rem; font-weight: 600; padding: 5px 14px;
-  background: var(--yellow); color: var(--white);
+  font-size: 0.82rem; font-weight: 600; padding: 6px 16px;
+  background: var(--text); color: var(--white);
   border-radius: 999px; text-decoration: none; flex-shrink: 0;
-  transition: background 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s;
 }
-.nav-login-btn:hover { background: var(--amber); }
+.nav-login-btn:hover { background: #000; transform: translateY(-1px); box-shadow: 0 6px 16px -6px rgba(0,0,0,0.3); }
 
 /* 모바일 인증 */
 .mobile-auth-links {
