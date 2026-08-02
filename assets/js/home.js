@@ -56,6 +56,25 @@ function av(name, cls) {
   return `<span class="av ${cls || ""}"><span>${init}</span><img src="${url}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></span>`;
 }
 
+// 7일 전투력 합 시계열 → area 스파크라인 SVG
+function sparkline(series) {
+  const pts = (series || []).map(s => Number(s.total) || 0);
+  if (pts.length < 2) return "";
+  const W = 340, H = 120, min = Math.min(...pts), max = Math.max(...pts), rng = (max - min) || 1;
+  const x = i => 10 + (i * (W - 20) / (pts.length - 1));
+  const y = v => H - 14 - ((v - min) / rng) * (H - 32);
+  const line = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(pts.length - 1).toFixed(1)},${H} L${x(0).toFixed(1)},${H} Z`;
+  const lx = x(pts.length - 1).toFixed(1), ly = y(pts[pts.length - 1]).toFixed(1);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:120px;overflow:visible">
+    <defs><linearGradient id="dashArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0a53a" stop-opacity="0.3"/><stop offset="1" stop-color="#f0a53a" stop-opacity="0"/></linearGradient></defs>
+    <line x1="0" y1="${H - 1}" x2="${W}" y2="${H - 1}" stroke="#ece8e1" stroke-width="1"/>
+    <path d="${area}" fill="url(#dashArea)"/>
+    <path d="${line}" fill="none" stroke="#e8890c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lx}" cy="${ly}" r="5" fill="#fff" stroke="#e8890c" stroke-width="3"/>
+  </svg>`;
+}
+
 function guildChip(guild) {
   const gn = String(guild || "").normalize("NFC").trim();
   if (!gn || gn === "길드 없음") return "";
@@ -157,10 +176,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/home-videos`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/official-notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/popular-searches`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/guild-dashboard`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
     ]);
   }
 
-  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes]) {
+  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes, dashRes]) {
     const u = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     const visitorStats = visitorRes || {};
@@ -183,7 +203,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .filter(g => g && g.guildName).sort((a, b) => Number(a.guildRank || 0) - Number(b.guildRank || 0)).slice(0, 12);
 
     const clampH = v => Math.max(0, Math.min(100, v));
-    const healthTop = (Array.isArray(serverHealthRes) ? serverHealthRes : [])
+    const healthAll = (Array.isArray(serverHealthRes) ? serverHealthRes : [])
       .filter(g => g && g.guildName && Number(g.memberSampled || 0) >= 3)
       .map(g => {
         const depth = Number(g.medianPower || 0) > 0 ? clampH(50 + 12.5 * Math.log10(Number(g.medianPower) / 1e12)) : 0;
@@ -195,7 +215,28 @@ document.addEventListener("DOMContentLoaded", async () => {
           : [[depth, 0.42], [act, 0.33], [bal, 0.25]].filter(p => p[0] != null);
         const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
         return { name: g.guildName, score: Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum) };
-      }).sort((a, b) => b.score - a.score).slice(0, 12);
+      }).sort((a, b) => b.score - a.score);
+    const healthTop = healthAll.slice(0, 12);
+
+    // 친구패밀리 KPI — 이미 가져온 데이터로 계산
+    const friendRanks = (Array.isArray(serverGuildRes) ? serverGuildRes : [])
+      .filter(g => FRIENDS.has(normalizeGuildName(g.guildName || "")))
+      .map(g => Number(g.guildRank || 0)).filter(n => n > 0);
+    const friendGuildRank = friendRanks.length ? Math.min(...friendRanks) : null;
+    const friendHealth = healthAll.find(g => FRIENDS.has(normalizeGuildName(g.name || "")));
+    const friendHealthScore = friendHealth ? friendHealth.score : null;
+    const friendHealthRank = friendHealth ? healthAll.indexOf(friendHealth) + 1 : null;
+    const healthTotal = healthAll.length;
+
+    // 대시보드(백엔드 집계) — 히어로/KPI/차트. 없으면 클라 계산값으로 폴백.
+    const dash = (dashRes && typeof dashRes === "object" && !Array.isArray(dashRes)) ? dashRes : {};
+    const dSeries = Array.isArray(dash.series) ? dash.series : [];
+    const dGrowth = Number(dash.growthPct || 0);
+    const dGrowers = Number(dash.growersYesterday || 0);
+    const dTotal = Number(dash.totalMembers || 0);
+    const dWeek = Number(dash.growersWeek || 0);
+    const heroGrowth = dGrowth > 0 ? dGrowth : familyGrowthPct;
+    const heroGrowers = dGrowers > 0 ? dGrowers : growers;
 
     // 커뮤니티 피드
     const feedDate = (iso) => {
@@ -235,49 +276,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         <span class="feed-date">${feedDate(p.created_at)}</span>
       </a>`;
 
-    // ── 히어로 ──
-    const heroLoggedOut = `
-      <div class="hero-card portal">
-        <div class="hero-copy">
-          <span class="hero-badge"><span class="pulse"></span> 메이플키우기 · 스카니아11 서버 포털</span>
-          <h1 class="hero-title-portal">스카니아11, <span class="accent">한눈에</span></h1>
-          <p class="hero-desc">전적 검색 · 서버 랭킹 · 커뮤니티를 한 곳에서.</p>
-          <form class="hero-search-big" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명으로 전적 검색" autocomplete="off" /><button type="submit">검색</button>
-          </form>
-          ${popular.length ? `<div class="hero-chips"><span class="hero-chips-label">인기 검색</span>${popular.slice(0, 5).map((p, i) => `<a class="hero-chip" href="./profile?n=${encodeURIComponent(p.name)}"><b>${i + 1}</b> ${escapeHtml(p.name)}</a>`).join("")}</div>` : ""}
-          <div class="hero-proof-row">
-            <span class="hero-proof">🛡️ 운영 길드 <b>친구들</b></span>
-            ${serverTotal ? `<span class="hero-proof">👥 스카니아11 <b>${formatNumber(serverTotal)}명</b></span>` : ""}
-          </div>
-          <div class="hero-cta-row">
-            <a class="cta primary" href="./ranking">서버 전체 랭킹 ${ICON.arrow}</a>
-            <a class="cta ghost" href="./join">길드 가입 문의</a>
-          </div>
-        </div>
-        <form id="heroLoginForm" class="login-card">
-          <div class="login-card-title">로그인 / 가입</div>
-          <div class="login-card-desc">캐릭터명으로 간편 로그인 — 출석·포인트·커뮤니티</div>
-          <input id="heroLoginName" class="login-input" type="text" placeholder="캐릭터명" autocomplete="username" />
-          <input id="heroLoginPw" class="login-input" type="password" placeholder="비밀번호" autocomplete="current-password" />
-          <button type="submit" class="cta primary" style="width:100%">로그인</button>
-          <div id="heroLoginErr" class="login-err"></div>
-          <div class="login-sub">계정이 없으신가요? <a href="./login?tab=register">회원가입</a></div>
-        </form>
-      </div>`;
-
-    const heroLoggedIn = `
-      <div class="hero-card">
-        <div class="hero-copy">
-          <span class="hero-badge"><span class="pulse"></span> 반갑습니다, <b style="margin-left:2px">${escapeHtml(u ? u.character_name : "")}</b>님</span>
-          ${familyGrowthPct > 0
-            ? `<h1 class="hero-title">친구패밀리, 이번 주<br><span class="pct">+${familyGrowthPct.toFixed(1)}%</span> 컸어요</h1>
-               <p class="hero-sub">전투력 합 <b>${formatCompactPower(prevTotal)}</b><span class="arrow">→</span><b>${formatCompactPower(curTotal)}</b> · ${growers}명 성장</p>`
-            : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
-               <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
-          <div style="margin-top:16px"><a class="cta ghost" href="./profile?n=${encodeURIComponent(u ? u.character_name : "")}">내 전적 보기 ${ICON.arrow}</a></div>
-        </div>
-        ${growthTop.length ? `
+    // ── 히어로 (친구패밀리 대시보드 내러티브) ──
+    const heroChart = dSeries.length >= 2
+      ? `<div class="hero-chart">${sparkline(dSeries)}<div class="hero-chart-caption"><span>7일 전</span><span>어제</span><span>오늘</span></div></div>`
+      : (growthTop.length ? `
         <div class="hero-side-panel">
           <div class="hero-side-title">이번 주 성장 TOP <a href="./weekly">더보기</a></div>
           ${growthTop.map((it, i) => `
@@ -286,7 +288,30 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="mini-main"><div class="mini-name">${escapeHtml(it.name || "-")}</div><div class="mini-sub">${escapeHtml((it.guild || "").normalize("NFC").trim() || "라운지")}</div></div>
               <span class="mini-val" style="color:var(--green)">+${formatCompactPower(it.weeklyDiff || 0)}</span>
             </a>`).join("")}
-        </div>` : ""}
+        </div>` : "");
+
+    const heroHtml = `
+      <div class="hero-card">
+        <div class="hero-copy">
+          <span class="hero-live"><span class="pulse"></span> ${
+            heroGrowers > 0
+              ? `어제 <b style="margin:0 3px">${heroGrowers}명</b>이 전투력을 올렸어요`
+              : (u ? `반갑습니다, <b style="margin:0 3px">${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
+          }</span>
+          ${heroGrowth > 0
+            ? `<h1 class="hero-title">이번 주 다같이<br><span class="pct">+${heroGrowth.toFixed(1)}%</span> 컸습니다</h1>
+               ${dSeries.length >= 2
+                  ? `<p class="hero-sub">7일간 길드 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
+                  : `<p class="hero-sub">친구패밀리가 함께 성장하고 있어요</p>`}`
+            : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
+               <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
+          <div class="hero-cta-row" style="margin-top:20px">
+            ${u
+              ? `<a class="cta ghost" href="./profile?n=${encodeURIComponent(u.character_name)}">내 전적 보기 ${ICON.arrow}</a>`
+              : `<a class="cta primary" href="./ranking">서버 랭킹 ${ICON.arrow}</a><a class="cta ghost" href="./login">로그인 / 가입</a>`}
+          </div>
+        </div>
+        ${heroChart}
       </div>`;
 
     // ── KPI ──
@@ -298,12 +323,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>`;
     const kpiRow = `
       <div class="kpi-row">
-        ${kpi("스카니아11 전체", ICON.users, formatNumber(serverTotal || memberCount), "명", "서버 등록 캐릭터")}
-        ${kpi("친구패밀리", ICON.trophy, formatNumber(rows.length), "명", "5개 길드 길드원")}
-        ${kpi("지금 접속", ICON.bolt, `<span style="color:var(--green)">${formatNumber(online)}</span>`, "명", `<span class="live-dot" style="width:7px;height:7px"></span> 실시간`)}
-        ${familyGrowthPct > 0
-          ? kpi("이번 주 성장", ICON.trend, `<span style="color:var(--green)">+${familyGrowthPct.toFixed(1)}</span>`, "%", `${growers}명이 전투력 상승`)
-          : kpi("최고 순위", ICON.trend, formatNumber(rows.filter(r => Number(r.serverRank || 0) > 0).length), "명", "서버 랭킹 등재")}
+        ${kpi("어제 활동한 길드원", ICON.users, dTotal > 0 ? `${dGrowers}` : "—", dTotal > 0 ? `/${dTotal}` : "", "전투력이 오른 사람")}
+        ${kpi("이번 주 성장", ICON.trend, dTotal > 0 ? `${dWeek}` : "—", "명", "전투력이 오른 사람")}
+        ${kpi("길드 순위", ICON.trophy, friendGuildRank ? `${friendGuildRank}` : "—", friendGuildRank ? "위" : "", "친구패밀리 최고 길드")}
+        ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
 
     // ── 랭킹 3열 ──
@@ -360,12 +383,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>` : "";
 
     document.querySelector("main").innerHTML = `
-      <section class="hero"><div class="container">${u ? heroLoggedIn : heroLoggedOut}</div></section>
+      <section class="hero"><div class="container">${heroHtml}</div></section>
 
       <div class="live-bar"><div class="container live-bar-inner">
         <div class="live-bar-left"><span class="live-dot"></span>
           ${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : "함께 보고 있는 멤버들이 있어요"}
-          <span class="live-sep">·</span><span class="live-extra">누적 ${formatNumber(visitorStats.total || 0)}명 방문</span>
+          <span class="live-sep">·</span><span class="live-extra">${serverTotal ? `스카니아11 ${formatNumber(serverTotal)}명 · ` : ""}누적 ${formatNumber(visitorStats.total || 0)}명 방문</span>
         </div>
         <span class="live-update">마지막 업데이트 ${lastUpdate}</span>
       </div></div>
