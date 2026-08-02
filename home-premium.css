@@ -267,6 +267,15 @@ svg { display: block; }
   display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: var(--ink-faint); }
 .cc-foot .go { font-weight: 600; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 3px; }
 .cc-foot .go svg { width: 13px; height: 13px; }
+.cc-foot a.go:hover { color: var(--amber); }
+
+/* 현재 시즌 카드 */
+.content-card.season-cur { background: linear-gradient(180deg, var(--amber-tint), #fff 72%); border-color: var(--amber-line); }
+.cc-badge.season { color: var(--amber); background: var(--amber-tint); border-color: var(--amber-line); }
+.cc-prog { margin-top: 16px; }
+.cc-track { height: 9px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.cc-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6b24d, var(--amber-bright)); }
+.cc-prog-cap { margin-top: 9px; font-size: 0.76rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
 /* 시즌 컨텐츠 */
 .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

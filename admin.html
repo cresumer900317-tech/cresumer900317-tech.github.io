@@ -220,7 +220,6 @@
           <div><label>회차/날짜 라벨</label><input type="text" id="crRound" placeholder="예: 34회차 또는 8/1" /></div>
           <div><label>점수</label><input type="number" id="crScore" placeholder="예: 860" /></div>
           <div><label>참여 인원 (선택)</label><input type="number" id="crPart" placeholder="예: 72" /></div>
-          <div><label>목표점수 (시즌, 선택)</label><input type="number" id="crGoal" placeholder="예: 5000" /></div>
           <div><label>기록일 (선택)</label><input type="date" id="crDate" style="width:auto;" /></div>
           <button class="add-btn" onclick="addContentRecord()">등록</button>
         </div>
@@ -235,6 +234,17 @@
           <div><label>아이콘 (이모지)</label><input type="text" id="crNewIcon" placeholder="🏟️" style="width:auto;" /></div>
           <button class="add-btn" onclick="addSeasonContent()">추가</button>
         </div>
+      </div>
+      <div class="input-section">
+        <h2>🗓️ 현재 시즌 지정</h2>
+        <p style="font-size:0.78rem;color:#6b7280;margin-bottom:12px;">홈에 '시즌 진행 중'으로 표시할 시즌 하나를 지정합니다. 시작·종료일로 주차 진행바가 자동 계산돼요. 다른 시즌은 자동으로 아카이브로 이동합니다.</p>
+        <div class="input-row">
+          <div><label>시즌 컨텐츠</label><select id="crSeasonSel"></select></div>
+          <div><label>시작일</label><input type="date" id="crSeasonStart" style="width:auto;" /></div>
+          <div><label>종료일</label><input type="date" id="crSeasonEnd" style="width:auto;" /></div>
+          <button class="add-btn" onclick="setCurrentSeason()">현재 시즌으로 지정</button>
+        </div>
+        <div id="crSeasonNow" style="font-size:0.8rem;color:#16a34a;margin-top:10px;"></div>
       </div>
     </div>
   </div>
@@ -428,12 +438,42 @@ async function delVideo(id) {
 // ── 컨텐츠 기록 ──
 async function loadContentSelect() {
   const sel = document.getElementById("crContent");
+  const ssel = document.getElementById("crSeasonSel");
+  const nowEl = document.getElementById("crSeasonNow");
   try {
     const res = await fetch(`${API}/api/admin/contents`, { headers: adminAuth() });
     const data = await res.json();
-    if (!Array.isArray(data) || !data.length) { sel.innerHTML = '<option value="">컨텐츠 없음</option>'; return; }
+    if (!Array.isArray(data) || !data.length) { sel.innerHTML = '<option value="">컨텐츠 없음</option>'; if (ssel) ssel.innerHTML = ''; return; }
     sel.innerHTML = data.map(c => `<option value="${c.id}">${c.icon || ""} ${c.name} (${c.type === "season" ? "시즌" : "고정"})</option>`).join("");
+    const seasons = data.filter(c => c.type === "season");
+    if (ssel) ssel.innerHTML = seasons.length ? seasons.map(c => `<option value="${c.id}">${c.icon || ""} ${c.name}</option>`).join("") : '<option value="">시즌 컨텐츠 없음 — 위에서 추가</option>';
+    const cur = data.find(c => c.is_current);
+    if (nowEl) {
+      if (cur) {
+        nowEl.textContent = `✅ 현재 시즌: ${cur.name}${cur.starts_at ? ` (${cur.starts_at} ~ ${cur.ends_at || "?"})` : ""}`;
+        if (ssel) ssel.value = cur.id;
+        if (cur.starts_at) document.getElementById("crSeasonStart").value = cur.starts_at;
+        if (cur.ends_at) document.getElementById("crSeasonEnd").value = cur.ends_at;
+      } else { nowEl.textContent = "현재 지정된 시즌이 없어요."; }
+    }
   } catch (e) { sel.innerHTML = '<option value="">불러오기 실패</option>'; }
+}
+
+async function setCurrentSeason() {
+  const contentId = document.getElementById("crSeasonSel").value;
+  if (!contentId) { showToast("시즌 컨텐츠를 선택해주세요", false); return; }
+  const res = await fetch(`${API}/api/admin/season-current`, {
+    method: "POST", headers: adminAuth(),
+    body: JSON.stringify({
+      contentId,
+      startsAt: document.getElementById("crSeasonStart").value || null,
+      endsAt: document.getElementById("crSeasonEnd").value || null,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.detail || "지정 실패", false); return; }
+  showToast("현재 시즌 지정 완료");
+  loadContentSelect();
 }
 
 async function loadContentRecords() {
@@ -462,14 +502,13 @@ async function addContentRecord() {
     roundLabel: document.getElementById("crRound").value.trim() || null,
     score: parseInt(score) || 0,
     participants: document.getElementById("crPart").value ? parseInt(document.getElementById("crPart").value) : null,
-    goal: document.getElementById("crGoal").value ? parseInt(document.getElementById("crGoal").value) : null,
     recordedDate: document.getElementById("crDate").value || null,
   };
   const res = await fetch(`${API}/api/admin/content-records`, { method: "POST", headers: adminAuth(), body: JSON.stringify(body) });
   const data = await res.json();
   if (!res.ok) { showToast(data.detail || "등록 실패", false); return; }
   showToast("회차 점수 등록 완료");
-  ["crRound", "crScore", "crPart", "crGoal", "crDate"].forEach(id => document.getElementById(id).value = "");
+  ["crRound", "crScore", "crPart", "crDate"].forEach(id => document.getElementById(id).value = "");
   loadContentRecords();
 }
 
