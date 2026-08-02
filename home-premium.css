@@ -48,7 +48,7 @@
 
   --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
           "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
-  --serif: "Fraunces", "Pretendard Variable", serif;  /* 라틴 숫자 에디토리얼 악센트 */
+  --serif: var(--font);  /* (구 Fraunces) — 세리프 제거, 산세리프로 통일 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,7 +73,7 @@ svg { display: block; }
 /* 숫자 표기 — 표 정렬 + 라틴 세리프 악센트 */
 .num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .num-display {
-  font-family: var(--serif);
+  font-family: var(--font);
   font-variant-numeric: tabular-nums lining-nums;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -188,11 +188,16 @@ svg { display: block; }
   100% { box-shadow: 0 0 0 0 rgba(21,128,61,0); }
 }
 .hero-title {
-  margin-top: 18px;
-  font-size: clamp(2rem, 3.4vw, 2.85rem); font-weight: 800;
-  letter-spacing: -0.038em; line-height: 1.12; color: var(--ink);
+  margin-top: 16px;
+  font-size: clamp(1.7rem, 2.6vw, 2.15rem); font-weight: 800;
+  letter-spacing: -0.035em; line-height: 1.2; color: var(--ink);
 }
-.hero-title .pct { font-family: var(--serif); font-weight: 600; color: var(--amber); font-style: italic; }
+.hero-title .pct { font-weight: 800; color: var(--amber); }
+
+/* 히어로 막대 차트 */
+.hero-bars { display: flex; align-items: flex-end; gap: 9px; height: 118px; }
+.hero-bar { flex: 1; min-height: 8px; border-radius: 6px 6px 3px 3px; background: #f3e2c6; }
+.hero-bar.on { background: linear-gradient(180deg, #f6b24d, var(--amber-bright)); }
 .hero-sub { margin-top: 14px; font-size: 0.98rem; color: var(--ink-soft); }
 .hero-sub b { color: var(--ink); font-weight: 650; }
 .hero-sub .arrow { color: var(--ink-ghost); margin: 0 6px; }
@@ -217,8 +222,8 @@ svg { display: block; }
 .kpi-label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 550; color: var(--ink-faint); }
 .kpi-label svg { width: 14px; height: 14px; color: var(--ink-ghost); }
 .kpi-value {
-  margin-top: 10px; font-family: var(--serif); font-size: 2rem; font-weight: 600;
-  line-height: 1; letter-spacing: -0.02em; color: var(--ink);
+  margin-top: 10px; font-size: 2rem; font-weight: 800;
+  line-height: 1; letter-spacing: -0.03em; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .kpi-value .unit { font-family: var(--font); font-size: 0.95rem; font-weight: 600; color: var(--ink-faint); margin-left: 2px; }
@@ -247,11 +252,11 @@ svg { display: block; }
   background: var(--surface-2); border: 1px solid var(--line);
   padding: 3px 9px; border-radius: var(--r-pill);
 }
-.cc-badge.live { color: var(--amber); background: var(--amber-tint); border-color: var(--amber-line); }
+.cc-badge.live { color: var(--green); background: var(--green-tint); border-color: #cdeed6; }
 .cc-score { margin-top: 14px; display: flex; align-items: baseline; gap: 7px; }
 .cc-score b {
-  font-family: var(--serif); font-size: 1.9rem; font-weight: 600; line-height: 1;
-  letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums;
+  font-family: var(--font); font-size: 1.9rem; font-weight: 800; line-height: 1;
+  letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums;
 }
 .cc-score .unit { font-size: 0.8rem; color: var(--ink-faint); }
 .cc-meta { margin-top: 9px; display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--ink-faint); }
@@ -273,7 +278,7 @@ svg { display: block; }
 .sc-name { font-size: 0.92rem; font-weight: 680; }
 .sc-tag { font-size: 0.66rem; font-weight: 700; color: #7c5cff; background: #f1eeff; border: 1px solid #e2dcff; padding: 2px 8px; border-radius: var(--r-pill); }
 .sc-body { margin-top: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.sc-score b { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sc-score b { font-size: 1.6rem; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .sc-score span { font-size: 0.78rem; color: var(--ink-faint); margin-left: 5px; }
 .sc-prog { flex: 1; max-width: 190px; }
 .sc-prog-top { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-faint); margin-bottom: 6px; }
@@ -318,8 +323,8 @@ svg { display: block; }
   color: #fff; border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow-md);
 }
 .myweek-label { font-size: 0.78rem; color: #c9bfae; font-weight: 550; }
-.myweek-value { margin-top: 8px; font-family: var(--serif); font-size: 2.3rem; font-weight: 600; line-height: 1;
-  color: #ffd58a; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.myweek-value { margin-top: 8px; font-size: 2.3rem; font-weight: 800; line-height: 1;
+  color: #ffd58a; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 .myweek-value .rank { font-family: var(--font); font-size: 0.9rem; color: #e8dfce; font-weight: 500; margin-left: 8px; }
 .myweek-foot { margin-top: 11px; font-size: 0.78rem; color: #a99e8b; }
 

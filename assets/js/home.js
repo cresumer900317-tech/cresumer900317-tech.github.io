@@ -56,23 +56,14 @@ function av(name, cls) {
   return `<span class="av ${cls || ""}"><span>${init}</span><img src="${url}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></span>`;
 }
 
-// 7일 전투력 합 시계열 → area 스파크라인 SVG
+// 7일 전투력 합 시계열 → 막대 차트 (시안)
 function sparkline(series) {
   const pts = (series || []).map(s => Number(s.total) || 0);
   if (pts.length < 2) return "";
-  const W = 340, H = 120, min = Math.min(...pts), max = Math.max(...pts), rng = (max - min) || 1;
-  const x = i => 10 + (i * (W - 20) / (pts.length - 1));
-  const y = v => H - 14 - ((v - min) / rng) * (H - 32);
-  const line = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(pts.length - 1).toFixed(1)},${H} L${x(0).toFixed(1)},${H} Z`;
-  const lx = x(pts.length - 1).toFixed(1), ly = y(pts[pts.length - 1]).toFixed(1);
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:120px;overflow:visible">
-    <defs><linearGradient id="dashArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0a53a" stop-opacity="0.3"/><stop offset="1" stop-color="#f0a53a" stop-opacity="0"/></linearGradient></defs>
-    <line x1="0" y1="${H - 1}" x2="${W}" y2="${H - 1}" stroke="#ece8e1" stroke-width="1"/>
-    <path d="${area}" fill="url(#dashArea)"/>
-    <path d="${line}" fill="none" stroke="#e8890c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${lx}" cy="${ly}" r="5" fill="#fff" stroke="#e8890c" stroke-width="3"/>
-  </svg>`;
+  const mx = Math.max(...pts), mn = Math.min(...pts) * 0.985, rng = (mx - mn) || 1;
+  return `<div class="hero-bars">${pts.map((v, i) =>
+    `<span class="hero-bar${i === pts.length - 1 ? " on" : ""}" style="height:${Math.round(22 + (v - mn) / rng * 78)}%"></span>`
+  ).join("")}</div>`;
 }
 
 function guildChip(guild) {
@@ -282,7 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ── 히어로 (친구패밀리 대시보드 내러티브) ──
     const heroChart = dSeries.length >= 2
-      ? `<div class="hero-chart">${sparkline(dSeries)}<div class="hero-chart-caption"><span>7일 전</span><span>어제</span><span>오늘</span></div></div>`
+      ? `<div class="hero-chart">${sparkline(dSeries)}</div>`
       : (growthTop.length ? `
         <div class="hero-side-panel">
           <div class="hero-side-title">이번 주 성장 TOP <a href="./weekly">더보기</a></div>
@@ -303,7 +294,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               : (u ? `반갑습니다, <b style="margin:0 3px">${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
           }</span>
           ${heroGrowth > 0
-            ? `<h1 class="hero-title">이번 주 다같이<br><span class="pct">+${heroGrowth.toFixed(1)}%</span> 컸습니다</h1>
+            ? `<h1 class="hero-title">이번 주 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 컸습니다</h1>
                ${dSeries.length >= 2
                   ? `<p class="hero-sub">7일간 길드 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
                   : `<p class="hero-sub">친구패밀리가 함께 성장하고 있어요</p>`}`
@@ -347,7 +338,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const crFixedCard = (c, lead) => {
       const d = c.prevScore != null ? crPct(c.score, c.prevScore) : null;
       return `<div class="content-card${lead ? " lead" : ""}">
-        <div class="cc-top"><span class="cc-name">${escapeHtml(c.name || "")}</span>${c.roundLabel ? `<span class="cc-badge">${escapeHtml(c.roundLabel)}</span>` : ""}</div>
+        <div class="cc-top"><span class="cc-name">${escapeHtml(c.name || "")}</span>${lead ? `<span class="cc-badge live">진행 중</span>` : (c.roundLabel ? `<span class="cc-badge">${escapeHtml(c.roundLabel)}</span>` : "")}</div>
         <div class="cc-score"><b>${fmtScore(c.score)}</b><span class="unit">점${c.count ? ` · ${c.count}회` : ""}</span></div>
         <div class="cc-meta">${d != null ? `<span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? ICON.up : ""}지난 회차 ${d >= 0 ? "+" : ""}${d}%</span> · ` : ""}최고 ${fmtScore(c.best)}</div>
         <div class="cc-bars">${crBars(c.history)}</div>
