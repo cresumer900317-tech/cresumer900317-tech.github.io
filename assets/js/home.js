@@ -233,7 +233,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const dGrowth = Number(dash.growthPct || 0);
     const dGrowers = Number(dash.growersYesterday || 0);
     const dTotal = Number(dash.totalMembers || 0);
-    const dWeek = Number(dash.growersWeek || 0);
+    const dMonth = Number(dash.growersMonth || 0);
+    const dMonthLabel = dash.monthLabel || "이번 달";
     const heroGrowth = dGrowth > 0 ? dGrowth : familyGrowthPct;
     const heroGrowers = dGrowers > 0 ? dGrowers : growers;
 
@@ -298,9 +299,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               : (u ? `반갑습니다, <b style="margin:0 3px">${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
           }</span>
           ${heroGrowth > 0
-            ? `<h1 class="hero-title">이번 주 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 컸습니다</h1>
+            ? `<h1 class="hero-title">${dMonthLabel}, 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 성장했어요</h1>
                ${dSeries.length >= 2
-                  ? `<p class="hero-sub">7일간 길드 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
+                  ? `<p class="hero-sub">${dMonthLabel} 길드 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
                   : `<p class="hero-sub">친구패밀리가 함께 성장하고 있어요</p>`}`
             : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
                <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
@@ -323,7 +324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const kpiRow = `
       <div class="kpi-row">
         ${kpi("어제 활동한 길드원", ICON.users, dTotal > 0 ? `${dGrowers}` : "—", dTotal > 0 ? `/${dTotal}` : "", "전투력이 오른 사람")}
-        ${kpi("이번 주 성장", ICON.trend, dTotal > 0 ? `${dWeek}` : "—", "명", "전투력이 오른 사람")}
+        ${kpi("이번 달 성장", ICON.trend, dTotal > 0 ? `${dMonth}` : "—", "명", "전투력이 오른 사람")}
         ${kpi("길드 순위", ICON.trophy, friendGuildRank ? `${friendGuildRank}` : "—", friendGuildRank ? "위" : "", "친구패밀리 최고 길드")}
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
