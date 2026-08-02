@@ -122,6 +122,9 @@ function premiumHeader(user) {
       </div>
       <div class="mnav-panel" id="mnavPanel">
         <div class="container mnav-links">
+          <form class="mnav-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+          </form>
           ${NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("")}
           <a href="./members">길드원</a><a href="./weekly">월간성장</a>
           ${user ? `<a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>` : `<a href="./login">로그인 / 회원가입</a>`}
