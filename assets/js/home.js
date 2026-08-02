@@ -299,9 +299,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               : (u ? `반갑습니다, <b style="margin:0 3px">${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
           }</span>
           ${heroGrowth > 0
-            ? `<h1 class="hero-title">${dMonthLabel}, 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 성장했어요</h1>
+            ? `<h1 class="hero-title">${dMonthLabel}, 친구패밀리 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 성장 중</h1>
                ${dSeries.length >= 2
-                  ? `<p class="hero-sub">${dMonthLabel} 길드 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
+                  ? `<p class="hero-sub">${dMonthLabel} 친구패밀리 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
                   : `<p class="hero-sub">친구패밀리가 함께 성장하고 있어요</p>`}`
             : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
                <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
