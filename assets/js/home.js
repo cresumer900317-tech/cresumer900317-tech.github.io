@@ -180,10 +180,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/official-notices`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/popular-searches`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/guild-dashboard`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      fetch(`${API_BASE}/api/content-records`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
   }
 
-  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes, dashRes]) {
+  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes, dashRes, crRes]) {
     const u = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     const visitorStats = visitorRes || {};
@@ -332,6 +333,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
 
+    // ── 컨텐츠 기록 ──
+    const contentRecords = Array.isArray(crRes) ? crRes : [];
+    const crFixed = contentRecords.filter(c => c.type !== "season");
+    const crSeason = contentRecords.filter(c => c.type === "season");
+    const fmtScore = (n) => Number(n || 0).toLocaleString("ko-KR");
+    const crPct = (a, b) => (b > 0 ? Math.round((a - b) / b * 100) : null);
+    const crBars = (hist) => {
+      const h = (hist && hist.length) ? hist : [0];
+      const mx = Math.max(...h, 1);
+      return h.map((v, i) => `<div class="cc-bar${i === h.length - 1 ? " on" : ""}" style="height:${Math.max(12, Math.round(v / mx * 100))}%"></div>`).join("");
+    };
+    const crFixedCard = (c, lead) => {
+      const d = c.prevScore != null ? crPct(c.score, c.prevScore) : null;
+      return `<div class="content-card${lead ? " lead" : ""}">
+        <div class="cc-top"><span class="cc-name">${escapeHtml(c.name || "")}</span>${c.roundLabel ? `<span class="cc-badge">${escapeHtml(c.roundLabel)}</span>` : ""}</div>
+        <div class="cc-score"><b>${fmtScore(c.score)}</b><span class="unit">점${c.count ? ` · ${c.count}회` : ""}</span></div>
+        <div class="cc-meta">${d != null ? `<span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? ICON.up : ""}지난 회차 ${d >= 0 ? "+" : ""}${d}%</span> · ` : ""}최고 ${fmtScore(c.best)}</div>
+        <div class="cc-bars">${crBars(c.history)}</div>
+        <div class="cc-foot"><span>${c.participants ? `참여 ${c.participants}명` : "&nbsp;"}</span><span class="go">${escapeHtml(c.recordedDate || "")}</span></div>
+      </div>`;
+    };
+    const crSeasonCard = (c) => {
+      const prog = (c.goal && c.goal > 0) ? Math.min(100, Math.round(c.score / c.goal * 100)) : null;
+      return `<div class="season-card">
+        <div class="sc-head"><span class="sc-name">${escapeHtml(c.name || "")}</span><span class="sc-tag">시즌</span></div>
+        <div class="sc-body">
+          <div class="sc-score"><b>${fmtScore(c.score)}</b><span>점${c.roundLabel ? ` · ${escapeHtml(c.roundLabel)}` : ""}</span></div>
+          <div class="sc-prog">
+            <div class="sc-prog-top"><span>${c.goal ? `목표 ${fmtScore(c.goal)}` : (c.participants ? `참여 ${c.participants}명` : "진행 중")}</span><span>${prog != null ? prog + "%" : ""}</span></div>
+            <div class="sc-track"><div class="sc-fill" style="width:${prog != null ? prog : 20}%"></div></div>
+          </div>
+        </div>
+      </div>`;
+    };
+    const contentSection = contentRecords.length ? `
+      <section class="section"><div class="container">
+        <div class="section-head">
+          <div><span class="section-eyebrow">GUILD ACTIVITY</span><div class="section-title">컨텐츠 기록</div><div class="section-sub">운영진이 회차마다 등록</div></div>
+        </div>
+        ${crFixed.length ? `<div class="sub-eyebrow">고정 컨텐츠 <span class="tag">상시 운영</span></div><div class="content-grid">${crFixed.map((c, i) => crFixedCard(c, i === 0)).join("")}</div>` : ""}
+        ${crSeason.length ? `<div class="sub-eyebrow" style="margin-top:22px">시즌 컨텐츠</div><div class="season-grid">${crSeason.map(crSeasonCard).join("")}</div>` : ""}
+      </div></section>` : "";
+
     // ── 랭킹 3열 ──
     const rankSection = (serverTop.length || serverGuildTop.length || healthTop.length) ? `
       <section class="section"><div class="container">
@@ -401,6 +445,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div></div>` : ""}
 
       <section class="section" style="padding-top:20px"><div class="container">${kpiRow}</div></section>
+
+      ${contentSection}
 
       <section class="section"><div class="container"><div class="grid-3">
         <div class="panel">
