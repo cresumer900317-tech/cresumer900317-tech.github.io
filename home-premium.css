@@ -492,8 +492,12 @@ svg { display: block; }
 .av { position: relative; width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; overflow: hidden;
   background: linear-gradient(135deg, var(--surface-3), var(--surface-2)); display: grid; place-items: center;
   font-size: 0.82rem; font-weight: 700; color: var(--ink-faint); }
-.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* mgf 캐릭터 전신 렌더 → 얼굴로 확대(예전 디자인 방식) */
+.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  object-position: center 20%; transform: scale(2.99); transform-origin: center 50%; }
 .av.sm { width: 32px; height: 32px; border-radius: 9px; }
+/* 서버 랭킹 캐릭터 아바타 — 크게(예전 64px 감성) */
+.rank-row .av { width: 56px; height: 56px; border-radius: 14px; }
 
 /* 라이브 바 */
 .live-bar { border-bottom: 1px solid var(--line-soft); }
