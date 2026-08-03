@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const nr = Number(n.serverRank || 0);
             const isMe = lc(n.nickname) === lc(me.nickname);
             const nFriend = FRIENDS.has(norm(n.guild));
-            const npt = String(n.powerText || "").trim() || formatCompactPower(n.power);
+            const npt = fmtPowerShort(n.power); // 좁은 행이라 "228.9경"식 축약 — 이름 잘림 방지
             return `
               <a class="pf-nb-row ${isMe ? "pf-nb-me" : ""}" href="./profile?n=${encodeURIComponent(n.nickname || "")}">
                 <span class="pf-nb-rank">${formatNumber(nr)}</span>

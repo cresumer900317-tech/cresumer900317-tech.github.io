@@ -72,16 +72,6 @@ function sparkline(series) {
   ).join("")}</div>`;
 }
 
-// 짧은 전투력 표기 — "89경 2,656조" 대신 "89.3경" (모바일 줄바꿈 방지)
-function fmtPowerShort(value) {
-  const n = Number(value) || 0;
-  const one = (v) => v.toFixed(1).replace(/\.0$/, "");
-  if (n >= 1e16) return `${one(n / 1e16)}경`;
-  if (n >= 1e12) return `${one(n / 1e12)}조`;
-  if (n >= 1e8) return `${one(n / 1e8)}억`;
-  return formatNumber(Math.floor(n));
-}
-
 function guildChip(guild) {
   const gn = String(guild || "").normalize("NFC").trim();
   if (!gn || gn === "길드 없음") return "";

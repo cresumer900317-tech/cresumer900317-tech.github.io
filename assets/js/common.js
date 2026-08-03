@@ -84,6 +84,16 @@ function fullPowerText(text) {
   return formatCompactPower(text);
 }
 
+// 짧은 전투력 표기 — "89경 2,656조" 대신 "89.3경" (좁은 UI·모바일용)
+function fmtPowerShort(value) {
+  const n = Number(value) || 0;
+  const one = (v) => v.toFixed(1).replace(/\.0$/, "");
+  if (n >= 1e16) return `${one(n / 1e16)}경`;
+  if (n >= 1e12) return `${one(n / 1e12)}조`;
+  if (n >= 1e8) return `${one(n / 1e8)}억`;
+  return formatNumber(Math.floor(n));
+}
+
 function normalizeGuildName(guild) {
   const text = String(guild || "").trim();
   return GUILD_META[text] ? text : "길드 없음";
