@@ -157,15 +157,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div style="padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div>
-              <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">📖 공략 게시판</h1>
-              <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">길드 컨텐츠 공략과 세팅을 공유해요</p>
+              <span class="page-eyebrow">COMMUNITY</span>
+              <h1 class="page-title">공략 게시판</h1>
+              <p class="page-desc">길드 컨텐츠 공략과 세팅을 공유해요</p>
             </div>
             <a href="./tips-write" class="board-write-btn" style="text-decoration:none;">✏️ 공략 등록</a>
           </div>
 
           ${topNotice ? `
-          <a href="./notice-view?id=${topNotice.id}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;text-decoration:none;">
-            <span style="flex-shrink:0;font-size:0.72rem;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:999px;">📢 공지</span>
+          <a href="./notice-view?id=${topNotice.id}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:16px;background:var(--amber-tint);border:1px solid var(--amber-line);border-radius:12px;text-decoration:none;">
+            <span style="flex-shrink:0;font-size:0.72rem;font-weight:700;color:var(--amber);background:var(--white);border:1px solid var(--amber-line);padding:3px 10px;border-radius:999px;">📢 공지</span>
             <span style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(topNotice.title)}</span>
             <span style="flex-shrink:0;font-size:0.78rem;color:var(--text-soft);">보기 →</span>
           </a>` : ""}

@@ -3407,8 +3407,8 @@ a.mini-summary-card:active { transform: translateY(1px); }
   gap: 12px;
 }
 .tips-hot-card {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1.5px solid var(--yellow-border);
+  background: linear-gradient(180deg, var(--amber-tint), #fff 78%);
+  border: 1px solid var(--amber-line);
   border-radius: var(--radius-lg);
   padding: 16px;
   text-decoration: none;
@@ -3422,13 +3422,13 @@ a.mini-summary-card:active { transform: translateY(1px); }
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  background: linear-gradient(90deg, #f6b24d, var(--amber-bright));
   border-radius: 4px 4px 0 0;
 }
 .tips-hot-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
-  border-color: var(--amber);
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
 }
 .tips-hot-rank {
   font-size: 1.1rem;
@@ -4532,3 +4532,7 @@ a.mini-summary-card:active { transform: translateY(1px); }
   .site-header .btn-login, .site-header .user-menu { display: none; }
   .site-header .mnav-btn { margin-left: auto; }
 }
+
+/* 공용 페이지 헤드 (eyebrow는 .page-eyebrow 공용) */
+.page-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 4px; }
+.page-desc { font-size: 0.86rem; color: var(--ink-faint); margin: 0; }

@@ -67,8 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container">
           <div style="padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div>
-              <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 4px;">📢 공지사항</h1>
-              <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">길드 운영 관련 공지를 확인하세요</p>
+              <span class="page-eyebrow">GUILD NOTICE</span>
+              <h1 class="page-title">공지사항</h1>
+              <p class="page-desc">길드 운영 관련 공지를 확인하세요</p>
             </div>
             ${isAdmin ? `<a href="./notice-write" class="board-write-btn" style="text-decoration:none;">✏️ 공지 작성</a>` : ""}
           </div>

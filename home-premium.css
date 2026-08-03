@@ -658,3 +658,8 @@ svg { display: block; }
   .myweek { padding: 18px; }
   .myweek-value { font-size: 2rem; }
 }
+
+/* 공용 셸 보강 (아카이브 등 home-premium 기반 페이지) */
+.nav .nav-pop a.active { color: var(--amber); background: var(--amber-tint); }
+.mnav-group-label { padding: 12px 14px 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; color: var(--ink-ghost); }
+.page-eyebrow { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--amber); margin-bottom: 2px; }

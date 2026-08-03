@@ -3,24 +3,7 @@ const AR_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const AR_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const user = getUser();
-  document.getElementById("app-shell").innerHTML = `
-    <header class="site-header">
-      <div class="container header-inner">
-        <a class="brand" href="./">
-          <span class="brand-mark">🍁</span>
-          <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
-        </a>
-        <nav class="nav">
-          <a href="./">홈</a><a href="./ranking">랭킹</a><a href="./profile">전적검색</a>
-          <a href="./notice">공지</a><a href="./tips">공략</a><a href="./level-calc">계산기</a>
-        </nav>
-        <div class="header-right">
-          ${user ? `<a class="btn-login" href="./mypage">${escapeHtml(user.character_name)}</a>` : `<a class="btn-login" href="./login">로그인</a>`}
-        </div>
-      </div>
-    </header>`;
-  try { pingVisitor(); } catch (e) {}
+  renderShell();  // 공용 프리미엄 헤더 (검색·길드 드롭다운·모바일 패널 포함)
 
   const main = document.querySelector("main");
   main.innerHTML = `<div class="container" style="padding-top:30px"><div class="sk sk-title"></div><div class="sk sk-card" style="margin-top:16px"></div></div>`;
