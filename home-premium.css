@@ -59,6 +59,8 @@ body {
   font-family: var(--font);
   line-height: 1.55;
   letter-spacing: -0.011em;
+  word-break: keep-all;       /* 한글 어절 단위 줄바꿈 — 단어 중간 끊김 방지 */
+  overflow-wrap: break-word;  /* 긴 닉네임·숫자만 예외적으로 끊기 허용 */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;   /* 가로 오버플로우 방지(모바일 클리핑) */
@@ -187,7 +189,10 @@ svg { display: block; }
 .hero-live .pulse {
   width: 8px; height: 8px; border-radius: 50%; background: var(--green);
   box-shadow: 0 0 0 0 rgba(21,128,61,.5); animation: pulse 2.2s infinite;
+  flex-shrink: 0;
 }
+.hero-live-txt { min-width: 0; }
+.hero-live-txt b { margin: 0 1px; }
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 rgba(21,128,61,.45); }
   70%  { box-shadow: 0 0 0 7px rgba(21,128,61,0); }
@@ -196,7 +201,8 @@ svg { display: block; }
 .hero-title {
   margin-top: 16px;
   font-size: clamp(1.7rem, 2.6vw, 2.15rem); font-weight: 800;
-  letter-spacing: -0.035em; line-height: 1.2; color: var(--ink);
+  letter-spacing: -0.035em; line-height: 1.25; color: var(--ink);
+  text-wrap: balance;
 }
 .hero-title .pct { font-weight: 800; color: var(--amber); }
 
@@ -423,7 +429,7 @@ svg { display: block; }
   border: 1px solid var(--amber-line); border-radius: var(--r-xl);
   padding: 26px 32px; box-shadow: var(--shadow-sm);
 }
-.recruit-title { font-size: 1.15rem; font-weight: 750; letter-spacing: -0.02em; }
+.recruit-title { font-size: 1.15rem; font-weight: 750; letter-spacing: -0.02em; text-wrap: balance; }
 .recruit-desc { font-size: 0.88rem; color: var(--ink-soft); margin-top: 6px; max-width: 620px; }
 .btn-amber { display: inline-flex; align-items: center; gap: 7px; height: 46px; padding: 0 24px;
   background: linear-gradient(180deg, #ef9d20, var(--amber)); color: #fff; font-weight: 650; font-size: 0.9rem;
@@ -606,10 +612,13 @@ svg { display: block; }
   /* 히어로 */
   .hero { padding: 20px 0 4px; }
   .hero-card { padding: 22px 20px; gap: 18px; border-radius: var(--r-lg); }
-  .hero-live { font-size: 0.75rem; }
-  .hero-title { font-size: 1.7rem; }
+  .hero-live { font-size: 0.78rem; align-items: flex-start; border-radius: 14px; }
+  .hero-live .pulse { margin-top: 5px; }
+  .hero-title { font-size: 1.55rem; }
   .hero-title-portal { font-size: 1.45rem; }
   .hero-sub { font-size: 0.9rem; }
+  .hero-right { gap: 12px; }
+  .hero-recruit { font-size: 0.82rem; padding: 12px 14px; }
   .hero-chart svg, .hero-chart .hero-bars { height: 108px; }
 
   /* KPI */

@@ -72,6 +72,16 @@ function sparkline(series) {
   ).join("")}</div>`;
 }
 
+// 짧은 전투력 표기 — "89경 2,656조" 대신 "89.3경" (모바일 줄바꿈 방지)
+function fmtPowerShort(value) {
+  const n = Number(value) || 0;
+  const one = (v) => v.toFixed(1).replace(/\.0$/, "");
+  if (n >= 1e16) return `${one(n / 1e16)}경`;
+  if (n >= 1e12) return `${one(n / 1e12)}조`;
+  if (n >= 1e8) return `${one(n / 1e8)}억`;
+  return formatNumber(Math.floor(n));
+}
+
 function guildChip(guild) {
   const gn = String(guild || "").normalize("NFC").trim();
   if (!gn || gn === "길드 없음") return "";
@@ -308,15 +318,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const heroHtml = `
       <div class="hero-card">
         <div class="hero-copy">
-          <span class="hero-live"><span class="pulse"></span> ${
+          <span class="hero-live"><span class="pulse"></span><span class="hero-live-txt">${
             heroGrowers > 0
-              ? `어제 <b style="margin:0 3px">${heroGrowers}명</b>이 전투력을 올렸어요`
-              : (u ? `반갑습니다, <b style="margin:0 3px">${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
-          }</span>
+              ? `어제 <b>${heroGrowers}명</b>이 전투력을 올렸어요`
+              : (u ? `반갑습니다, <b>${escapeHtml(u.character_name)}</b>님` : "함께 성장하는 친구패밀리")
+          }</span></span>
           ${heroGrowth > 0
             ? `<h1 class="hero-title">${dMonthLabel}, 친구패밀리 다같이 <span class="pct">+${heroGrowth.toFixed(1)}%</span> 성장 중</h1>
                ${dSeries.length >= 2
-                  ? `<p class="hero-sub">${dMonthLabel} 친구패밀리 전투력 합 <b>${formatCompactPower(dSeries[0].total)}</b><span class="arrow">→</span><b>${formatCompactPower(dSeries[dSeries.length - 1].total)}</b></p>`
+                  ? `<p class="hero-sub">${dMonthLabel} 친구패밀리 전투력 합 <b>${fmtPowerShort(dSeries[0].total)}</b><span class="arrow">→</span><b>${fmtPowerShort(dSeries[dSeries.length - 1].total)}</b></p>`
                   : `<p class="hero-sub">친구패밀리가 함께 성장하고 있어요</p>`}`
             : `<h1 class="hero-title">메이플키우기 <span class="pct">라운지</span></h1>
                <p class="hero-sub">전적 · 서버랭킹 · 커뮤니티</p>`}
@@ -345,7 +355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const kpiRow = `
       <div class="kpi-row">
         ${kpi("친구패밀리 길드원", ICON.users, memberCount ? formatNumber(memberCount) : "—", memberCount ? "명" : "", `${FRIENDS.size}개 길드가 함께해요`)}
-        ${kpi("전투력 합", ICON.bolt, curTotal > 0 ? formatCompactPower(curTotal) : "—", "", sumWeekly > 0 ? `이번 주 <span class="delta up">+${formatCompactPower(sumWeekly)}</span>` : "친구패밀리 전체 합산")}
+        ${kpi("전투력 합", ICON.bolt, curTotal > 0 ? fmtPowerShort(curTotal) : "—", "", sumWeekly > 0 ? `이번 주 <span class="delta up">+${fmtPowerShort(sumWeekly)}</span>` : "친구패밀리 전체 합산")}
         ${kpi("길드 순위", ICON.trophy, friendGuildRank ? `${friendGuildRank}` : "—", friendGuildRank ? "위" : "", "친구패밀리 최고 길드")}
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
@@ -486,7 +496,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <div class="live-bar"><div class="container live-bar-inner">
         <div class="live-bar-left"><span class="live-dot"></span>
-          ${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : (Number(visitorStats.today || 0) > 0 ? `오늘 <b>${formatNumber(visitorStats.today)}명</b>이 다녀갔어요` : "메이플키우기 라운지에 오신 걸 환영해요")}
+          <span class="live-msg">${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : (Number(visitorStats.today || 0) > 0 ? `오늘 <b>${formatNumber(visitorStats.today)}명</b>이 다녀갔어요` : "메이플키우기 라운지에 오신 걸 환영해요")}</span>
           <span class="live-sep">·</span><span class="live-extra">${serverTotal ? `스카니아11 ${formatNumber(serverTotal)}명 · ` : ""}누적 ${formatNumber(visitorStats.total || 0)}명 방문</span>
         </div>
         <span class="live-update">마지막 업데이트 ${lastUpdate}</span>
