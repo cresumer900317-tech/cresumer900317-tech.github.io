@@ -131,6 +131,22 @@ function navLink(href, key, label, currentPage) {
   return `<a class="nav-link ${activeClass}" href="${href}">${label}</a>`;
 }
 
+// ── 공용 프리미엄 셸 (홈과 동일 헤더 — Warm Editorial) ──────
+const SHELL_ICON = {
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+};
+
+const SHELL_NAV = [
+  ["./", "home", "홈"], ["./ranking", "ranking", "랭킹"], ["./profile", "profile", "전적검색"],
+  ["./notice", "notice", "공지"], ["./tips", "tips", "공략"], ["./level-calc", "level-calc", "레벨업 계산기"],
+];
+const SHELL_GUILD_NAV = [
+  ["./members", "members", "길드원"], ["./weekly", "weekly", "월간성장"],
+  ["./rivals", "rivals", "라이벌"], ["./points", "points", "포인트"], ["./join", "join", "가입 문의"],
+];
+
 function renderShell() {
   const root = document.getElementById("app-shell");
   if (!root) return;
@@ -140,104 +156,76 @@ function renderShell() {
   // 공지/팁은 로그인 필요
   if (!requireLogin(page)) return;
 
-  // IA: 핵심 페이지는 최상위 플랫(랭킹·전적검색·공지·공략), 길드원 유틸만 드롭다운
-  const inGroup = (arr) => (arr.includes(page) ? "is-active" : "");
-  const links = `
-    ${navLink("./", "home", "홈", page)}
-    ${navLink("./ranking", "ranking", "랭킹", page)}
-    ${navLink("./profile", "profile", "전적검색", page)}
-    ${navLink("./notice", "notice", "공지", page)}
-    ${navLink("./tips", "tips", "공략", page)}
-    ${navLink("./level-calc", "level-calc", "레벨업 계산기", page)}
-    <div class="nav-group ${inGroup(["members", "weekly", "rivals", "points"])}">
-      <button class="nav-group-label" type="button">길드<span class="nav-caret">▾</span></button>
-      <div class="nav-group-menu">
-        ${navLink("./members", "members", "길드원", page)}
-        ${navLink("./weekly", "weekly", "월간성장", page)}
-        ${navLink("./rivals", "rivals", "라이벌", page)}
-        ${navLink("./points", "points", "포인트", page)}
-      </div>
-    </div>
-  `;
+  const a = ([h, k, l]) => `<a href="${h}"${k === page ? ' class="active"' : ""}>${l}</a>`;
+  const guildActive = SHELL_GUILD_NAV.some(([, k]) => k === page);
+  const navLinks = SHELL_NAV.map(a).join("");
+  const guildDrop = `<div class="nav-drop" id="guildDrop">
+      <button type="button" id="guildDropBtn"${guildActive ? ' class="active"' : ""}>길드${SHELL_ICON.chev}</button>
+      <div class="nav-pop">${SHELL_GUILD_NAV.map(a).join("")}</div>
+    </div>`;
 
-  const userHtml = user
-    ? `<div class="nav-user-dropdown">
-        <button class="nav-user-trigger" onclick="this.parentElement.classList.toggle('is-open')">
-          <span class="nav-user-name">${escapeHtml(user.character_name)}</span>
-          <span class="nav-user-arrow">▾</span>
-        </button>
-        <div class="nav-user-menu">
-          <div class="nav-user-menu-header">
-            <strong>${escapeHtml(user.character_name)}</strong>
-            <span>${escapeHtml(user.guild||"")}</span>
-          </div>
-          <a href="./mypage" class="nav-user-menu-item">회원정보</a>
-          <a href="./login?tab=changepw" class="nav-user-menu-item">비밀번호 변경</a>
-          <button class="nav-user-menu-item nav-user-menu-logout" onclick="logout()">로그아웃</button>
-        </div>
+  const auth = user
+    ? `<div class="user-menu" id="userMenu">
+         <button class="user-btn" type="button" id="userBtn">${escapeHtml(user.character_name)}${SHELL_ICON.chev}</button>
+         <div class="user-pop">
+           <div class="user-pop-head"><strong>${escapeHtml(user.character_name)}</strong><span>${escapeHtml(user.guild || "라운지 회원")}</span></div>
+           <a href="./mypage">회원정보</a>
+           <a href="./login?tab=changepw">비밀번호 변경</a>
+           <button class="logout" onclick="logout()">로그아웃</button>
+         </div>
        </div>`
-    : `<div class="nav-auth-btns">
-        <a class="nav-register-btn" href="./login?tab=register">회원가입</a>
-        <a class="nav-login-btn" href="./login">로그인</a>
-       </div>`;
+    : `<a class="btn-login" href="./login">로그인</a>`;
+
+  const searchForm = (cls) => `
+    <form class="${cls}" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+      ${SHELL_ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+    </form>`;
 
   root.innerHTML = `
-    <header class="site-header-bar">
-      <div class="container site-header-inner">
-        <a class="brand-box" href="./">
-          <span class="brand-emoji">🍁</span>
-          <div>
-            <div class="brand-title">메이플키우기 라운지</div>
-            <div class="brand-sub">스카니아11 서버</div>
-          </div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="./">
+          <span class="brand-mark">🍁</span>
+          <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
         </a>
-        <nav class="nav-menu">${links}</nav>
-        ${userHtml}
-        <div class="mobile-auth-header">
+        <nav class="nav">${navLinks}${guildDrop}</nav>
+        <div class="header-right">
+          ${searchForm("search-pill")}
+          ${auth}
+          <button class="mnav-btn" type="button" id="mnavBtn" aria-label="메뉴">${SHELL_ICON.menu}</button>
+        </div>
+      </div>
+      <div class="mnav-panel" id="mnavPanel">
+        <div class="container mnav-links">
+          ${searchForm("mnav-search")}
+          ${SHELL_NAV.map(a).join("")}
+          <div class="mnav-group-label">길드</div>
+          ${SHELL_GUILD_NAV.map(a).join("")}
           ${user
-            ? `<span class="mobile-header-user">👤 ${escapeHtml(user.character_name)}</span>`
-            : `<a href="./login?tab=register" class="mobile-header-register">가입</a>
-               <a href="./login" class="mobile-header-login">로그인</a>`
-          }
-        </div>
-        <button id="mobileMenuButton" class="mobile-menu-btn" type="button" aria-label="메뉴 열기">☰</button>
-      </div>
-      <div id="mobileNavPanel" class="mobile-nav-panel">
-        <div class="container mobile-nav-links">
-          ${links}
-          <div class="mobile-auth-links">
-            ${user
-              ? `<div class="mobile-user-info">
-                  <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:8px;">👤 ${escapeHtml(user.character_name)} <span style="font-size:0.72rem;font-weight:400;color:var(--text-faint);">${escapeHtml(user.guild||"")}</span></div>
-                  <div style="display:flex;gap:8px;">
-                    <a href="./mypage" class="mobile-auth-btn mobile-register" style="flex:1;">회원정보</a>
-                    <a href="./login?tab=changepw" class="mobile-auth-btn mobile-register" style="flex:1;">비밀번호 변경</a>
-                  </div>
-                  <button onclick="logout()" class="mobile-auth-btn mobile-login" style="width:100%;margin-top:8px;border:none;cursor:pointer;">로그아웃</button>
-                </div>`
-              : `<a href="./login?tab=register" class="mobile-auth-btn mobile-register">회원가입</a>
-                 <a href="./login" class="mobile-auth-btn mobile-login">로그인</a>`
-            }
-          </div>
+            ? `<div class="mnav-group-label">내 계정</div><a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>`
+            : `<a href="./login">로그인 / 회원가입</a>`}
         </div>
       </div>
-    </header>
-  `;
-  const mobileMenuButton = document.getElementById("mobileMenuButton");
-  const mobileNavPanel = document.getElementById("mobileNavPanel");
-  if (mobileMenuButton && mobileNavPanel) {
-    mobileMenuButton.addEventListener("click", () => mobileNavPanel.classList.toggle("is-open"));
+    </header>`;
+
+  const mnavBtn = document.getElementById("mnavBtn");
+  const mnavPanel = document.getElementById("mnavPanel");
+  if (mnavBtn && mnavPanel) mnavBtn.addEventListener("click", () => mnavPanel.classList.toggle("open"));
+  const userBtn = document.getElementById("userBtn");
+  const userMenu = document.getElementById("userMenu");
+  if (userBtn && userMenu) {
+    userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
+  }
+  const guildDropBtn = document.getElementById("guildDropBtn");
+  const guildDropEl = document.getElementById("guildDrop");
+  if (guildDropBtn && guildDropEl) {
+    guildDropBtn.addEventListener("click", (e) => { e.stopPropagation(); guildDropEl.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!guildDropEl.contains(e.target)) guildDropEl.classList.remove("open"); });
   }
 
-  // 드롭다운 바깥 클릭 시 닫기
-  document.addEventListener("click", (e) => {
-    const dd = document.querySelector(".nav-user-dropdown");
-    if (dd && !dd.contains(e.target)) dd.classList.remove("is-open");
-  });
-
-  // 방문자 ping
+  // 방문자 ping (3분마다 재핑)
   pingVisitor();
-  // 3분마다 재핑 (접속 유지)
   setInterval(pingVisitor, 3 * 60 * 1000);
 }
 

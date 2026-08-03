@@ -92,6 +92,8 @@ function premiumHeader(user) {
     <div class="nav-pop">
       <a href="./members">길드원</a>
       <a href="./weekly">월간성장</a>
+      <a href="./rivals">라이벌</a>
+      <a href="./points">포인트</a>
       <a href="./join">가입 문의</a>
     </div>
   </div>`;
@@ -130,7 +132,7 @@ function premiumHeader(user) {
             ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
           </form>
           ${NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("")}
-          <a href="./members">길드원</a><a href="./weekly">월간성장</a>
+          <a href="./members">길드원</a><a href="./weekly">월간성장</a><a href="./rivals">라이벌</a><a href="./points">포인트</a>
           ${user ? `<a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>` : `<a href="./login">로그인 / 회원가입</a>`}
         </div>
       </div>

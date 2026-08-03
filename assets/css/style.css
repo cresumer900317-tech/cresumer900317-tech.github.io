@@ -1,29 +1,50 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
 
-/* ===== 친구패밀리 · 시그니처 옐로우 테마 ===== */
+/* ===== 친구패밀리 · Warm Editorial (홈과 동일 디자인 언어) ===== */
 :root {
-  --yellow: #f59e0b;
-  --yellow-light: #fbbf24;
-  --yellow-pale: #fef3c7;
-  --yellow-bg: #fffbeb;
-  --yellow-border: #fde68a;
-  --amber: #d97706;
-  --amber-dark: #b45309;
-  --amber-darker: #92400e;
+  /* 구 토큰 — 값만 Warm Editorial로 재조율 (기존 셀렉터 전부 그대로 동작) */
+  --yellow: #e8890c;
+  --yellow-light: #f6b24d;
+  --yellow-pale: #f9efdd;
+  --yellow-bg: #fdf5e9;
+  --yellow-border: #f2e2c8;
+  --amber: #c2740a;
+  --amber-dark: #9d5e08;
+  --amber-darker: #7d4b06;
   --white: #ffffff;
-  --bg: #fafaf9;
+  --bg: #fcfbf9;
   --surface: #ffffff;
-  --border: #e5e7eb;
-  --border-light: #f3f4f6;
+  --border: #ece8e1;
+  --border-light: #f3f0ea;
   --text: #1c1917;
-  --text-soft: #78716c;
-  --text-faint: #a8a29e;
-  --text-hint: #d6d3d1;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --container: 1320px;
+  --text-soft: #6b645c;
+  --text-faint: #a39b90;
+  --text-hint: #cabfb2;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --container: 1360px;
+
+  /* 홈(home-premium.css)과 공유하는 별칭 — 공용 셸/신규 컴포넌트용 */
+  --canvas: #fcfbf9;
+  --surface-2: #f7f5f1;
+  --surface-3: #f2efe9;
+  --ink: #1c1917;
+  --ink-soft: #6b645c;
+  --ink-faint: #a39b90;
+  --ink-ghost: #cabfb2;
+  --amber-bright: #e8890c;
+  --amber-tint: #fdf5e9;
+  --amber-line: #f2e2c8;
+  --line: #ece8e1;
+  --line-soft: #f3f0ea;
+  --line-strong: #e0dbd2;
+  --r-xl: 22px; --r-lg: 18px; --r-md: 13px; --r-sm: 9px; --r-pill: 999px;
+  --shadow-xs: 0 1px 2px rgba(28,25,23,.05);
+  --shadow-sm: 0 1px 2px rgba(28,25,23,.04), 0 2px 6px rgba(28,25,23,.03);
+  --shadow-md: 0 1px 3px rgba(28,25,23,.04), 0 14px 34px -16px rgba(120,88,32,.18);
+  --shadow-lg: 0 2px 6px rgba(28,25,23,.05), 0 30px 60px -28px rgba(120,88,32,.24);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -4408,4 +4429,113 @@ a.mini-summary-card:active { transform: translateY(1px); }
   .macro-hero-title { font-size: 1.3rem; }
   .macro-features { grid-template-columns: 1fr; }
   .macro-card { padding: 18px; }
+}
+/* ═══════════════════════════════════════════════════════════
+   공용 프리미엄 셸 헤더 — 홈(home-premium.css)과 동일 마크업/스타일
+   renderShell()(common.js)이 렌더. 구 .site-header-bar 계열은 미사용(정리 예정).
+   ═══════════════════════════════════════════════════════════ */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(252,251,249,0.82);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.header-inner { height: 66px; display: flex; align-items: center; gap: 28px; }
+.brand { display: flex; align-items: center; gap: 11px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  background: linear-gradient(150deg, #f6a935, #d97706 62%, #b45309);
+  display: grid; place-items: center; font-size: 19px; line-height: 1;
+  box-shadow: 0 4px 12px -2px rgba(217,119,6,.42), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.brand-text { line-height: 1.15; }
+.brand-name { font-size: 0.98rem; font-weight: 750; letter-spacing: -0.02em; color: var(--ink); }
+.brand-sub  { font-size: 0.7rem; font-weight: 500; color: var(--ink-faint); margin-top: 0; }
+
+.nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+.nav a, .nav .nav-drop > button {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  height: 34px; padding: 0 12px; border-radius: 9px;
+  font-size: 0.86rem; font-weight: 550; color: var(--ink-soft);
+  transition: color .16s ease, background .16s ease;
+}
+.nav a:hover, .nav .nav-drop > button:hover { color: var(--ink); background: var(--surface-2); }
+.nav a.active { color: var(--amber); font-weight: 650; }
+.nav .nav-drop { position: relative; }
+.nav .chev { width: 13px; height: 13px; opacity: .6; }
+.nav-pop { position: absolute; top: 40px; left: 0; min-width: 148px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg); padding: 7px; display: none; z-index: 60; }
+.nav .nav-drop.open .nav-pop { display: block; }
+.nav .nav-pop a { display: block; height: auto; padding: 8px 10px; border-radius: var(--r-sm);
+  font-size: 0.83rem; color: var(--ink-soft); }
+.nav .nav-pop a:hover { background: var(--surface-2); color: var(--ink); }
+.nav .nav-pop a.active { color: var(--amber); background: var(--amber-tint); }
+
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.search-pill {
+  display: flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 14px; width: 210px;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill); color: var(--ink-faint);
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.search-pill:hover { border-color: var(--ink-ghost); box-shadow: var(--shadow-xs); }
+.search-pill svg { width: 15px; height: 15px; }
+.search-pill input {
+  border: none; background: none; outline: none; flex: 1; min-width: 0;
+  font-size: 0.85rem; color: var(--ink);
+}
+.btn-login {
+  height: 38px; padding: 0 18px; border-radius: var(--r-pill);
+  background: var(--ink); color: #fff; font-size: 0.85rem; font-weight: 600;
+  display: inline-flex; align-items: center;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.btn-login:hover { background: #000; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.user-menu { position: relative; }
+.user-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 8px 0 14px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  font-size: 0.85rem; font-weight: 600; color: var(--ink); transition: border-color .16s ease, box-shadow .16s ease; }
+.user-btn:hover { border-color: var(--ink-ghost); box-shadow: var(--shadow-xs); }
+.user-btn svg { width: 14px; height: 14px; opacity: .55; }
+.user-pop { position: absolute; top: 46px; right: 0; width: 200px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg); padding: 7px; display: none; z-index: 60; }
+.user-menu.open .user-pop { display: block; }
+.user-pop-head { padding: 8px 10px 10px; border-bottom: 1px solid var(--line-soft); margin-bottom: 6px; }
+.user-pop-head strong { display: block; font-size: 0.88rem; }
+.user-pop-head span { font-size: 0.74rem; color: var(--ink-faint); }
+.user-pop a, .user-pop button { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: var(--r-sm);
+  font-size: 0.83rem; color: var(--ink-soft); transition: background .14s ease, color .14s ease;
+  background: none; border: none; font-family: inherit; cursor: pointer; }
+.user-pop a:hover, .user-pop button:hover { background: var(--surface-2); color: var(--ink); }
+.user-pop .logout { color: #b91c1c; }
+
+.mnav-btn { display: none; width: 40px; height: 40px; border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); align-items: center; justify-content: center; cursor: pointer; font-family: inherit; }
+.mnav-btn svg { width: 20px; height: 20px; }
+.mnav-panel { display: none; border-top: 1px solid var(--line-soft); background: var(--surface); }
+.mnav-panel.open { display: block; }
+.mnav-links { display: grid; gap: 3px; padding: 12px 0 16px; }
+.mnav-search { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; margin-bottom: 8px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-pill); }
+.mnav-search svg { width: 16px; height: 16px; color: var(--ink-faint); flex-shrink: 0; }
+.mnav-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 0.9rem; color: var(--ink); }
+.mnav-links a { padding: 11px 14px; border-radius: var(--r-md); font-size: 0.9rem; font-weight: 550; color: var(--ink-soft); }
+.mnav-links a.active { color: var(--amber); background: var(--amber-tint); }
+.mnav-group-label { padding: 12px 14px 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; color: var(--ink-ghost); }
+
+@media (max-width: 940px) {
+  .site-header .nav, .site-header .search-pill { display: none; }
+  .site-header .mnav-btn { display: inline-flex; }
+}
+@media (max-width: 600px) {
+  .header-inner { gap: 10px; height: 56px; }
+  .brand { min-width: 0; gap: 9px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; font-size: 17px; }
+  .brand-text { min-width: 0; }
+  .brand-name { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-header .btn-login, .site-header .user-menu { display: none; }
+  .site-header .mnav-btn { margin-left: auto; }
 }
