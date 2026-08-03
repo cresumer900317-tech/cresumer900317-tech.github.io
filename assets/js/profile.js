@@ -364,7 +364,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="container">
         <div class="pf-empty">
           <div class="pf-empty-icon">🔎</div>
-          <h2 class="pf-empty-title">캐릭터 전적 검색</h2>
+          <span class="page-eyebrow" style="margin-top:18px">SCANIA 11</span>
+          <h2 class="pf-empty-title" style="margin-top:2px">캐릭터 전적 검색</h2>
           <p class="pf-empty-desc">스카니아11 서버 누구든 캐릭터명을 검색하면<br>서버 순위 · 전투력 · 인기도를 한눈에 볼 수 있어요.</p>
         </div>
       </div>` + footerHtml();

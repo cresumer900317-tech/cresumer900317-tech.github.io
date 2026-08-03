@@ -467,24 +467,25 @@ main { padding: 0 0 48px; }
 }
 
 /* ── 개인 프로필/전적 페이지 ── */
-.pf-searchbar { background: var(--yellow-bg, #fffbeb); border-bottom: 1px solid var(--yellow-border, #fde68a); padding: 16px 0; }
-.pf-search-form { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--border-light, #e5e7eb); border-radius: 999px; padding: 6px 6px 6px 16px; max-width: 560px; margin: 0 auto; }
+.pf-searchbar { background: var(--amber-tint); border-bottom: 1px solid var(--amber-line); padding: 18px 0; }
+.pf-search-form { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 6px 6px 16px; max-width: 560px; margin: 0 auto; box-shadow: var(--shadow-sm); transition: border-color .16s ease, box-shadow .16s ease; }
+.pf-search-form:focus-within { border-color: var(--amber-line); box-shadow: 0 0 0 3px rgba(232,137,12,.12); }
 .pf-search-icon { flex: none; }
 .pf-search-form input { flex: 1; min-width: 0; border: none; outline: none; font-size: 0.95rem; background: transparent; color: var(--text); }
 .pf-search-btn { height: 38px; padding: 0 20px; }
 .pf-wrap { padding-top: 24px; padding-bottom: 60px; max-width: 760px; }
-.pf-empty { text-align: center; padding: 60px 16px; }
-.pf-empty-icon { font-size: 3rem; }
+.pf-empty { text-align: center; padding: 70px 16px 84px; }
+.pf-empty-icon { font-size: 2rem; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: var(--amber-tint); border: 1px solid var(--amber-line); border-radius: 22px; }
 .pf-empty-title { font-size: 1.4rem; font-weight: 800; color: var(--text); margin: 14px 0 8px; }
 .pf-empty-desc { font-size: 0.95rem; color: var(--text-soft); line-height: 1.6; }
 
 .pf-hero { display: flex; align-items: center; gap: 18px; background: var(--white); border: 1px solid var(--border-light, #e5e7eb); border-radius: 18px; padding: 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
-.pf-hero-friend { border-color: var(--brand, #3182ce); box-shadow: 0 0 0 2px rgba(49,130,206,0.12); }
+.pf-hero-friend { border-color: var(--amber-line); box-shadow: 0 0 0 2px rgba(232,137,12,0.10); background: linear-gradient(180deg, var(--amber-tint), var(--white) 70%); }
 .pf-hero-avatar { flex: none; width: 96px; height: 96px; }
 .pf-hero-avatar .character-avatar { width: 96px; height: 96px; }
 .pf-hero-main { flex: 1; min-width: 0; }
 .pf-hero-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.pf-friend-tag { font-size: 0.72rem; font-weight: 800; color: var(--brand, #3182ce); }
+.pf-friend-tag { font-size: 0.72rem; font-weight: 800; color: var(--amber); }
 .pf-hero-name { font-size: 1.5rem; font-weight: 900; color: var(--text); margin: 0; line-height: 1.2; word-break: break-all; }
 .pf-hero-sub { font-size: 0.85rem; color: var(--text-soft); margin-top: 4px; }
 .pf-hero-rank { flex: none; text-align: center; padding-left: 16px; border-left: 1px solid var(--border-light, #eee); }
@@ -514,12 +515,12 @@ main { padding: 0 0 48px; }
 .pf-nb-ava .character-avatar { width: 44px; height: 44px; }
 .pf-nb-name { flex: 1; min-width: 0; font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pf-nb-name b { color: var(--amber-dark, #b45309); }
-.pf-nb-fr { font-size: 0.68rem; font-weight: 700; color: var(--brand, #3182ce); }
+.pf-nb-fr { font-size: 0.68rem; font-weight: 700; color: var(--amber); }
 .pf-nb-power { flex: none; font-size: 0.95rem; font-weight: 800; color: var(--amber, #f59e0b); white-space: nowrap; }
 
 .pf-cta { margin-top: 24px; border-radius: 16px; padding: 22px; text-align: center; }
 .pf-cta-recruit { background: linear-gradient(135deg, #fffbeb, #fff7ed); border: 1px solid var(--yellow-border, #fde68a); }
-.pf-cta-member { background: linear-gradient(135deg, #eff6ff, #fff); border: 1px solid #bfdbfe; }
+.pf-cta-member { background: linear-gradient(135deg, var(--amber-tint), #fff); border: 1px solid var(--amber-line); }
 .pf-cta-title { font-size: 1.05rem; font-weight: 800; color: var(--text); line-height: 1.4; }
 .pf-cta-desc { font-size: 0.85rem; color: var(--text-soft); margin: 8px 0 16px; line-height: 1.5; }
 .pf-cta-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
