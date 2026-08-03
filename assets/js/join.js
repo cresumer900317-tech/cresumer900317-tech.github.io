@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="page-card">
         <div class="container">
           <div class="jn-wrap">
+            <span class="page-eyebrow">RECRUIT</span>
             <h1 class="rk-page-title">친구패밀리 가입 문의</h1>
             <p class="jn-intro">
               스카니아11에서 같이 성장할 길드를 찾고 있다면 —
