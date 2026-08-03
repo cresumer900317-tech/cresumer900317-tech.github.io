@@ -2026,34 +2026,25 @@ a.mini-summary-card:active { transform: translateY(1px); }
 /* ===== 랭킹 페이지 개편 ===== */
 
 /* 전투력/인기도 탭 바 */
-.rk-tab-bar {
-  display: flex;
-  gap: 8px;
-  margin: 8px 0 4px;
-}
+.rk-tab-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 4px; }
+.rk-seg { display: inline-flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: var(--r-pill); }
 .rk-tab-btn {
-  flex: 1;
-  padding: 10px 0;
-  border: 2px solid var(--yellow-border);
-  border-radius: var(--radius-md);
-  background: var(--white);
-  color: var(--text-soft);
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: 0.02em;
+  border: none; background: none; font-family: inherit; cursor: pointer;
+  padding: 8px 18px; border-radius: var(--r-pill);
+  color: var(--ink-soft); font-size: 0.86rem; font-weight: 650;
+  transition: color .15s ease, background .15s ease;
 }
-.rk-tab-btn:hover {
-  border-color: var(--yellow);
-  color: var(--amber-dark);
-  background: var(--yellow-bg);
+.rk-tab-btn:hover { color: var(--ink); }
+.rk-tab-btn.rk-tab-active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-xs); }
+.rk-metric { display: inline-flex; align-items: center; gap: 7px; font-size: 0.8rem; font-weight: 600; color: var(--ink-faint); }
+.rk-metric select {
+  height: 38px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); color: var(--ink); font-weight: 650; font-size: 0.85rem;
+  cursor: pointer; font-family: inherit;
 }
-.rk-tab-btn.rk-tab-active {
-  background: var(--yellow);
-  border-color: var(--amber);
-  color: var(--white);
-  box-shadow: 0 3px 10px rgba(245,158,11,0.3);
+.page-eyebrow {
+  display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 2px;
 }
 
 /* 인기도 포디움(시상대) */
@@ -2086,7 +2077,7 @@ a.mini-summary-card:active { transform: translateY(1px); }
 @media (max-width: 600px) {
   .rk-pod-grid { grid-template-columns: 1fr 1.25fr 1fr; gap: 8px; }
   .rk-pod-wrap { padding: 24px 12px 0; }
-  .rk-tab-btn { font-size: 0.8rem; padding: 9px 2px; letter-spacing: 0; white-space: nowrap; }
+  .rk-tab-btn { font-size: 0.8rem; padding: 8px 12px; letter-spacing: 0; white-space: nowrap; }
 }
 
 /* TOP3 히어로 영역 */

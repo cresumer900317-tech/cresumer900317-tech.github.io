@@ -112,16 +112,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         .map(m => `<option value="${m}"${active === m ? " selected" : ""}>${METRIC_LABEL[m]}</option>`)
         .join("");
       return `
-        <div class="rk-tab-bar" style="flex-wrap:wrap;align-items:center;gap:8px;">
-          ${scopeBtn("family", "친구패밀리")}
-          ${scopeBtn("server", "서버전체")}
-          ${scopeBtn("guildcmp", "길드 건강도")}
+        <div class="rk-tab-bar">
+          <div class="rk-seg">
+            ${scopeBtn("family", "친구패밀리")}
+            ${scopeBtn("server", "서버전체")}
+            ${scopeBtn("guildcmp", "길드 건강도")}
+          </div>
           ${isFamily ? `
-            <label style="display:inline-flex;align-items:center;gap:6px;margin-left:4px;font-size:0.82rem;color:#718096;">
-              지표
-              <select id="metricSelect" style="padding:8px 12px;border:1px solid #cbd5e0;border-radius:10px;font-weight:700;font-size:0.95rem;background:#fff;color:#2d3748;cursor:pointer;">
-                ${metricOpts}
-              </select>
+            <label class="rk-metric">지표
+              <select id="metricSelect">${metricOpts}</select>
             </label>` : ""}
         </div>
       `;
@@ -746,7 +745,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="page-card">
           <div class="container">
             <div class="rk-page-header">
-              <h1 class="rk-page-title">통합 랭킹</h1>
+              <div><span class="page-eyebrow">SCANIA 11</span><h1 class="rk-page-title">통합 랭킹</h1></div>
               <div class="rk-dday-chip ${cutlineDDay !== null && cutlineDDay <= 3 ? 'rk-dday-urgent' : ''}">
                 <span class="rk-dday-label">배치 기준일</span>
                 <span class="rk-dday-date">${cutlineDateStr}</span>
