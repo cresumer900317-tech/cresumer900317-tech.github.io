@@ -61,9 +61,11 @@ function av(name, cls) {
 }
 
 // 7일 전투력 합 시계열 → 막대 차트 (시안)
+// 월초 등 포인트가 적으면 막대 1~3개만 떠서 빈약함 → 4개 미만이면 성장TOP 폴백
+const SPARK_MIN_POINTS = 4;
 function sparkline(series) {
   const pts = (series || []).map(s => Number(s.total) || 0);
-  if (pts.length < 2) return "";
+  if (pts.length < SPARK_MIN_POINTS) return "";
   const mx = Math.max(...pts), mn = Math.min(...pts) * 0.985, rng = (mx - mn) || 1;
   return `<div class="hero-bars">${pts.map((v, i) =>
     `<span class="hero-bar${i === pts.length - 1 ? " on" : ""}" style="height:${Math.round(22 + (v - mn) / rng * 78)}%"></span>`
@@ -85,7 +87,14 @@ function premiumHeader(user) {
     ["./notice", "공지"], ["./tips", "공략"], ["./level-calc", "계산기"],
   ];
   const navLinks = NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("");
-  const guildDrop = `<div class="nav-drop"><button type="button">길드${ICON.chev}</button></div>`;
+  const guildDrop = `<div class="nav-drop" id="guildDrop">
+    <button type="button" id="guildDropBtn">길드${ICON.chev}</button>
+    <div class="nav-pop">
+      <a href="./members">길드원</a>
+      <a href="./weekly">월간성장</a>
+      <a href="./join">가입 문의</a>
+    </div>
+  </div>`;
 
   const auth = user
     ? `<div class="user-menu" id="userMenu">
@@ -137,6 +146,12 @@ function bindHeader() {
   if (userBtn && userMenu) {
     userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
     document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
+  }
+  const guildDropBtn = document.getElementById("guildDropBtn");
+  const guildDrop = document.getElementById("guildDrop");
+  if (guildDropBtn && guildDrop) {
+    guildDropBtn.addEventListener("click", (e) => { e.stopPropagation(); guildDrop.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!guildDrop.contains(e.target)) guildDrop.classList.remove("open"); });
   }
 }
 
@@ -277,7 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       </a>`;
 
     // ── 히어로 (친구패밀리 대시보드 내러티브) ──
-    const heroChart = dSeries.length >= 2
+    const heroChart = dSeries.length >= SPARK_MIN_POINTS
       ? `<div class="hero-chart">${sparkline(dSeries)}</div>`
       : (growthTop.length ? `
         <div class="hero-side-panel">
@@ -383,7 +398,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="cc-foot">${crPrevSeason ? `<span>이전 시즌 <b style="color:var(--ink-soft)">${escapeHtml(crPrevSeason)}</b></span>` : `<span>&nbsp;</span>`}<a class="go" href="./archive">아카이브 ${ICON.arrow}</a></div>
       </div>`;
     };
-    const crGuildCards = (gd) => [...(gd.fixed || []).map(crFixedCard), ...(gd.season ? [crSeasonCard(gd.season)] : [])];
+    // 길드에 입력된 점수가 하나도 없으면 대기 카드 나열 대신 안내 한 장으로 압축
+    const crGuildCards = (gd) => {
+      const fixed = gd.fixed || [];
+      const hasAnyScore = fixed.some(c => !c.pending && c.score != null) || gd.season;
+      if (!hasAnyScore) {
+        const names = fixed.map(c => escapeHtml(c.name || "")).filter(Boolean).join(" · ");
+        return [`<div class="content-card cc-pending cc-empty">
+          <div class="cc-top"><span class="cc-name">컨텐츠 기록 준비 중</span><span class="cc-badge">대기</span></div>
+          <div class="cc-meta">${names || "길드 컨텐츠"} — 운영진이 점수를 입력하면 이곳에 기록이 표시돼요.</div>
+        </div>`];
+      }
+      return [...fixed.map(crFixedCard), ...(gd.season ? [crSeasonCard(gd.season)] : [])];
+    };
     const crHasAny = crGuilds.some(gd => (gd.fixed && gd.fixed.length) || gd.season);
     const contentSection = crHasAny ? `
       <section class="section"><div class="container">
@@ -453,7 +480,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <div class="live-bar"><div class="container live-bar-inner">
         <div class="live-bar-left"><span class="live-dot"></span>
-          ${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : "함께 보고 있는 멤버들이 있어요"}
+          ${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : (Number(visitorStats.today || 0) > 0 ? `오늘 <b>${formatNumber(visitorStats.today)}명</b>이 다녀갔어요` : "메이플키우기 라운지에 오신 걸 환영해요")}
           <span class="live-sep">·</span><span class="live-extra">${serverTotal ? `스카니아11 ${formatNumber(serverTotal)}명 · ` : ""}누적 ${formatNumber(visitorStats.total || 0)}명 방문</span>
         </div>
         <span class="live-update">마지막 업데이트 ${lastUpdate}</span>
@@ -529,31 +556,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="footer-copy">© ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
       </div></footer>`;
 
-    // 히어로 로그인 폼
-    const form = document.getElementById("heroLoginForm");
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const name = document.getElementById("heroLoginName").value.trim();
-        const pw = document.getElementById("heroLoginPw").value;
-        const errEl = document.getElementById("heroLoginErr");
-        errEl.textContent = "";
-        if (!name || !pw) { errEl.textContent = "캐릭터명과 비밀번호를 입력해주세요."; return; }
-        const btn = form.querySelector("button[type=submit]");
-        btn.disabled = true; btn.textContent = "로그인 중...";
-        try {
-          const res = await fetch(`${API_BASE}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ character_name: name, password: pw }) });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.detail || "로그인에 실패했습니다.");
-          sessionStorage.setItem("user", JSON.stringify(data.user));
-          if (data.token) sessionStorage.setItem("token", data.token);
-          location.reload();
-        } catch (err) {
-          errEl.textContent = err.message || "로그인에 실패했습니다.";
-          btn.disabled = false; btn.textContent = "로그인";
-        }
-      });
-    }
   }
 
   // SWR: 캐시 즉시 렌더 → 최신 데이터 백그라운드 갱신

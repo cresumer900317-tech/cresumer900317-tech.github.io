@@ -111,6 +111,12 @@ svg { display: block; }
 .nav a.active { color: var(--amber); font-weight: 650; }
 .nav .nav-drop { position: relative; }
 .nav .chev { width: 13px; height: 13px; opacity: .6; }
+.nav-pop { position: absolute; top: 40px; left: 0; min-width: 148px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-lg); padding: 7px; display: none; z-index: 60; }
+.nav .nav-drop.open .nav-pop { display: block; }
+.nav .nav-pop a { display: block; height: auto; padding: 8px 10px; border-radius: var(--r-sm);
+  font-size: 0.83rem; color: var(--ink-soft); }
+.nav .nav-pop a:hover { background: var(--surface-2); color: var(--ink); }
 
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .search-pill {
@@ -205,6 +211,7 @@ svg { display: block; }
 /* 히어로 차트 */
 .hero-chart { position: relative; }
 .hero-chart svg { width: 100%; height: 132px; overflow: visible; }
+.hero-chart .hero-bars { height: 132px; }
 .hero-chart-caption {
   display: flex; justify-content: space-between; margin-top: 10px;
   font-size: 0.72rem; color: var(--ink-ghost); font-variant-numeric: tabular-nums;
@@ -289,6 +296,10 @@ svg { display: block; }
 .content-card.cc-pending .cc-score b { color: var(--ink-ghost); }
 .content-card.cc-pending .cc-bar { background: var(--surface-3); opacity: 0.6; }
 .content-card.cc-pending .cc-name { color: var(--ink-soft); }
+/* 점수 미입력 길드 — 안내 한 장으로 압축 (그리드 전체 폭) */
+.content-card.cc-empty { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 14px; flex-wrap: wrap; }
+.content-card.cc-empty .cc-top { flex-shrink: 0; gap: 10px; }
+.content-card.cc-empty .cc-meta { margin-top: 0; }
 
 /* 시즌 컨텐츠 */
 .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -483,18 +494,6 @@ svg { display: block; }
 .cta.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); }
 .cta.ghost:hover { border-color: var(--ink-ghost); }
 
-/* 히어로 로그인 카드 */
-.login-card { background: linear-gradient(180deg, #fffdfa, var(--surface)); border: 1px solid var(--amber-line);
-  border-radius: var(--r-lg); padding: 22px; display: flex; flex-direction: column; box-shadow: var(--shadow-sm); }
-.login-card-title { font-size: 1rem; font-weight: 750; }
-.login-card-desc { font-size: 0.8rem; color: var(--ink-faint); margin: 6px 0 16px; line-height: 1.5; }
-.login-input { height: 44px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--r-md);
-  background: var(--surface); font-size: 0.9rem; margin-bottom: 9px; outline: none; transition: border-color .16s, box-shadow .16s; }
-.login-input:focus { border-color: var(--amber-line); box-shadow: 0 0 0 3px rgba(232,137,12,.12); }
-.login-err { font-size: 0.78rem; color: var(--red); min-height: 18px; margin-top: 4px; }
-.login-sub { font-size: 0.8rem; color: var(--ink-faint); margin-top: 10px; text-align: center; }
-.login-sub a { color: var(--amber); font-weight: 600; }
-
 /* 히어로 우측 성장 리스트 (로그인) */
 .hero-side-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; box-shadow: var(--shadow-xs); }
 .hero-side-title { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
@@ -598,7 +597,7 @@ svg { display: block; }
   .hero-title { font-size: 1.7rem; }
   .hero-title-portal { font-size: 1.45rem; }
   .hero-sub { font-size: 0.9rem; }
-  .hero-chart svg { height: 108px; }
+  .hero-chart svg, .hero-chart .hero-bars { height: 108px; }
 
   /* KPI */
   .kpi-row { gap: 10px; }
