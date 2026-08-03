@@ -106,50 +106,11 @@ function renderLevelCalc() {
 
           <div class="lc-block">
             <h2 class="lc-block-title">경험치 버프 <span class="lc-buff-total" id="totalBuffVal">+0%</span></h2>
-            <div class="lc-field-row">
-              <label class="lc-field">
-                <span>길드 대항전</span>
-                <select id="bGW">
-                  <option value="0">선택 안함</option>
-                  <option value="16">1위 +16%</option>
-                  <option value="13">2위 +13%</option>
-                  <option value="10">3위 +10%</option>
-                  <option value="7">4위 +7%</option>
-                  <option value="5">5위 +5%</option>
-                </select>
-              </label>
-              <label class="lc-field">
-                <span>길드 수련장</span>
-                <select id="bGT">
-                  <option value="0">선택 안함</option>
-                  <option value="16">1위 +16%</option>
-                  <option value="13">2위 +13%</option>
-                  <option value="10">3위 +10%</option>
-                  <option value="7">4~5위 +7%</option>
-                  <option value="5">6~7위 +5%</option>
-                </select>
-              </label>
-            </div>
-            <div class="lc-field-row">
-              <label class="lc-field">
-                <span>아레나</span>
-                <select id="bAR">
-                  <option value="0">선택 안함</option>
-                  <option value="15">1위 +15%</option>
-                  <option value="10">2위 +10%</option>
-                  <option value="5">3위 +5%</option>
-                </select>
-              </label>
-              <label class="lc-field">
-                <span>추가 버프 (%)</span>
-                <input type="number" id="bCustom" value="0" min="0" max="999" step="1">
-              </label>
-            </div>
-            <div class="lc-checks">
-              <label class="lc-check"><input type="checkbox" id="mbSp"><span>스페셜 +10%</span></label>
-              <label class="lc-check"><input type="checkbox" id="mbPr"><span>프리미엄 +10%</span></label>
-              <label class="lc-check"><input type="checkbox" id="mbAd"><span>광고제거 +5%</span></label>
-            </div>
+            <label class="lc-field">
+              <span>경험치 증가 합계 (%)</span>
+              <input type="number" id="buffPct" value="0" min="0" max="999" step="1" placeholder="예: 26">
+            </label>
+            <p class="lc-hint">길드 대항전·수련장, 아레나, 패키지 등 내 경험치 증가를 모두 더해 입력하세요. 예) 대항전 1위 16 + 프리미엄 10 = 26</p>
           </div>
         </section>
 
@@ -260,13 +221,8 @@ function lcCalc() {
   const kmp    = Math.max(0, parseFloat(document.getElementById("kmp").value) || 0);
   const sid    = document.getElementById("stageSelect").value;
 
-  // 버프 합산
-  const bSum = ["bGW", "bGT", "bAR", "bCustom"]
-    .reduce((a, id) => a + (parseFloat(document.getElementById(id).value) || 0), 0);
-  const mbSum = (document.getElementById("mbSp").checked ? 10 : 0)
-              + (document.getElementById("mbPr").checked ? 10 : 0)
-              + (document.getElementById("mbAd").checked ? 5 : 0);
-  const totalBuff = bSum + mbSum;
+  // 버프 — 합계 %를 직접 입력
+  const totalBuff = Math.max(0, parseFloat(document.getElementById("buffPct").value) || 0);
   const mul = 1 + totalBuff / 100;
   lcSet("totalBuffVal", "+" + totalBuff + "%");
 
@@ -303,16 +259,16 @@ function lcCalc() {
   lcSet("expPctLabel",    lcFmtPct(curPct));
   lcSet("nextLvExpLabel", `Lv.${curLv} 경험치`);
   document.getElementById("expFill").style.width = Math.min(curPct, 100) + "%";
-  lcSet("perKill",        lcFmtExp(expKill) + " EXP");
-  lcSet("perMin",         lcFmtExp(expMin)  + " EXP");
-  lcSet("lvNeeded",       lcFmtExp(curLvReq) + " EXP");
-  lcSet("nextExpRemain",  lcFmtExp(nextNeeded) + " EXP");
+  lcSet("perKill",        lcFmtExp(expKill));
+  lcSet("perMin",         lcFmtExp(expMin));
+  lcSet("lvNeeded",       lcFmtExp(curLvReq));
+  lcSet("nextExpRemain",  lcFmtExp(nextNeeded));
 
   // 목표 레벨 탭
   lcSet("targetHeroLabel", `Lv.${curLv} → Lv.${tgtLv}`);
   lcSet("targetTime",      lcFmtTime(targetSecs));
-  lcSet("targetLvLabel",   lcFmtExp(totalNeeded) + " EXP");
-  lcSet("targetExpRemain", lcFmtExp(totalNeeded) + " EXP");
+  lcSet("targetLvLabel",   lcFmtExp(totalNeeded));
+  lcSet("targetExpRemain", lcFmtExp(totalNeeded));
   lcSet("targetHourPct",   lcFmtPct(pctHour) + " / Lv");
   lcSet("targetDayPct",    lcFmtPct(pctDay)  + " / Lv");
 
@@ -340,7 +296,9 @@ function lcCalcPQ(curLvReq, expMin, nextNeeded, totalNeeded) {
 
   function fmtRuns(runs, days) {
     if (!isFinite(runs)) return "∞";
-    const dStr = days < 1 ? (days * 24).toFixed(1) + "시간" : days.toFixed(1) + "일";
+    const dStr = days < 1 ? (days * 24).toFixed(1) + "시간"
+      : days < 1000 ? days.toFixed(1) + "일"
+      : Math.round(days).toLocaleString("ko-KR") + "일";
     return runs.toLocaleString("ko-KR") + "판 (" + dStr + ")";
   }
 
@@ -350,7 +308,7 @@ function lcCalcPQ(curLvReq, expMin, nextNeeded, totalNeeded) {
 
   lcSet("huntPctLabel", lcFmtPct(huntPctMin) + " / Lv");
   lcSet("pqPctLabel",   lcFmtPct(pqPctMin)   + " / Lv");
-  lcSet("pqExpRun",     lcFmtExp(pqExpRun) + " EXP");
+  lcSet("pqExpRun",     lcFmtExp(pqExpRun));
   lcSet("pqHourPct",    lcFmtPct(pqHrPct) + " / Lv");
   lcSet("pqRunsNext",   fmtRuns(runsNext,   daysNext));
   lcSet("pqRunsTarget", fmtRuns(runsTarget, daysTarget));
@@ -380,11 +338,9 @@ function bindLevelCalc() {
   });
 
   // 입력 변경 → 재계산
-  ["curLv", "curExp", "tgtLv", "kmp", "bCustom"].forEach(id =>
+  ["curLv", "curExp", "tgtLv", "kmp", "buffPct"].forEach(id =>
     document.getElementById(id).addEventListener("input", lcCalc));
-  ["stageSelect", "bGW", "bGT", "bAR", "pqSelect"].forEach(id =>
-    document.getElementById(id).addEventListener("change", lcCalc));
-  ["mbSp", "mbPr", "mbAd"].forEach(id =>
+  ["stageSelect", "pqSelect"].forEach(id =>
     document.getElementById(id).addEventListener("change", lcCalc));
 
   // 클리어 시간 슬라이더

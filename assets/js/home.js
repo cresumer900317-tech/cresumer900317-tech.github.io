@@ -84,7 +84,7 @@ function guildChip(guild) {
 function premiumHeader(user) {
   const NAV = [
     ["./", "홈", true], ["./ranking", "랭킹"], ["./profile", "전적검색"],
-    ["./notice", "공지"], ["./tips", "공략"], ["./level-calc", "계산기"],
+    ["./notice", "공지"], ["./tips", "공략"], ["./level-calc", "레벨업 계산기"],
   ];
   const navLinks = NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("");
   const guildDrop = `<div class="nav-drop" id="guildDrop">
@@ -554,7 +554,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <footer class="footer"><div class="container footer-inner">
         <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
         <div class="footer-links">
-          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">계산기</a>
+          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">레벨업 계산기</a>
           <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">앱 (iOS)</a>
           <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">앱 (Android)</a>
           <a href="./join">친구패밀리 가입 문의</a>
