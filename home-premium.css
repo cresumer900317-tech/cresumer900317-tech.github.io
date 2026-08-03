@@ -99,8 +99,8 @@ svg { display: block; }
 }
 .brand-mark svg { width: 20px; height: 20px; color: #fff; }
 .brand-text { line-height: 1.15; }
-.brand-name { font-size: 0.98rem; font-weight: 750; letter-spacing: -0.02em; color: var(--ink); }
-.brand-sub  { font-size: 0.7rem; font-weight: 500; color: var(--ink-faint); }
+.brand-name { display: block; font-size: 0.98rem; font-weight: 750; letter-spacing: -0.02em; color: var(--ink); }
+.brand-sub  { display: block; font-size: 0.7rem; font-weight: 500; color: var(--ink-faint); }
 
 .nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
 .nav a, .nav .nav-drop > button {

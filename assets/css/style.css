@@ -4450,14 +4450,15 @@ a.mini-summary-card:active { transform: translateY(1px); }
   box-shadow: 0 4px 12px -2px rgba(217,119,6,.42), inset 0 1px 0 rgba(255,255,255,.35);
 }
 .brand-text { line-height: 1.15; }
-.brand-name { font-size: 0.98rem; font-weight: 750; letter-spacing: -0.02em; color: var(--ink); }
-.brand-sub  { font-size: 0.7rem; font-weight: 500; color: var(--ink-faint); margin-top: 0; }
+.brand-name { display: block; font-size: 0.98rem; font-weight: 750; letter-spacing: -0.02em; color: var(--ink); }
+.brand-sub  { display: block; font-size: 0.7rem; font-weight: 500; color: var(--ink-faint); margin-top: 0; }
 
 .nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
 .nav a, .nav .nav-drop > button {
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
   height: 34px; padding: 0 12px; border-radius: 9px;
   font-size: 0.86rem; font-weight: 550; color: var(--ink-soft);
+  border: none; background: transparent; cursor: pointer; font-family: inherit;
   transition: color .16s ease, background .16s ease;
 }
 .nav a:hover, .nav .nav-drop > button:hover { color: var(--ink); background: var(--surface-2); }
