@@ -36,6 +36,7 @@
 .lc-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .lc-field-row + .lc-field, .lc-field + .lc-field-row, .lc-field-row + .lc-field-row { margin-top: 12px; }
 .lc-field + .lc-field { margin-top: 12px; }
+.lc-field-row > .lc-field { margin-top: 0; }  /* 같은 행 안에서는 좌우 수평 정렬 유지 */
 .lc-field { display: flex; flex-direction: column; gap: 6px; }
 .lc-field > span {
   font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
