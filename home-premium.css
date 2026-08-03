@@ -212,6 +212,19 @@ svg { display: block; }
 .hero-chart { position: relative; }
 .hero-chart svg { width: 100%; height: 132px; overflow: visible; }
 .hero-chart .hero-bars { height: 132px; }
+
+/* 히어로 우측 스택: 차트/성장TOP + 가입 문의 */
+.hero-right { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-width: 0; }
+.hero-recruit {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 13px 16px; background: var(--amber-tint);
+  border: 1px solid var(--amber-line); border-radius: var(--r-md);
+  font-size: 0.84rem; color: var(--ink-soft);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.hero-recruit b { display: inline-flex; align-items: center; gap: 5px; color: var(--amber); font-weight: 700; white-space: nowrap; }
+.hero-recruit b svg { width: 14px; height: 14px; }
+.hero-recruit:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); border-color: #e8c98f; }
 .hero-chart-caption {
   display: flex; justify-content: space-between; margin-top: 10px;
   font-size: 0.72rem; color: var(--ink-ghost); font-variant-numeric: tabular-nums;

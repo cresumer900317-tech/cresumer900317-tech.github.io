@@ -326,7 +326,13 @@ document.addEventListener("DOMContentLoaded", async () => {
               : `<a class="cta primary" href="./ranking">서버 랭킹 ${ICON.arrow}</a><a class="cta ghost" href="./login">로그인 / 가입</a>`}
           </div>
         </div>
-        ${heroChart}
+        <div class="hero-right">
+          ${heroChart}
+          ${u ? "" : `<a class="hero-recruit" href="./join">
+            <span>같이 할 길드를 찾고 있다면</span>
+            <b>친구패밀리 가입 문의 ${ICON.arrow}</b>
+          </a>`}
+        </div>
       </div>`;
 
     // ── KPI ──
@@ -338,8 +344,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>`;
     const kpiRow = `
       <div class="kpi-row">
-        ${kpi("어제 활동한 길드원", ICON.users, dTotal > 0 ? `${dGrowers}` : "—", dTotal > 0 ? `/${dTotal}` : "", "전투력이 오른 사람")}
-        ${kpi("이번 달 성장", ICON.trend, dTotal > 0 ? `${dMonth}` : "—", "명", "전투력이 오른 사람")}
+        ${kpi("친구패밀리 길드원", ICON.users, memberCount ? formatNumber(memberCount) : "—", memberCount ? "명" : "", `${FRIENDS.size}개 길드가 함께해요`)}
+        ${kpi("전투력 합", ICON.bolt, curTotal > 0 ? formatCompactPower(curTotal) : "—", "", sumWeekly > 0 ? `이번 주 <span class="delta up">+${formatCompactPower(sumWeekly)}</span>` : "친구패밀리 전체 합산")}
         ${kpi("길드 순위", ICON.trophy, friendGuildRank ? `${friendGuildRank}` : "—", friendGuildRank ? "위" : "", "친구패밀리 최고 길드")}
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
