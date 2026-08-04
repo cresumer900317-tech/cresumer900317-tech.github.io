@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div></section>
     <section class="section"><div class="container"><div class="grid-3">${Array(3).fill('<div class="panel"><div class="sk sk-card" style="margin:16px;height:220px"></div></div>').join("")}</div></div></section>`;
 
-  const HOME_CACHE_KEY = "homeDataCache_v5";
+  const HOME_CACHE_KEY = "homeDataCache_v6";
 
   async function loadHomeData() {
     return Promise.all([
@@ -193,10 +193,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetch(`${API_BASE}/api/popular-searches`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/guild-dashboard`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/content-records`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      fetch(`${API_BASE}/api/weekly`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/growth-story`, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
     ]);
   }
 
-  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes, dashRes, crRes]) {
+  function renderHome([summary, members, visitorRes, noticesRes, tipsRes, serverTopRes, serverGuildRes, serverStatsRes, serverHealthRes, couponsRes, videosRes, officialRes, popularRes, dashRes, crRes, weeklyRes, growthRes]) {
     const u = getUser();
     const serverTotal = Number((serverStatsRes && serverStatsRes.totalPlayers) || 0);
     const visitorStats = visitorRes || {};
@@ -352,6 +354,74 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${kpi("건강도", ICON.heart, friendHealthScore != null ? `${friendHealthScore}` : "—", "", friendHealthRank ? `${healthTotal}개 중 ${friendHealthRank}위` : "활력 점수")}
       </div>`;
 
+    // ── 성장 라이브 (7일 성장왕 · 오늘의 성장 피드 · 기록/목표) ──
+    const weeklyRows = (Array.isArray(weeklyRes) ? weeklyRes : [])
+      .filter(r => r && r.hasWeeklyBase && Number(r.weeklyDiff || 0) > 0);
+    const kings = weeklyRows.slice(0, 3);
+    const gsData = (growthRes && typeof growthRes === "object" && !Array.isArray(growthRes)) ? growthRes : {};
+    const gsFeed = Array.isArray(gsData.feed) ? gsData.feed : [];
+    const gsPeak = gsData.peak || {};
+    const gsGoal = gsData.goal || {};
+    const goalPct = Number(gsGoal.target) > 0 ? Math.min(100, Math.max(2, Math.round(Number(gsGoal.current) / Number(gsGoal.target) * 100))) : 0;
+    const gsMile = (Array.isArray(gsData.milestones) && gsData.milestones.length) ? gsData.milestones[gsData.milestones.length - 1] : null;
+    const feedDateStr = gsData.feedDate ? `${Number(gsData.feedDate.slice(5, 7))}/${Number(gsData.feedDate.slice(8, 10))}` : "";
+    const mileDateStr = gsMile ? `${gsMile.date.slice(0, 4)}.${Number(gsMile.date.slice(5, 7))}.${Number(gsMile.date.slice(8, 10))}` : "";
+    const CROWN = ["👑", "🥈", "🥉"];
+
+    const kingRow = (r, i) => `
+      <a class="gl-king${i === 0 ? " lead" : ""}" href="./profile?n=${encodeURIComponent(r.name || "")}" style="--gl-d:${i * 90}ms">
+        <span class="gl-crown">${CROWN[i]}</span>
+        ${av(r.name, i === 0 ? "" : "sm")}
+        <span class="gl-king-main">
+          <span class="gl-king-name">${escapeHtml(r.name || "-")} ${guildChip(r.guild)}</span>
+          ${i === 0 ? `<span class="gl-king-sub">최근 7일 최다 성장</span>` : ""}
+        </span>
+        <span class="gl-king-val">+${i === 0 ? `<b class="glc" data-cv="${Number(r.weeklyDiff) || 0}">0</b>` : fmtPowerShort(r.weeklyDiff)}${r.weeklyGrowthRate != null ? `<em>+${r.weeklyGrowthRate}%</em>` : ""}</span>
+      </a>`;
+
+    const feedRowG = (f, i) => `
+      <a class="gl-row" href="./profile?n=${encodeURIComponent(f.name || "")}" style="--gl-d:${120 + i * 60}ms">
+        ${av(f.name, "sm")}
+        <span class="gl-row-name">${escapeHtml(f.name || "-")} ${guildChip(f.guild)}</span>
+        <span class="gl-row-val">+${fmtPowerShort(f.diff)}${f.pct != null ? `<em>+${f.pct}%</em>` : ""}</span>
+      </a>`;
+
+    const growthSection = (kings.length || gsFeed.length) ? `
+      <section class="section"><div class="container">
+        <div class="section-head">
+          <div><span class="section-eyebrow">GROWTH LIVE</span><div class="section-title">성장 라이브</div><div class="section-sub">매일 자동 수집되는 친구패밀리 전투력 변화</div></div>
+          <a class="section-link" href="./weekly">월간성장 보기 ${ICON.arrow}</a>
+        </div>
+        <div class="gl-grid">
+          <div class="panel gl-podium">
+            <div class="panel-head"><span class="panel-title">${ICON.trophy} 7일 성장왕</span></div>
+            <div class="gl-kings">${kings.length ? kings.map(kingRow).join("") : `<div class="gl-empty">이번 주 데이터가 쌓이는 중이에요</div>`}</div>
+          </div>
+          <div class="panel gl-feedp">
+            <div class="panel-head"><span class="panel-title">${ICON.trend} 오늘의 성장</span>
+              ${gsData.grewCount ? `<span class="gl-head-meta">${feedDateStr} · <b>${gsData.grewCount}명</b> 상승</span>` : ""}</div>
+            <div class="gl-feed-list">${gsFeed.length ? gsFeed.slice(0, 7).map(feedRowG).join("") : `<div class="gl-empty">오늘 수집분이 아직 없어요 — 다음 크롤에 갱신돼요</div>`}</div>
+          </div>
+          <div class="gl-side">
+            <div class="gl-stat${gsPeak.isToday ? " glow" : ""}">
+              <span class="gl-stat-label">🏆 길드 최고 전투력</span>
+              <span class="gl-stat-val"><b class="glc" data-cv="${Number(gsPeak.total) || 0}">0</b></span>
+              <span class="gl-stat-foot">${gsPeak.isToday ? `<span class="gl-new">오늘 경신!</span>` : (gsPeak.date ? `${Number(String(gsPeak.date).slice(5, 7))}/${Number(String(gsPeak.date).slice(8, 10))} 달성` : "")}</span>
+            </div>
+            ${Number(gsData.streakDays) >= 2 ? `
+            <div class="gl-stat"><span class="gl-stat-label">🔥 연속 성장</span>
+              <span class="gl-stat-val">${gsData.streakDays}<span class="unit">일째</span></span>
+              <span class="gl-stat-foot">길드 합계가 매일 오르는 중</span></div>` : ""}
+            <div class="gl-stat">
+              <span class="gl-stat-label">🎯 다음 목표 ${fmtPowerShort(gsGoal.target)}</span>
+              <div class="gl-track"><div class="gl-fill" style="width:${goalPct}%"></div></div>
+              <span class="gl-stat-foot"><b style="color:var(--amber)">${fmtPowerShort(gsGoal.remaining)}</b> 남았어요</span>
+            </div>
+            ${gsMile ? `<div class="gl-stat"><span class="gl-stat-label">⛰️ 최초 ${gsMile.gyeong}경 돌파</span><span class="gl-stat-foot">${mileDateStr}</span></div>` : ""}
+          </div>
+        </div>
+      </div></section>` : "";
+
     // ── 컨텐츠 기록 (길드 탭: 친구들·친구둘, 각 고정 2 + 현재 시즌 1) ──
     const crData = (crRes && typeof crRes === "object" && !Array.isArray(crRes)) ? crRes : {};
     const crGuilds = Array.isArray(crData.guilds) ? crData.guilds : [];
@@ -500,6 +570,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       <section class="section" style="padding-top:20px"><div class="container">${kpiRow}</div></section>
 
+      ${growthSection}
+
       ${contentSection}
 
       <section class="section"><div class="container"><div class="grid-3">
@@ -564,6 +636,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="footer-copy">© ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
       </div></footer>`;
 
+    // 숫자 카운트업 (성장 라이브) — 모션 최소화 설정 시 즉시 표시
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelectorAll(".glc[data-cv]").forEach(el => {
+      const target = Number(el.dataset.cv) || 0;
+      if (reduceMotion || target <= 0) { el.textContent = fmtPowerShort(target); return; }
+      const t0 = performance.now(), dur = 950;
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = fmtPowerShort(target * e);
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
   }
 
   // SWR: 캐시 즉시 렌더 → 최신 데이터 백그라운드 갱신
