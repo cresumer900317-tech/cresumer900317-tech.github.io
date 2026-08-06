@@ -46,6 +46,33 @@
 }
 .ic-hint { margin-top: 10px; font-size: 0.76rem; line-height: 1.6; color: var(--text-faint); }
 
+/* 내 스펙 입력 */
+.ic-profile { padding: 0; overflow: hidden; }
+.ic-profile-toggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 14px 18px; border: none; background: none; cursor: pointer; text-align: left;
+  font-size: 0.88rem; font-weight: 700; color: var(--text);
+}
+.ic-profile-toggle em { font-style: normal; font-weight: 400; font-size: 0.76rem; color: var(--text-faint); }
+.ic-profile-chev { color: var(--text-faint); }
+.ic-profile-body { padding: 4px 18px 18px; }
+.ic-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 560px) { .ic-field-row { grid-template-columns: 1fr; } }
+.ic-field { display: flex; flex-direction: column; gap: 6px; }
+.ic-field > span { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); }
+.ic-field > span em { font-style: normal; font-weight: 400; color: var(--text-faint); font-size: 0.72rem; }
+.ic-field input, .ic-field select, .ic-field textarea {
+  width: 100%; padding: 0 12px; height: 40px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--white); color: var(--text); font-size: 0.88rem;
+}
+.ic-field textarea { height: auto; padding: 10px 12px; resize: vertical; font-family: inherit; line-height: 1.5; }
+.ic-field input:focus, .ic-field select:focus, .ic-field textarea:focus {
+  outline: none; border-color: var(--yellow-light); box-shadow: 0 0 0 3px rgba(251,191,36,0.18);
+}
+.ic-field-full { margin-top: 2px; }
+.ic-field-note { font-size: 0.74rem; color: var(--text-faint); font-weight: 400; padding-top: 10px; }
+
 /* 로딩 */
 .ic-loading { text-align: center; padding: 32px 18px; }
 .ic-spinner {

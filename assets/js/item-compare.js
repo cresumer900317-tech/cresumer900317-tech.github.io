@@ -34,6 +34,41 @@ function renderItemCompare() {
         <div class="ic-hint">비교 팝업의 <b>양쪽 아이템이 모두 보이게</b> 캡쳐해 주세요. 전투력 변화 숫자가 보이면 더 정확해요.</div>
       </div>
 
+      <div class="ic-panel ic-profile">
+        <button type="button" class="ic-profile-toggle" id="icProfileToggle">
+          <span>⚙️ 내 스펙 입력 <em>(선택 — 입력하면 판정이 훨씬 정확해져요)</em></span>
+          <span class="ic-profile-chev" id="icProfileChev">▾</span>
+        </button>
+        <div class="ic-profile-body" id="icProfileBody" hidden>
+          <div class="ic-field-row">
+            <label class="ic-field"><span>직업</span><input type="text" id="icJob" placeholder="예: 나이트로드" /></label>
+            <label class="ic-field"><span>레벨</span><input type="number" id="icLevel" min="1" max="200" placeholder="예: 113" /></label>
+          </div>
+          <div class="ic-field-row">
+            <label class="ic-field"><span>크리티컬 확률 <em>%</em></span><input type="number" id="icCrit" min="0" max="200" placeholder="예: 95" /></label>
+            <label class="ic-field"><span>주력 콘텐츠</span>
+              <select id="icContent">
+                <option value="">전체</option>
+                <option value="보스/길드 레이드">보스·레이드</option>
+                <option value="사냥(스테이지)">사냥</option>
+                <option value="PVP(아레나/콜로세움)">PVP</option>
+              </select></label>
+          </div>
+          <div class="ic-field-row">
+            <label class="ic-field"><span>딜 스타일</span>
+              <select id="icStyle">
+                <option value="">모름</option>
+                <option value="기본 공격(평타) 위주">기본 공격(평타) 위주</option>
+                <option value="스킬 위주">스킬 위주</option>
+                <option value="혼합">혼합</option>
+              </select></label>
+            <label class="ic-field"><span>&nbsp;</span><span class="ic-field-note">스펙은 이 기기에 저장돼요</span></label>
+          </div>
+          <label class="ic-field ic-field-full"><span>추가 메모 <em>현재 스탯·참고사항 자유롭게</em></span>
+            <textarea id="icMemo" rows="2" placeholder="예: 기본 공격 데미지 이미 120% 쌓여있음, 쿨감 40%"></textarea></label>
+        </div>
+      </div>
+
       <div id="icResult"></div>
     </div>`;
 
@@ -65,6 +100,55 @@ function renderItemCompare() {
 
   document.getElementById("icAnalyzeBtn").addEventListener("click", icAnalyze);
   document.getElementById("icResetBtn").addEventListener("click", icReset);
+
+  // 내 스펙 패널: 토글 + localStorage 저장/복원
+  const toggle = document.getElementById("icProfileToggle");
+  const body = document.getElementById("icProfileBody");
+  toggle.addEventListener("click", () => {
+    body.hidden = !body.hidden;
+    document.getElementById("icProfileChev").textContent = body.hidden ? "▾" : "▴";
+  });
+  const saved = icLoadProfile();
+  for (const [id, key] of IC_PROFILE_FIELDS) {
+    const el = document.getElementById(id);
+    if (saved[key] != null) el.value = saved[key];
+    el.addEventListener("change", icSaveProfile);
+  }
+  if (Object.values(saved).some((v) => v)) {
+    body.hidden = false;
+    document.getElementById("icProfileChev").textContent = "▴";
+  }
+}
+
+const IC_PROFILE_FIELDS = [
+  ["icJob", "job"], ["icLevel", "level"], ["icCrit", "crit"],
+  ["icContent", "content"], ["icStyle", "style"], ["icMemo", "memo"],
+];
+
+function icLoadProfile() {
+  try { return JSON.parse(localStorage.getItem("ic-profile") || "{}") || {}; }
+  catch (_) { return {}; }
+}
+
+function icSaveProfile() {
+  const data = {};
+  for (const [id, key] of IC_PROFILE_FIELDS) {
+    const el = document.getElementById(id);
+    if (el && el.value.trim()) data[key] = el.value.trim();
+  }
+  try { localStorage.setItem("ic-profile", JSON.stringify(data)); } catch (_) {}
+}
+
+function icBuildContext() {
+  const p = icLoadProfile();
+  const lines = [];
+  if (p.job) lines.push(`직업: ${p.job}`);
+  if (p.level) lines.push(`레벨: ${p.level}`);
+  if (p.crit) lines.push(`크리티컬 확률: ${p.crit}%`);
+  if (p.content) lines.push(`주력 콘텐츠: ${p.content}`);
+  if (p.style) lines.push(`딜 스타일: ${p.style}`);
+  if (p.memo) lines.push(`참고: ${p.memo}`);
+  return lines.join("\n");
 }
 
 function icSetFile(file) {
@@ -125,9 +209,12 @@ async function icAnalyze() {
     </div>`;
 
   try {
+    icSaveProfile(); // 분석 직전 최신 입력값 저장
     const blob = await icCompress(icFile);
     const fd = new FormData();
     fd.append("file", blob, "screenshot.jpg");
+    const ctx = icBuildContext();
+    if (ctx) fd.append("context", ctx);
     const res = await fetch(`${API_BASE}/api/item-compare/analyze`, { method: "POST", body: fd });
     let data = null;
     try { data = await res.json(); } catch (_) { /* 비 JSON 응답 */ }
