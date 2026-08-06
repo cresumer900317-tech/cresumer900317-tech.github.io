@@ -140,7 +140,11 @@ const SHELL_ICON = {
 
 const SHELL_NAV = [
   ["./", "home", "홈"], ["./ranking", "ranking", "랭킹"], ["./profile", "profile", "전적검색"],
-  ["./notice", "notice", "공지"], ["./tips", "tips", "공략"], ["./level-calc", "level-calc", "레벨업 계산기"],
+  ["./notice", "notice", "공지"], ["./tips", "tips", "공략"],
+];
+const SHELL_CALC_NAV = [
+  ["./level-calc", "level-calc", "레벨업 계산기"],
+  ["./item-compare", "item-compare", "아이템 비교 AI"],
 ];
 const SHELL_GUILD_NAV = [
   ["./members", "members", "길드원"], ["./weekly", "weekly", "월간성장"],
@@ -158,7 +162,12 @@ function renderShell() {
 
   const a = ([h, k, l]) => `<a href="${h}"${k === page ? ' class="active"' : ""}>${l}</a>`;
   const guildActive = SHELL_GUILD_NAV.some(([, k]) => k === page);
+  const calcActive = SHELL_CALC_NAV.some(([, k]) => k === page);
   const navLinks = SHELL_NAV.map(a).join("");
+  const calcDrop = `<div class="nav-drop" id="calcDrop">
+      <button type="button" id="calcDropBtn"${calcActive ? ' class="active"' : ""}>계산기${SHELL_ICON.chev}</button>
+      <div class="nav-pop">${SHELL_CALC_NAV.map(a).join("")}</div>
+    </div>`;
   const guildDrop = `<div class="nav-drop" id="guildDrop">
       <button type="button" id="guildDropBtn"${guildActive ? ' class="active"' : ""}>길드${SHELL_ICON.chev}</button>
       <div class="nav-pop">${SHELL_GUILD_NAV.map(a).join("")}</div>
@@ -188,7 +197,7 @@ function renderShell() {
           <span class="brand-mark">🍁</span>
           <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
         </a>
-        <nav class="nav">${navLinks}${guildDrop}</nav>
+        <nav class="nav">${navLinks}${calcDrop}${guildDrop}</nav>
         <div class="header-right">
           ${searchForm("search-pill")}
           ${auth}
@@ -199,6 +208,8 @@ function renderShell() {
         <div class="container mnav-links">
           ${searchForm("mnav-search")}
           ${SHELL_NAV.map(a).join("")}
+          <div class="mnav-group-label">계산기</div>
+          ${SHELL_CALC_NAV.map(a).join("")}
           <div class="mnav-group-label">길드</div>
           ${SHELL_GUILD_NAV.map(a).join("")}
           ${user
@@ -217,11 +228,13 @@ function renderShell() {
     userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
     document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
   }
-  const guildDropBtn = document.getElementById("guildDropBtn");
-  const guildDropEl = document.getElementById("guildDrop");
-  if (guildDropBtn && guildDropEl) {
-    guildDropBtn.addEventListener("click", (e) => { e.stopPropagation(); guildDropEl.classList.toggle("open"); });
-    document.addEventListener("click", (e) => { if (!guildDropEl.contains(e.target)) guildDropEl.classList.remove("open"); });
+  for (const [dropId, btnId] of [["guildDrop", "guildDropBtn"], ["calcDrop", "calcDropBtn"]]) {
+    const dropBtn = document.getElementById(btnId);
+    const dropEl = document.getElementById(dropId);
+    if (dropBtn && dropEl) {
+      dropBtn.addEventListener("click", (e) => { e.stopPropagation(); dropEl.classList.toggle("open"); });
+      document.addEventListener("click", (e) => { if (!dropEl.contains(e.target)) dropEl.classList.remove("open"); });
+    }
   }
 
   // 방문자 ping (3분마다 재핑)

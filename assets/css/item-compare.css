@@ -1,0 +1,113 @@
+/* ===== 아이템 비교 AI ===== */
+.ic-wrap { padding-top: 28px; max-width: 720px; margin: 0 auto; }
+.ic-head { text-align: center; margin-bottom: 22px; }
+.ic-title { font-size: 1.5rem; font-weight: 800; color: var(--amber-darker); }
+.ic-sub { font-size: 0.85rem; color: var(--text-soft); margin-top: 6px; }
+
+.ic-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.ic-panel + .ic-panel, #icResult .ic-panel { margin-top: 16px; }
+
+/* 업로드 존 */
+.ic-drop {
+  border: 2px dashed var(--yellow-border);
+  border-radius: var(--radius-lg);
+  background: var(--yellow-bg);
+  min-height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-align: center; padding: 16px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  overflow: hidden;
+}
+.ic-drop:hover, .ic-drop.ic-dragover { border-color: var(--amber); background: var(--yellow-pale); }
+.ic-drop-icon { font-size: 2rem; margin-bottom: 8px; }
+.ic-drop-text { font-size: 0.95rem; color: var(--text); }
+.ic-drop-hint { font-size: 0.78rem; color: var(--text-faint); margin-top: 6px; }
+.ic-preview { max-width: 100%; max-height: 420px; border-radius: var(--radius-md); display: block; }
+
+.ic-actions { display: flex; gap: 10px; margin-top: 14px; }
+.ic-btn-analyze {
+  flex: 1; height: 46px; border: none; border-radius: var(--radius-md); cursor: pointer;
+  font-size: 0.95rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  box-shadow: 0 2px 8px rgba(217,119,6,0.25);
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.ic-btn-analyze:hover:not(:disabled) { transform: translateY(-1px); }
+.ic-btn-analyze:disabled { opacity: 0.45; cursor: default; }
+.ic-btn-reset {
+  height: 46px; padding: 0 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--white); color: var(--text-soft); font-size: 0.85rem; font-weight: 700; cursor: pointer;
+}
+.ic-hint { margin-top: 10px; font-size: 0.76rem; line-height: 1.6; color: var(--text-faint); }
+
+/* 로딩 */
+.ic-loading { text-align: center; padding: 32px 18px; }
+.ic-spinner {
+  width: 34px; height: 34px; margin: 0 auto 12px;
+  border: 3px solid var(--yellow-border); border-top-color: var(--amber);
+  border-radius: 50%; animation: ic-spin 0.8s linear infinite;
+}
+@keyframes ic-spin { to { transform: rotate(360deg); } }
+.ic-loading-text { font-size: 0.85rem; color: var(--text-soft); }
+
+/* 에러 */
+.ic-error { color: #b45309; font-size: 0.88rem; font-weight: 600; }
+
+/* 판정 결과 */
+.ic-verdict-hero {
+  text-align: center; padding: 22px 16px;
+  border-radius: var(--radius-lg); margin-bottom: 14px;
+  background: linear-gradient(135deg, var(--yellow-bg), var(--yellow-pale));
+  border: 1px solid var(--yellow-border);
+}
+.ic-verdict-hero.ic-w-right { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: #a7f3d0; }
+.ic-verdict-hero.ic-w-left { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #bfdbfe; }
+.ic-verdict-icon { font-size: 1.8rem; }
+.ic-verdict-label { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-top: 6px; }
+.ic-verdict-conf { font-size: 0.8rem; color: var(--text-soft); margin-top: 6px; font-weight: 600; }
+.ic-summary { font-size: 0.92rem; line-height: 1.7; color: var(--text); padding: 2px 4px 4px; }
+
+.ic-block-title { font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 18px 0 10px; }
+
+/* 콘텐츠별 판정 */
+.ic-content-row {
+  display: grid; grid-template-columns: 92px 88px 1fr; gap: 10px; align-items: baseline;
+  padding: 9px 4px; border-top: 1px dashed var(--border); font-size: 0.84rem;
+}
+.ic-content-row:first-child { border-top: none; }
+.ic-content-name { font-weight: 700; color: var(--text); }
+.ic-content-winner { font-weight: 800; white-space: nowrap; }
+.ic-cw-right { color: #059669; }
+.ic-cw-left { color: #2563eb; }
+.ic-cw-tie, .ic-cw-unknown { color: var(--text-faint); }
+.ic-content-reason { color: var(--text-soft); line-height: 1.55; }
+@media (max-width: 560px) {
+  .ic-content-row { grid-template-columns: 84px 76px; }
+  .ic-content-reason { grid-column: 1 / -1; padding-left: 2px; }
+}
+
+/* 스탯 테이블 */
+.ic-table-scroll { overflow-x: auto; }
+.ic-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.ic-table th, .ic-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+.ic-table th { background: var(--yellow-bg); font-size: 0.78rem; }
+.ic-td-stat { font-weight: 700; color: var(--text-soft); white-space: nowrap; }
+.ic-item-head { display: flex; flex-direction: column; gap: 2px; }
+.ic-item-side { font-size: 0.7rem; font-weight: 700; color: var(--amber-dark); }
+.ic-item-head em { font-style: normal; font-size: 0.72rem; color: var(--text-faint); font-weight: 400; }
+.ic-diff { color: #059669; font-weight: 800; font-size: 0.78rem; margin-left: 4px; }
+.ic-none { color: var(--text-faint); }
+
+/* 주의·메타 */
+.ic-caution {
+  margin-top: 14px; padding: 10px 12px; font-size: 0.8rem; line-height: 1.6;
+  background: var(--yellow-bg); border: 1px solid var(--yellow-border);
+  border-radius: var(--radius-md); color: var(--text-soft);
+}
+.ic-meta { margin-top: 12px; font-size: 0.72rem; color: var(--text-faint); text-align: center; }

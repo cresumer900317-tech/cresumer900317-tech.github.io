@@ -84,9 +84,16 @@ function guildChip(guild) {
 function premiumHeader(user) {
   const NAV = [
     ["./", "홈", true], ["./ranking", "랭킹"], ["./profile", "전적검색"],
-    ["./notice", "공지"], ["./tips", "공략"], ["./level-calc", "레벨업 계산기"],
+    ["./notice", "공지"], ["./tips", "공략"],
   ];
   const navLinks = NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("");
+  const calcDrop = `<div class="nav-drop" id="calcDrop">
+    <button type="button" id="calcDropBtn">계산기${ICON.chev}</button>
+    <div class="nav-pop">
+      <a href="./level-calc">레벨업 계산기</a>
+      <a href="./item-compare">아이템 비교 AI</a>
+    </div>
+  </div>`;
   const guildDrop = `<div class="nav-drop" id="guildDrop">
     <button type="button" id="guildDropBtn">길드${ICON.chev}</button>
     <div class="nav-pop">
@@ -117,7 +124,7 @@ function premiumHeader(user) {
           <span class="brand-mark">🍁</span>
           <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
         </a>
-        <nav class="nav">${navLinks}${guildDrop}</nav>
+        <nav class="nav">${navLinks}${calcDrop}${guildDrop}</nav>
         <div class="header-right">
           <form class="search-pill" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
             ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
@@ -132,6 +139,7 @@ function premiumHeader(user) {
             ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
           </form>
           ${NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("")}
+          <a href="./level-calc">레벨업 계산기</a><a href="./item-compare">아이템 비교 AI</a>
           <a href="./members">길드원</a><a href="./weekly">월간성장</a><a href="./rivals">라이벌</a><a href="./points">포인트</a>
           ${user ? `<a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>` : `<a href="./login">로그인 / 회원가입</a>`}
         </div>
@@ -149,11 +157,13 @@ function bindHeader() {
     userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
     document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
   }
-  const guildDropBtn = document.getElementById("guildDropBtn");
-  const guildDrop = document.getElementById("guildDrop");
-  if (guildDropBtn && guildDrop) {
-    guildDropBtn.addEventListener("click", (e) => { e.stopPropagation(); guildDrop.classList.toggle("open"); });
-    document.addEventListener("click", (e) => { if (!guildDrop.contains(e.target)) guildDrop.classList.remove("open"); });
+  for (const [dropId, btnId] of [["guildDrop", "guildDropBtn"], ["calcDrop", "calcDropBtn"]]) {
+    const dropBtn = document.getElementById(btnId);
+    const dropEl = document.getElementById(dropId);
+    if (dropBtn && dropEl) {
+      dropBtn.addEventListener("click", (e) => { e.stopPropagation(); dropEl.classList.toggle("open"); });
+      document.addEventListener("click", (e) => { if (!dropEl.contains(e.target)) dropEl.classList.remove("open"); });
+    }
   }
 }
 
@@ -628,7 +638,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <footer class="footer"><div class="container footer-inner">
         <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
         <div class="footer-links">
-          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">레벨업 계산기</a>
+          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">레벨업 계산기</a><a href="./item-compare">아이템 비교 AI</a>
           <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">앱 (iOS)</a>
           <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">앱 (Android)</a>
           <a href="./join">친구패밀리 가입 문의</a>
