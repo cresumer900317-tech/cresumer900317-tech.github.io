@@ -22,3 +22,8 @@ test('zero is a real value and invalid input is not zero',()=>{
  assert.equal(evaluate('formatCompactPower(0)'),'0');
  assert.equal(evaluate(`formatCompactPower('bad')`),'-');
 });
+
+test('current power never reassigns an old server rank to a new date',()=>{
+ const data=vm.runInContext(`historyWithCurrent([{date:'2026-09-04',power:80,serverRank:2}],{power:173,serverRank:2,capturedAt:'2026-09-14T01:00:00+09:00',rankCapturedAt:'2026-09-04T09:00:00+09:00'})`,ctx);
+ assert.equal(data.length,2);assert.equal(data[1].power,173);assert.equal(data[1].serverRank,null);
+});

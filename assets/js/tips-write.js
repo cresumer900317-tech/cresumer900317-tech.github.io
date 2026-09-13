@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   const user = getUser();
 

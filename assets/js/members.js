@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   try {
     const members = await getGuildsData();
@@ -46,13 +46,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const isFull = stats.count >= 30;
             const isActive = currentGuild === g;
             return `
-              <div class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}${isActive ? " mb-guild-active" : ""}" data-guild-filter="${escapeHtml(g)}">
+              <button type="button" class="mb-guild-summary-card${isFull ? " mb-guild-full" : ""}${isActive ? " mb-guild-active" : ""}" data-guild-filter="${escapeHtml(g)}">
                 <div class="mb-gs-name">${guildBadgeHtml(g)}</div>
                 <div class="mb-gs-count">${stats.count}<span>명</span></div>
                 <div class="mb-gs-power">${formatCompactPower(stats.avgPower)}</div>
                 <div class="mb-gs-label">평균 전투력</div>
-                <div class="mb-gs-status ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "모집 중"}</div>
-              </div>
+                <div class="mb-gs-status ${isFull ? "full" : "recruit"}">${isFull ? "정원 마감" : "잔여 자리 있음"}</div>
+              </button>
             `;
           }).join("")}
         </div>
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const power = getPowerDisplay(item);
       const isMaster = item.isMaster;
       return `
-        <div class="mb-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
+        <a href="./profile?n=${encodeURIComponent(item.name)}" class="mb-card" data-character-row="${escapeHtml((item.name || "").toLowerCase())}">
           <div class="mb-rank">
             ${rank <= 3
               ? `<span style="font-size:1.3rem;">${rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}</span>`
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="mb-power">${escapeHtml(power)}</div>
             ${item.serverRank ? `<div class="mb-server">서버 ${formatNumber(item.serverRank)}위</div>` : ""}
           </div>
-        </div>
+        </a>
       `;
     }
 
@@ -170,6 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <p style="font-size:0.85rem;color:var(--text-soft);margin:0;">전체 <strong>${totalCount}명</strong> · 현재 <span id="members-count">-</span> 표시 중</p>
           </div>
 
+          <div class="lounge-data-note">${observationHtml(latestObservation(rows),"길드원 수집",3)}<span>잔여 자리는 수집된 인원 기준이며 실제 모집 여부는 가입 문의에서 확인해 주세요.</span></div>
           <div class="tab-bar" style="margin-bottom:12px;">
             <button class="tab-btn is-active" data-guild="전체">전체 <span class="tab-count">${totalCount}</span></button>
             ${GUILDS.map(g => `<button class="tab-btn" data-guild="${escapeHtml(g)}">${tabLabel(g)}</button>`).join("")}

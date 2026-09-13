@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   try {
     const res = await fetch(`${API_BASE}/api/monthly`, { cache: "no-store" });
@@ -7,10 +7,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const members = await res.json();
     const rows = Array.isArray(members) ? members : [];
 
-    const now = new Date();
+    const now = new Date(kstDateKey()+"T12:00:00+09:00");
     const monthLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
     const hasSnapshot = rows.some(r => r.hasSnapshot);
-    const snapDateLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월 5일`;
+    const snapDates=[...new Set(rows.map(r=>r.snapshotCapturedAt).filter(Boolean))];
+    const snapDateLabel = snapDates.length ? formatObservedAt(snapDates.sort()[0]) : "이번 달 저장된 월초 스냅샷";
 
     let currentTab = "power";
 
@@ -30,7 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ── 전투력 전용 함수 ──
     function serverDiffHtml(item) {
       const diff = item.monthlyServerDiff;
-      if (!diff) return `<span style="color:var(--text-faint);font-size:0.82rem;">변동없음</span>`;
+      if (diff == null) return `<span>기준 없음</span>`;
+      if (!diff) return `<span>변동없음</span>`;
       if (diff > 0) return `<span style="color:#059669;font-weight:700;font-size:0.92rem;">▲${formatNumber(diff)}</span>`;
       return `<span style="color:#dc2626;font-weight:700;font-size:0.92rem;">▼${formatNumber(Math.abs(diff))}</span>`;
     }
@@ -70,7 +72,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function popRankDiffHtml(item) {
       const diff = item.monthlyPopRankDiff;
-      if (!diff) return `<span style="color:var(--text-faint);font-size:0.82rem;">변동없음</span>`;
+      if (diff == null) return `<span>기준 없음</span>`;
+      if (!diff) return `<span>변동없음</span>`;
       if (diff > 0) return `<span style="color:#059669;font-weight:700;font-size:0.92rem;">▲${formatNumber(diff)}</span>`;
       return `<span style="color:#dc2626;font-weight:700;font-size:0.92rem;">▼${formatNumber(Math.abs(diff))}</span>`;
     }

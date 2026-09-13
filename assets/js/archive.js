@@ -3,7 +3,7 @@ const AR_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const AR_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
 
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();  // 공용 프리미엄 헤더 (검색·길드 드롭다운·모바일 패널 포함)
+  if (renderShell() === false) return;  // 공용 프리미엄 헤더 (검색·길드 드롭다운·모바일 패널 포함)
 
   const main = document.querySelector("main");
   main.innerHTML = `<div class="container" style="padding-top:30px"><div class="sk sk-title"></div><div class="sk sk-card" style="margin-top:16px"></div></div>`;
@@ -11,8 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   let data = [];
   try {
     const res = await fetch(`${API_BASE}/api/content-archive`, { cache: "no-store" });
-    data = res.ok ? await res.json() : [];
-  } catch (e) { data = []; }
+    if (!res.ok) throw new Error("기록을 불러오지 못했습니다.");
+    data = await res.json();
+  } catch (e) { renderError(null,e); return; }
   data = Array.isArray(data) ? data : [];
 
   const fmt = (n) => Number(n || 0).toLocaleString("ko-KR");
