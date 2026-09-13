@@ -106,7 +106,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const span = max - min;
     const innerW = W - padL - padR, innerH = H - padTop - padBot;
     const n = points.length;
-    const xAt = (i) => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+    const dates = points.map(p=>Date.parse(p.date));
+    const dateSpan = dates[n-1]-dates[0];
+    const xAt = i => padL + (dateSpan>0 ? (dates[i]-dates[0])/dateSpan*innerW : innerW/2);
     const yAt = (v) => {
       const t = opts.betterIsLow ? (v - min) / span : (max - v) / span;
       return padTop + t * innerH;
@@ -118,7 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const areaD = lineD + ` L ${coords[n-1][0].toFixed(1)} ${(H-padBot).toFixed(1)} L ${coords[0][0].toFixed(1)} ${(H-padBot).toFixed(1)} Z`;
 
     // Y 그리드 + 눈금 (헤어라인 실선, 차분한 회색)
-    const ticks = niceTicks(min + pad, max - pad, 3).map((v) => {
+    const ticks = niceTicks(min + pad, max - pad, 3).filter(v=>!opts.betterIsLow || (Number.isInteger(v) && v>0)).map((v) => {
       const y = yAt(v).toFixed(1);
       return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#eef2f7" stroke-width="1"/>
         <text x="${padL - 6}" y="${Number(y) + 3}" text-anchor="end" font-size="8" fill="#a3aebc">${escapeHtml(fmtTick(v))}</text>`;
@@ -247,11 +249,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     getServerRankingHistory(name).then(hist => {
       const body = document.querySelector("#pfGrowth .pf-growth-body");
       if (!body) return;
-      const all = (hist || []).filter(h => h && h.date);
-      let range = 0;   // 0 = 전체
+      const all = (hist || []).filter(h => h && h.date).sort((a,b)=>a.date.localeCompare(b.date));
+      let range = 30;   // Calendar days; never substitute an old observation for a missing day.
 
       const render = () => {
-        const rows = range ? all.slice(-range) : all;
+        const rows = historyInDays(all, range);
         const rankPts = rows.filter(h => Number(h.serverRank) > 0)
           .map(h => ({ label: fmtDateShort(h.date), date: h.date, value: Number(h.serverRank), extra: Number(h.power) || 0 }));
         const powerPts = rows.filter(h => Number(h.power) > 0)
@@ -263,7 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               ${[[7, "7일"], [30, "30일"], [0, "전체"]].map(([d, l]) =>
                 `<button class="mini-tab${range === d ? " active" : ""}" data-range="${d}">${l}</button>`).join("")}
             </div>
-            <span class="pf-chart-note-inline">그래프를 짚으면 날짜별 수치가 보여요</span>
+            <button class="ghost-btn" id="pfCsv" type="button">기간 기록 CSV</button><span class="pf-chart-note-inline">그래프를 짚으면 날짜별 수치가 보여요</span>
           </div>`;
 
         if (rankPts.length < 2 && powerPts.length < 2) {
@@ -281,7 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (powerPts.length >= 2) {
           const d = powerPts[powerPts.length - 1].value - powerPts[0].value;
-          const days = Math.max(1, powerPts.length - 1);
+          const days = elapsedHistoryDays(powerPts);
           chips.push(`<div class="pf-chip"><span class="pf-chip-k">전투력 성장</span><span class="pf-chip-v ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d >= 0 ? "+" : "-"}${formatCompactPower(Math.abs(d))}</span></div>`);
           chips.push(`<div class="pf-chip"><span class="pf-chip-k">일평균</span><span class="pf-chip-v">${d >= 0 ? "+" : "-"}${formatCompactPower(Math.abs(Math.round(d / days)))}</span></div>`);
         }
@@ -318,19 +320,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>`;
         }
         html += `<div class="pf-charts-grid">${chartsHtml}</div>`;
-        html += `<div class="pf-chart-note">하루 2회 자동 수집 · 날짜별 1포인트</div>`;
+        html += `<div class="pf-chart-note">mgf.gg 관측 이력 · 날짜별 1포인트 · 누락일은 추정하지 않음</div>`;
         body.innerHTML = html;
         attachChartHover(body);
         bindTabs();
       };
 
       const bindTabs = () => {
+        body.querySelector("#pfCsv")?.addEventListener("click",()=>exportCsv(`${name}-성장기록.csv`,["날짜","서버 순위","전투력","인기도"],historyInDays(all,range).map(r=>[r.date,r.serverRank,r.power,r.popularity])));
         body.querySelectorAll(".pf-range-row .mini-tab").forEach((b) => {
           b.addEventListener("click", () => { range = Number(b.dataset.range); render(); });
         });
       };
 
       render();
+    }).catch(() => {
+      const body=document.querySelector("#pfGrowth .pf-growth-body");
+      if(body) {body.innerHTML='<div class="pf-growth-empty" role="status">성장 이력을 불러오지 못했습니다. <button id="pfRetry" class="ghost-btn">다시 시도</button></div>';body.querySelector("#pfRetry").addEventListener("click",()=>renderGrowth(name));}
     });
   }
 
@@ -434,6 +440,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   main.innerHTML = searchBarHtml(query) + `
     <div class="container pf-wrap">
+      <div class="lounge-data-note">${observationHtml(me.capturedAt,"캐릭터 수집",me.statsSource==="guild"?3:18)}${observationHtml(me.rankCapturedAt || (me.statsSource!=="guild"?me.capturedAt:null),"서버 순위 수집",18)}<span>전투력·레벨은 최신 관측값, 서버 순위는 전체 서버 수집 당시 기준입니다.</span></div>
 
       <div class="pf-hero ${isFriend ? "pf-hero-friend" : ""}">
         <div class="pf-hero-avatar">${characterAvatarHtml({ name: me.nickname, guild: me.guild })}</div>
