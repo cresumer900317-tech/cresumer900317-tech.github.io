@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .sort((a, b) => Number(b.popularity || 0) - Number(a.popularity || 0));
 
     const CUT = 30;
-    let currentTab = "power";
+    let currentTab = new URLSearchParams(location.search).get("scope") === "server" ? "server" : "power";
     let lastFamilyMetric = "power";   // 친구패밀리 스코프로 돌아올 때 마지막 지표 복원
 
     // 배치 기준일 (매달 마지막 수요일 22시)
@@ -502,7 +502,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         listEl.innerHTML = createEmptyBox("서버 전체 랭킹 데이터가 아직 준비되지 않았어요. 잠시 후 다시 확인해 주세요.");
         return;
       }
-      if (totalEl) totalEl.textContent = formatNumber(data.length) + "명";
+      if (totalEl) totalEl.textContent = formatNumber(data.length);
+      if (!listEl.isConnected) return;
+      totalEl?.parentElement.insertAdjacentHTML("afterend", observationHtml(latestObservation(data,"rankCapturedAt"), "서버 순위 수집", 18));
       const moreWrap = document.getElementById("serverMoreWrap");
       const PAGE = SERVER_PAGE;   // 페이지당 인원
       let page = 1;
@@ -544,7 +546,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         moreWrap.innerHTML = `
           ${kw ? `<div class="rk-meta" style="margin-bottom:8px;">🔎 "${escapeHtml(kw)}" 검색결과 ${formatNumber(view.length)}명</div>` : ""}
           ${renderPager(totalPages)}
-          ${slice.length ? `<div class="rk-meta" style="margin-top:10px;">${formatNumber(view.length)}명 중 ${formatNumber(start + 1)}~${formatNumber(start + slice.length)}위 · ${page}/${formatNumber(totalPages)} 페이지</div>` : ""}
+          ${slice.length ? `<div class="rk-meta" style="margin-top:10px;">${formatNumber(view.length)}명 중 ${formatNumber(start + 1)}~${formatNumber(start + slice.length)}번째 결과 · ${page}/${formatNumber(totalPages)} 페이지</div>` : ""}
         `;
         moreWrap.querySelectorAll("[data-pg]").forEach(b => b.addEventListener("click", () => {
           if (b.hasAttribute("disabled")) return;
@@ -613,36 +615,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const depthScore = (med) => med > 0 ? clamp(50 + 12.5 * Math.log10(med / 1e12)) : 0;   // 1조=50, ×10마다+12.5
       const balanceScore = (neff) => clamp((neff - 1) / (10 - 1) * 100);                     // 유효기여자 1명→0, 10명→100
 
-      const scored = guilds.map((g) => {
-        const power = Number(g.power || 0);
-        const memCount = Number(g.members || g.memberSampled || 0);
-        const hasDist = Number(g.memberSampled || 0) >= 3;        // 분포 산출 가능 여부
-        const med = Number(g.medianPower || 0) > 0 ? Number(g.medianPower) : (memCount ? power / memCount : 0);
-        const neff = (hasDist && g.effContributors != null) ? Number(g.effContributors) : null;
-        const actRatio = g.activeRatio != null ? Number(g.activeRatio) : null;
-
-        const axisDepth = Math.round(depthScore(med));
-        const axisBalance = neff != null ? Math.round(balanceScore(neff)) : null;
-        const axisActivity = actRatio != null ? Math.round(actRatio * 100) : null;
-        const axisGrowth = (GROWTH_ACTIVE && g.growthRatio != null) ? Math.round(Number(g.growthRatio) * 100) : null;
-
-        // 종합: 성장 가동 시 성장30·활동25·깊이25·균형20, 미가동 시 깊이0.42·활동0.33·균형0.25 비례 재분배
-        let composite, parts;
-        if (GROWTH_ACTIVE && axisGrowth != null && axisBalance != null && axisActivity != null) {
-          parts = [[axisGrowth, 0.30], [axisActivity, 0.25], [axisDepth, 0.25], [axisBalance, 0.20]];
-        } else {
-          // 깊이:활동:균형 = 0.42:0.33:0.25 (누락 축은 가용 가중치로 재정규화)
-          parts = [[axisDepth, 0.42], [axisActivity, 0.33], [axisBalance, 0.25]].filter(p => p[0] != null);
-        }
-        const wsum = parts.reduce((a, [, w]) => a + w, 0) || 1;
-        composite = Math.round(parts.reduce((a, [v, w]) => a + v * w, 0) / wsum);
-
-        return {
-          g, power, members: memCount, med, neff, actRatio,
-          axisDepth, axisBalance, axisActivity, axisGrowth, hasDist,
-          score: composite,
-        };
-      }).sort((a, b) => b.score - a.score);
+      const scored = guilds.filter(g=>Number(g.memberSampled || 0)>=3).map(g => {
+        const shared=guildHealthScore(g);
+        return {g, power:Number(g.power || 0), members:Number(g.members || g.memberSampled || 0),
+          med:Number(g.medianPower || 0), neff:g.effContributors, actRatio:g.activeRatio,
+          axisDepth:shared.depth, axisBalance:shared.balance, axisActivity:shared.activity, axisGrowth:shared.growth,
+          hasDist:true, score:shared.score};
+      }).sort((a,b)=>b.score-a.score || a.g.guildName.localeCompare(b.g.guildName,"ko"));
 
       const friendCount = scored.filter(s => FRIENDS.has(String(s.g.guildName || "").normalize("NFC"))).length;
       const scoreColor = (s) => s >= 70 ? "#16a34a" : s >= 55 ? "#f59e0b" : s >= 40 ? "#fb923c" : "#94a3b8";
@@ -674,14 +653,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <div class="gc-axes">
               ${GROWTH_ACTIVE ? axisBar("성장", s.axisGrowth, "#16a34a") : ""}
-              ${axisBar("활동", s.axisActivity, "#3182ce")}
+              ${axisBar("인기도", s.axisActivity, "#3182ce")}
               ${axisBar("깊이", s.axisDepth, "#7c3aed")}
               ${axisBar("균형", s.axisBalance, "#f59e0b")}
             </div>
             <div class="gc-stats">
               <div class="gc-stat"><span>중앙값 전투력</span><b>${formatCompactPower(s.med)}</b></div>
-              <div class="gc-stat"><span>활동 멤버</span><b>${actPct != null ? actPct + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> ♥${POP_ACTIVE}+</span></b></div>
-              <div class="gc-stat"><span>유효 기여자</span><b>${s.neff != null ? s.neff.toFixed(1) + "명" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 실질캐리</span></b></div>
+              <div class="gc-stat"><span>인기도 50 이상</span><b>${actPct != null ? actPct + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> ♥${POP_ACTIVE}+</span></b></div>
+              <div class="gc-stat"><span>유효 기여자</span><b>${s.neff != null ? s.neff.toFixed(1) + "명" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 전투력 분산 지표</span></b></div>
               <div class="gc-stat"><span>주간 성장</span><b>${s.axisGrowth != null ? s.axisGrowth + "%" : "-"}<span style="font-size:0.7rem;color:#a0aec0;"> 멤버비율</span></b></div>
               <div class="gc-stat"><span>총 전투력</span><b>${formatCompactPower(s.power)}<span style="font-size:0.7rem;color:#a0aec0;"> ${s.members || "-"}명</span></b></div>
             </div>
@@ -721,10 +700,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           <button type="button" class="gc-info" onclick="this.classList.toggle('open')" aria-label="건강도 점수 설명">ⓘ
             <span class="gc-tip">
               <b>건강도 점수 기준</b>
-              <span>· 성장 — 이번 주 전투력이 오른 멤버 비율</span>
-              <span>· 활동 — 활발한 멤버 비율</span>
-              <span>· 깊이 — 본대가 얼마나 두꺼운가</span>
-              <span>· 균형 — 한두 명에게 안 업혔는가</span>
+              <span>· 성장 — 두 관측일 사이 전투력 1% 이상 증가 비율</span>
+              <span>· 인기도 — 인기도 50 이상 비율. 실제 접속·참여율이 아닙니다.</span>
+              <span>· 깊이 — 중앙값 전투력을 환산한 점수</span>
+              <span>· 균형 — 전투력이 여러 멤버에게 분산된 정도. 누락 지표는 제외합니다.</span>
             </span>
           </button>
         </div>
@@ -752,6 +731,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <span class="rk-dday-badge">${cutlineDDayText}</span>
               </div>
             </div>
+            <div class="lounge-data-note">${observationHtml(latestObservation(rows), "친구패밀리 수집", 3)}<span>mgf.gg 관측값 · 서버 순위와 전투력의 수집 시점은 다를 수 있어요.</span></div>
             ${tabBarHtml(tab)}
             ${content}
           </div>

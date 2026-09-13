@@ -18,9 +18,7 @@ async function fetchLocalJson(filename) {
     "weekly": "weekly",
     "notices": "notices",
   }[key] || key;
-  const response = await fetch(`${API_BASE}/api/${apiKey}`, { cache: "no-store" });
-  if (!response.ok) throw new Error(`데이터를 불러오지 못했습니다: ${filename}`);
-  return response.json();
+  return requestJson(`/api/${apiKey}`);
 }
 
 const getHomeData = () => fetchLocalJson("home-summary.json");
@@ -28,20 +26,91 @@ const getRankingData = () => fetchLocalJson("ranking.json");
 const getWeeklyData = () => fetchLocalJson("weekly.json");
 const getGuildsData = () => fetchLocalJson("members.json");
 const getNoticeData = () => fetchLocalJson("notices.json");
-const getServerRanking = () => fetchLocalJson("server-ranking.json");
+const getServerRanking = (limit = 7000) => fetchServerRanking(limit);
 const getGuildRanks = () => fetchLocalJson("guild-ranks.json");
-// 캐릭터 일별 서버랭킹 이력 (프로필 성장 그래프용). 데이터 없거나 실패 시 빈 배열.
+// 캐릭터 일별 이력. 빈 기록과 요청 실패를 구분해 재시도 안내를 제공한다.
 // (getTipsData 죽은 함수 제거: tips.js가 직접 fetch 사용 — 2026-06-28 클린업)
-const getServerRankingHistory = async (name) => {
+const getServerRankingHistory = (name) => requestJson(`/api/server-ranking/history?name=${encodeURIComponent(name)}&days=365`);
+
+// All timestamps displayed in KST. Legacy Railway timestamps are naive UTC.
+function observationDate(value) {
+  if (!value) return null;
+  let text = String(value);
+  if (/^\d{4}-\d{2}-\d{2}T/.test(text) && !/(Z|[+-]\d{2}:?\d{2})$/.test(text)) text += "Z";
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+function kstDateKey(value = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit"}).format(new Date(value));
+}
+function formatObservedAt(value) {
+  const date = observationDate(value);
+  return date ? date.toLocaleString("ko-KR", {timeZone:"Asia/Seoul", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hour12:false}) + " KST" : "기준 시각 미제공";
+}
+function observationHtml(value, label = "수집 기준", hours = 24) {
+  const date = observationDate(value);
+  const stale = date && Date.now() - date.getTime() > hours * 3600000;
+  return `<span class="data-observation${stale ? " is-stale" : ""}">${escapeHtml(label)} · ${escapeHtml(formatObservedAt(value))}${stale ? " · 갱신 지연" : ""}</span>`;
+}
+function latestObservation(rows, key = "capturedAt") {
+  return (rows || []).map(r => r[key]).filter(v => observationDate(v)).sort((a,b) => observationDate(b)-observationDate(a))[0] || null;
+}
+async function requestJson(path, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(`${API_BASE}/api/server-ranking/history?name=${encodeURIComponent(name)}`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (e) {
-    return [];
-  }
-};
+    const response = await fetch(`${API_BASE}${path}`, {...options, cache:"no-store", signal:controller.signal});
+    if (!response.ok) throw new Error("정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    return await response.json();
+  } finally { clearTimeout(timer); }
+}
+function mergeServerMembers(server, members) {
+  const map = new Map((members || []).map(m => [String(m.name || "").normalize("NFC").trim(), m]));
+  return (server || []).map(row => {
+    const m = map.get(String(row.nickname || "").normalize("NFC").trim());
+    const mt = observationDate(m?.capturedAt), rt = observationDate(row.capturedAt);
+    if (!mt || (rt && mt <= rt) || !(Number(m.power) > 0)) return row;
+    return {...row, power:m.power, powerText:m.powerText, job:m.job, level:m.level, guild:m.guild,
+      capturedAt:m.capturedAt, rankCapturedAt:row.rankCapturedAt || row.capturedAt || null, statsSource:"guild"};
+  });
+}
+async function fetchServerRanking(limit = 7000) {
+  const [server, members] = await Promise.all([
+    requestJson(`/api/server-ranking?limit=${Math.max(1, Math.min(7000, limit))}`),
+    getGuildsData().catch(() => [])
+  ]);
+  return mergeServerMembers(Array.isArray(server) ? server : [], members);
+}
+function guildHealthScore(g) {
+  const clamp = v => Math.max(0, Math.min(100,v));
+  const sampled = Number(g.memberSampled || 0);
+  const med = Number(g.medianPower || 0);
+  const depth = med > 0 ? clamp(50+12.5*Math.log10(med/1e12)) : 0;
+  const balance = sampled >= 3 && g.effContributors != null ? clamp((Number(g.effContributors)-1)/9*100) : null;
+  const activity = g.activeRatio != null ? clamp(Number(g.activeRatio)*100) : null;
+  const growth = g.growthRatio != null && Number(g.growthSampled || 0)>0 ? clamp(Number(g.growthRatio)*100) : null;
+  const parts = growth != null && balance != null && activity != null
+    ? [[growth,.30],[activity,.25],[depth,.25],[balance,.20]]
+    : [[depth,.42],[activity,.33],[balance,.25]].filter(([v]) => v != null);
+  return {score:Math.round(parts.reduce((s,[v,w])=>s+v*w,0)/parts.reduce((s,[,w])=>s+w,0)),
+    depth:Math.round(depth), balance:balance==null?null:Math.round(balance),
+    activity:activity==null?null:Math.round(activity), growth:growth==null?null:Math.round(growth)};
+}
+function historyInDays(rows, days, today = kstDateKey()) {
+  const since = new Date(`${today}T00:00:00+09:00`).getTime() - (days-1)*86400000;
+  return [...rows].filter(r => r.date && (!days || new Date(`${r.date.slice(0,10)}T00:00:00+09:00`).getTime() >= since))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+}
+function elapsedHistoryDays(rows) {
+  return rows.length>1 ? Math.max(1, (Date.parse(rows[rows.length-1].date)-Date.parse(rows[0].date))/86400000) : 1;
+}
+function exportCsv(filename, columns, rows) {
+  const cell = value => '"' + String(value ?? "").replace(/^[=+@-]/, "'$&").replace(/"/g, '""') + '"';
+  const content = [columns, ...rows].map(row=>row.map(cell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["\uFEFF",content], {type:"text/csv;charset=utf-8"}));
+  const a = document.createElement("a"); a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -65,8 +134,9 @@ function formatRate(value) {
 }
 
 function formatCompactPower(value) {
-  const num = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
-  if (!Number.isFinite(num) || num === 0) return "-";
+  const num = Number(String(value ?? "0").replace(/,/g, ""));
+  if (!Number.isFinite(num)) return "-";
+  if (num === 0) return "0";
   const gyeong = Math.floor(num / 1e16);
   const jo = Math.floor((num % 1e16) / 1e12);
   const eok = Math.floor((num % 1e12) / 1e8);
@@ -113,7 +183,7 @@ function metricClass(value) {
 
 function metricHtml(value, suffix = "") {
   const num = Number(value ?? 0);
-  const absVal = formatCompactPower(Math.abs(num));
+  const absVal = num === 0 ? "0" : formatCompactPower(Math.abs(num));
   const text = !Number.isFinite(num) ? "-" : `${num > 0 ? "+" : num < 0 ? "-" : ""}${absVal}${suffix}`;
   return `<span class="${metricClass(num)}">${escapeHtml(text)}</span>`;
 }
@@ -148,7 +218,7 @@ const SHELL_CALC_NAV = [
 ];
 const SHELL_GUILD_NAV = [
   ["./members", "members", "길드원"], ["./weekly", "weekly", "월간성장"],
-  ["./rivals", "rivals", "라이벌"], ["./points", "points", "포인트"], ["./join", "join", "가입 문의"],
+  ["./rivals", "rivals", "라이벌"], ["./archive", "archive", "콘텐츠 기록"], ["./points", "points", "포인트"], ["./join", "join", "가입 문의"],
 ];
 
 function renderShell() {
@@ -427,3 +497,17 @@ function logout() {
   sessionStorage.removeItem("token");
   location.href = "./";
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const css = document.createElement("link"); css.rel="stylesheet"; css.href="./assets/css/lounge-upgrade.css?v=1"; document.head.append(css);
+  const main = document.querySelector("main"); if (main) { main.id="main-content"; main.tabIndex=-1; }
+  const skip=document.createElement("a"); skip.href="#main-content"; skip.className="skip-link"; skip.textContent="본문으로 건너뛰기"; document.body.prepend(skip);
+  document.addEventListener("click", event => {
+    const button=event.target.closest(".nav-drop > button, .mnav-btn, .user-btn");
+    if(button) setTimeout(()=>button.setAttribute("aria-expanded", String(button.classList.contains("mnav-btn") ? document.getElementById("mnavPanel")?.classList.contains("open") : button.parentElement.classList.contains("open"))),0);
+  });
+  document.addEventListener("keydown", event => {
+    if(event.key!=="Escape") return;
+    document.querySelectorAll(".nav-drop.open, .user-menu.open, .mnav-panel.open").forEach(el=>el.classList.remove("open"));
+    document.querySelectorAll('[aria-expanded="true"]').forEach(el=>el.setAttribute("aria-expanded","false"));
+  });
+});
