@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
   const main = document.querySelector("main");
   const FRIENDS = new Set(["친구들", "친구둘", "친구삼", "친구넷", "친구닷"]);
 

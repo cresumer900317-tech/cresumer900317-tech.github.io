@@ -1,6 +1,6 @@
 // 아이템 비교 AI — 게임 비교 스크린샷 업로드 → 백엔드 Claude Vision 판정
 document.addEventListener("DOMContentLoaded", () => {
-  renderShell();
+  if (renderShell() === false) return;
   renderItemCompare();
 });
 

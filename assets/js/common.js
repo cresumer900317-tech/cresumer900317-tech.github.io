@@ -209,7 +209,7 @@ const SHELL_ICON = {
 };
 
 const SHELL_NAV = [
-  ["./", "home", "홈"], ["./ranking", "ranking", "랭킹"], ["./profile", "profile", "전적검색"],
+  ["./", "home", "홈"], ["./ranking", "ranking", "랭킹"], ["./weekly", "weekly", "성장 기록"],
   ["./notice", "notice", "공지"], ["./tips", "tips", "공략"],
 ];
 const SHELL_CALC_NAV = [
@@ -217,7 +217,7 @@ const SHELL_CALC_NAV = [
   ["./item-compare", "item-compare", "아이템 비교 AI"],
 ];
 const SHELL_GUILD_NAV = [
-  ["./members", "members", "길드원"], ["./weekly", "weekly", "월간성장"],
+  ["./members", "members", "길드원"], ["./profile", "profile", "캐릭터 검색"], ["./sources", "sources", "MGF 수집 현황"],
   ["./rivals", "rivals", "라이벌"], ["./archive", "archive", "콘텐츠 기록"], ["./points", "points", "포인트"], ["./join", "join", "가입 문의"],
 ];
 
@@ -228,25 +228,25 @@ function renderShell() {
   const user = getUser();
 
   // 공지/팁은 로그인 필요
-  if (!requireLogin(page)) return;
+  if (!requireLogin(page)) return false;
 
-  const a = ([h, k, l]) => `<a href="${h}"${k === page ? ' class="active"' : ""}>${l}</a>`;
+  const a = ([h, k, l]) => `<a href="${h}"${k === page ? ' class="active" aria-current="page"' : ""}>${l}</a>`;
   const guildActive = SHELL_GUILD_NAV.some(([, k]) => k === page);
   const calcActive = SHELL_CALC_NAV.some(([, k]) => k === page);
   const navLinks = SHELL_NAV.map(a).join("");
   const calcDrop = `<div class="nav-drop" id="calcDrop">
-      <button type="button" id="calcDropBtn"${calcActive ? ' class="active"' : ""}>계산기${SHELL_ICON.chev}</button>
-      <div class="nav-pop">${SHELL_CALC_NAV.map(a).join("")}</div>
+      <button type="button" id="calcDropBtn" aria-expanded="false" aria-controls="calcMenu"${calcActive ? ' class="active"' : ""}>계산기${SHELL_ICON.chev}</button>
+      <div class="nav-pop" id="calcMenu">${SHELL_CALC_NAV.map(a).join("")}</div>
     </div>`;
   const guildDrop = `<div class="nav-drop" id="guildDrop">
-      <button type="button" id="guildDropBtn"${guildActive ? ' class="active"' : ""}>길드${SHELL_ICON.chev}</button>
-      <div class="nav-pop">${SHELL_GUILD_NAV.map(a).join("")}</div>
+      <button type="button" id="guildDropBtn" aria-expanded="false" aria-controls="guildMenu"${guildActive ? ' class="active"' : ""}>길드${SHELL_ICON.chev}</button>
+      <div class="nav-pop" id="guildMenu">${SHELL_GUILD_NAV.map(a).join("")}</div>
     </div>`;
 
   const auth = user
     ? `<div class="user-menu" id="userMenu">
-         <button class="user-btn" type="button" id="userBtn">${escapeHtml(user.character_name)}${SHELL_ICON.chev}</button>
-         <div class="user-pop">
+         <button class="user-btn" type="button" id="userBtn" aria-expanded="false" aria-controls="accountMenu">${escapeHtml(user.character_name)}${SHELL_ICON.chev}</button>
+         <div class="user-pop" id="accountMenu">
            <div class="user-pop-head"><strong>${escapeHtml(user.character_name)}</strong><span>${escapeHtml(user.guild || "라운지 회원")}</span></div>
            <a href="./mypage">회원정보</a>
            <a href="./login?tab=changepw">비밀번호 변경</a>
@@ -256,8 +256,8 @@ function renderShell() {
     : `<a class="btn-login" href="./login">로그인</a>`;
 
   const searchForm = (cls) => `
-    <form class="${cls}" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-      ${SHELL_ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
+    <form class="${cls}" onsubmit="event.preventDefault(); var v=this.q.value.normalize("NFC").trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
+      ${SHELL_ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" aria-label="캐릭터명 검색" autocomplete="off" />
     </form>`;
 
   root.innerHTML = `
@@ -267,11 +267,11 @@ function renderShell() {
           <span class="brand-mark">🍁</span>
           <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
         </a>
-        <nav class="nav">${navLinks}${calcDrop}${guildDrop}</nav>
+        <nav class="nav" aria-label="주 메뉴">${navLinks}${calcDrop}${guildDrop}</nav>
         <div class="header-right">
           ${searchForm("search-pill")}
           ${auth}
-          <button class="mnav-btn" type="button" id="mnavBtn" aria-label="메뉴">${SHELL_ICON.menu}</button>
+          <button class="mnav-btn" type="button" id="mnavBtn" aria-label="전체 메뉴" aria-expanded="false" aria-controls="mnavPanel">${SHELL_ICON.menu}</button>
         </div>
       </div>
       <div class="mnav-panel" id="mnavPanel">
@@ -287,11 +287,24 @@ function renderShell() {
             : `<a href="./login">로그인 / 회원가입</a>`}
         </div>
       </div>
-    </header>`;
+    </header>
+    <nav class="mobile-dock" aria-label="모바일 빠른 메뉴">
+      <a href="./" ${page==='home'?'aria-current="page"':''}><span aria-hidden="true">⌂</span>홈</a>
+      <a href="./ranking" ${page==='ranking'?'aria-current="page"':''}><span aria-hidden="true">▥</span>랭킹</a>
+      <a href="./profile${user?'?n='+encodeURIComponent(user.character_name):''}" ${page==='profile'?'aria-current="page"':''}><span aria-hidden="true">⌕</span>내 캐릭터</a>
+      <a href="./points" ${page==='points'?'aria-current="page"':''}><span aria-hidden="true">✓</span>출석</a>
+      <button type="button" id="dockMenu" aria-expanded="false" aria-controls="mnavPanel"><span aria-hidden="true">☰</span>전체</button>
+    </nav>`;
 
   const mnavBtn = document.getElementById("mnavBtn");
   const mnavPanel = document.getElementById("mnavPanel");
-  if (mnavBtn && mnavPanel) mnavBtn.addEventListener("click", () => mnavPanel.classList.toggle("open"));
+  const toggleMobile = () => {
+    const open = mnavPanel.classList.toggle("open");
+    [mnavBtn, document.getElementById("dockMenu")].forEach(b=>b?.setAttribute("aria-expanded",String(open)));
+    document.body.classList.toggle("menu-is-open",open);
+  };
+  if (mnavBtn && mnavPanel) mnavBtn.addEventListener("click", toggleMobile);
+  document.getElementById("dockMenu")?.addEventListener("click", toggleMobile);
   const userBtn = document.getElementById("userBtn");
   const userMenu = document.getElementById("userMenu");
   if (userBtn && userMenu) {
@@ -310,6 +323,7 @@ function renderShell() {
   // 방문자 ping (3분마다 재핑)
   pingVisitor();
   setInterval(pingVisitor, 3 * 60 * 1000);
+  return true;
 }
 
 function getPowerDisplay(item) {
@@ -324,20 +338,18 @@ function bindCardSearch(inputId, resetBtnId, listId, dataAttr) {
   const wrap = document.getElementById(listId);
   if (!input || !wrap) return;
   function apply() {
-    const kw = String(input.value || "").trim().toLowerCase();
+    const kw = String(input.value || "").normalize("NFC").trim().toLowerCase();
     const cards = Array.from(wrap.querySelectorAll(`[${dataAttr}]`));
-    cards.forEach(c => c.classList.remove("highlight-card", "dim-card"));
-    if (!kw) return;
-    let first = null;
+    let visible=0;
     cards.forEach(c => {
-      if ((c.getAttribute(dataAttr) || "").includes(kw)) {
-        c.classList.add("highlight-card");
-        if (!first) first = c;
-      } else {
-        c.classList.add("dim-card");
-      }
+      const match = !kw || (c.getAttribute(dataAttr) || "").normalize("NFC").toLowerCase().includes(kw);
+      c.hidden = !match;
+      c.classList.remove("highlight-card", "dim-card");
+      if(match) visible++;
     });
-    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    let status=wrap.nextElementSibling;
+    if(!status?.classList.contains("search-feedback")) {status=document.createElement("p");status.className="search-feedback";status.setAttribute("role","status");wrap.after(status);}
+    status.textContent=kw ? `${visible}명 검색됨${visible ? "" : " · 다른 캐릭터명을 입력해 주세요."}` : "";
   }
   input.addEventListener("input", apply);
   if (resetBtn) resetBtn.addEventListener("click", () => { input.value = ""; apply(); input.focus(); });
@@ -350,7 +362,7 @@ function renderLoading(targetId, message = "불러오는 중...") {
 
 function renderError(targetId, error) {
   const el = document.getElementById(targetId) || document.querySelector("main");
-  if (el) el.innerHTML = `<div class="container" style="padding-top:40px;"><div class="error-box">${escapeHtml(error?.message || "오류가 발생했습니다.")}</div></div>`;
+  if (el) el.innerHTML = `<div class="container" style="padding-top:40px;"><div class="error-box" role="alert">${escapeHtml(error?.message || "오류가 발생했습니다.")}<p><button class="ghost-btn" onclick="location.reload()">다시 불러오기</button></p></div></div>`;
 }
 
 function createEmptyBox(message = "데이터가 없습니다.") {
@@ -498,7 +510,7 @@ function logout() {
   location.href = "./";
 }
 document.addEventListener("DOMContentLoaded", () => {
-  const css = document.createElement("link"); css.rel="stylesheet"; css.href="./assets/css/lounge-upgrade.css?v=1"; document.head.append(css);
+  const css = document.createElement("link"); css.rel="stylesheet"; css.href="./assets/css/lounge-upgrade.css?v=2"; if(!document.querySelector('link[href*="lounge-upgrade.css"]')) document.head.append(css);
   const main = document.querySelector("main"); if (main) { main.id="main-content"; main.tabIndex=-1; }
   const skip=document.createElement("a"); skip.href="#main-content"; skip.className="skip-link"; skip.textContent="본문으로 건너뛰기"; document.body.prepend(skip);
   document.addEventListener("click", event => {
@@ -507,7 +519,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.addEventListener("keydown", event => {
     if(event.key!=="Escape") return;
+    document.body.classList.remove("menu-is-open");
     document.querySelectorAll(".nav-drop.open, .user-menu.open, .mnav-panel.open").forEach(el=>el.classList.remove("open"));
     document.querySelectorAll('[aria-expanded="true"]').forEach(el=>el.setAttribute("aria-expanded","false"));
   });
 });
+
+// Small local preferences. Character names only; no tokens or private responses.
+function readLoungePrefs() {
+  try { const p=JSON.parse(localStorage.getItem("friends.lounge.prefs")||"{}");
+    return {favorites:Array.isArray(p.favorites)?p.favorites.filter(n=>typeof n==="string"&&n.length<=40).slice(0,5):[],primary:typeof p.primary==="string"?p.primary.slice(0,40):""};
+  } catch { return {favorites:[],primary:""}; }
+}
+function writeLoungePrefs(prefs) {
+  try {localStorage.setItem("friends.lounge.prefs",JSON.stringify(prefs));return true;} catch{return false;}
+}
+function historyWithCurrent(rows, current) {
+  const all=[...rows]; const stamp=observationDate(current?.capturedAt);
+  if(!stamp || !(Number(current.power)>0)) return all;
+  const date=kstDateKey(stamp), old=all.find(r=>r.date===date);
+  const rankStamp=observationDate(current.rankCapturedAt);
+  const point={date,power:current.power,serverRank:rankStamp&&kstDateKey(rankStamp)===date?current.serverRank:old?.serverRank??null,popularity:old?.popularity??null};
+  return all.filter(r=>r.date!==date).concat(point).sort((a,b)=>a.date.localeCompare(b.date));
+}

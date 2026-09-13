@@ -1,13 +1,14 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
   const main = document.querySelector("main");
   main.innerHTML = `<div class="page-card"><div class="container"><div class="loading-box">불러오는 중…</div></div></div>`;
 
   async function loadRanking() {
     try {
       const r = await fetch(`${API_BASE}/api/points/ranking?limit=100`, { cache: "no-store" });
-      return r.ok ? await r.json() : [];
-    } catch { return []; }
+      if(!r.ok) throw new Error("포인트 순위를 불러오지 못했습니다.");
+      return await r.json();
+    } catch { throw new Error("포인트 순위를 불러오지 못했습니다."); }
   }
   async function loadMe() {
     if (!getUser()) return null;
@@ -26,7 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <a class="cta-btn" href="./login?redirect=./points">로그인하기</a>
         </div>`;
     }
-    const checked = me && me.checkedToday;
+    if(!me) return `<div class="pt-card" role="alert"><p>내 출석 정보를 불러오지 못했어요.</p><button class="ghost-btn" onclick="location.reload()">다시 확인</button></div>`;
+    const checked = me.checkedToday;
     return `
       <div class="pt-card">
         <div class="pt-my-head">

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   const user = getUser();
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const res = await fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" });
+    if (!res.ok) throw new Error("공지 목록을 불러오지 못했습니다.");
     const notices = await res.json();
 
     function categoryColor(cat) {

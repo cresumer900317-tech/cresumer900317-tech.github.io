@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   const user = getUser();
 
@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       getMyBlocks(),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []),
     ]);
+    if (!res.ok) throw new Error("공략 목록을 불러오지 못했습니다.");
     const allTips = await res.json();
     // 최신 공지 1건 (API가 고정글 우선·최신순 정렬) — 게시판 상단 배너
     const topNotice = Array.isArray(noticesRes) && noticesRes.length ? noticesRes[0] : null;

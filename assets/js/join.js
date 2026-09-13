@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  renderShell();
+  if (renderShell() === false) return;
   const main = document.querySelector("main");
   const KAKAO = "https://open.kakao.com/o/gagOlyni";
 

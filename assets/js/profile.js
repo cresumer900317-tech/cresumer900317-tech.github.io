@@ -1,7 +1,7 @@
 // 개인 전적/프로필 페이지 — 스카니아11 서버 누구든 캐릭명 검색(무가입).
 // /api/server-ranking(6800명)에서 찾아 서버순위·전투력·인기도·경쟁권 표시.
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
   const main = document.querySelector("main");
   const params = new URLSearchParams(location.search);
   const query = (params.get("n") || "").trim();
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     getServerRankingHistory(name).then(hist => {
       const body = document.querySelector("#pfGrowth .pf-growth-body");
       if (!body) return;
-      const all = (hist || []).filter(h => h && h.date).sort((a,b)=>a.date.localeCompare(b.date));
+      const all = historyWithCurrent((hist || []).filter(h => h && h.date), me);
       let range = 30;   // Calendar days; never substitute an old observation for a missing day.
 
       const render = () => {
@@ -539,6 +539,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   ` + footerHtml();
 
   bindSearch();
+  const saved=document.createElement('div');saved.className='pf-save-row';
+  const initialPrefs=readLoungePrefs();
+  saved.innerHTML=`<button id="saveFavorite" type="button" aria-pressed="${initialPrefs.favorites.includes(me.nickname)}">${initialPrefs.favorites.includes(me.nickname)?'★ 관심 캐릭터':'☆ 관심 캐릭터'}</button><button id="savePrimary" type="button">내 캐릭터로 저장</button><small id="saveStatus" role="status">이 브라우저 홈에서 바로 확인할 수 있어요.</small>`;
+  document.querySelector('#pfGrowth').before(saved);
+  saved.querySelector('#saveFavorite').addEventListener('click',()=>{
+    const prefs=readLoungePrefs(),has=prefs.favorites.includes(me.nickname);
+    if(!has&&prefs.favorites.length>=5){saved.querySelector('#saveStatus').textContent='관심 캐릭터는 5명까지 등록할 수 있어요. 기존 캐릭터의 별을 해제해 주세요.';return;}
+    prefs.favorites=has?prefs.favorites.filter(n=>n!==me.nickname):[...prefs.favorites,me.nickname];
+    if(writeLoungePrefs(prefs)){const b=saved.querySelector('#saveFavorite');b.setAttribute('aria-pressed',String(!has));b.textContent=!has?'★ 관심 캐릭터':'☆ 관심 캐릭터';saved.querySelector('#saveStatus').textContent=has?'관심 캐릭터에서 해제했어요.':'홈의 나의 라운지에 추가했어요.';}
+    else saved.querySelector('#saveStatus').textContent='브라우저에 저장하지 못했어요.';
+  });
+  saved.querySelector('#savePrimary').addEventListener('click',()=>{const prefs=readLoungePrefs();prefs.primary=me.nickname;saved.querySelector('#saveStatus').textContent=writeLoungePrefs(prefs)?'내 캐릭터로 저장했어요. 로그인 상태에서는 계정 캐릭터를 먼저 표시합니다.':'브라우저에 저장하지 못했어요.';});
   renderGrowth(me.nickname);
   renderChangeLog(me.nickname);
   // 인기 검색어 집계용 (실패해도 무시)

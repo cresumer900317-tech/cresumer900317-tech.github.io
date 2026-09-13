@@ -80,100 +80,10 @@ function guildChip(guild) {
     : `<span class="guild-chip neutral">${escapeHtml(gn)}</span>`;
 }
 
-// ── 헤더 ────────────────────────────────────────────────────
-function premiumHeader(user) {
-  const NAV = [
-    ["./", "홈", true], ["./ranking", "랭킹"], ["./profile", "전적검색"],
-    ["./notice", "공지"], ["./tips", "공략"],
-  ];
-  const navLinks = NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("");
-  const calcDrop = `<div class="nav-drop" id="calcDrop">
-    <button type="button" id="calcDropBtn">계산기${ICON.chev}</button>
-    <div class="nav-pop">
-      <a href="./level-calc">레벨업 계산기</a>
-      <a href="./item-compare">아이템 비교 AI</a>
-    </div>
-  </div>`;
-  const guildDrop = `<div class="nav-drop" id="guildDrop">
-    <button type="button" id="guildDropBtn">길드${ICON.chev}</button>
-    <div class="nav-pop">
-      <a href="./members">길드원</a>
-      <a href="./weekly">월간성장</a>
-      <a href="./rivals">라이벌</a><a href="./archive">콘텐츠 기록</a>
-      <a href="./points">포인트</a>
-      <a href="./join">가입 문의</a>
-    </div>
-  </div>`;
-
-  const auth = user
-    ? `<div class="user-menu" id="userMenu">
-         <button class="user-btn" type="button" id="userBtn">${escapeHtml(user.character_name)}${ICON.chev}</button>
-         <div class="user-pop">
-           <div class="user-pop-head"><strong>${escapeHtml(user.character_name)}</strong><span>${escapeHtml(user.guild || "라운지 회원")}</span></div>
-           <a href="./mypage">회원정보</a>
-           <a href="./login?tab=changepw">비밀번호 변경</a>
-           <button class="logout" onclick="logout()">로그아웃</button>
-         </div>
-       </div>`
-    : `<a class="btn-login" href="./login">로그인</a>`;
-
-  return `
-    <header class="site-header">
-      <div class="container header-inner">
-        <a class="brand" href="./">
-          <span class="brand-mark">🍁</span>
-          <span class="brand-text"><span class="brand-name">메이플키우기 라운지</span><span class="brand-sub">스카니아11 서버</span></span>
-        </a>
-        <nav class="nav">${navLinks}${calcDrop}${guildDrop}</nav>
-        <div class="header-right">
-          <form class="search-pill" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
-          </form>
-          ${auth}
-          <button class="mnav-btn" type="button" id="mnavBtn" aria-label="메뉴">${ICON.menu}</button>
-        </div>
-      </div>
-      <div class="mnav-panel" id="mnavPanel">
-        <div class="container mnav-links">
-          <form class="mnav-search" onsubmit="event.preventDefault(); var v=this.q.value.trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
-            ${ICON.search}<input name="q" type="text" placeholder="캐릭터명 검색" autocomplete="off" />
-          </form>
-          ${NAV.map(([h, l, a]) => `<a href="${h}"${a ? ' class="active"' : ""}>${l}</a>`).join("")}
-          <a href="./level-calc">레벨업 계산기</a><a href="./item-compare">아이템 비교 AI</a>
-          <a href="./members">길드원</a><a href="./weekly">월간성장</a><a href="./rivals">라이벌</a><a href="./archive">콘텐츠 기록</a><a href="./points">포인트</a>
-          ${user ? `<a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>` : `<a href="./login">로그인 / 회원가입</a>`}
-        </div>
-      </div>
-    </header>`;
-}
-
-function bindHeader() {
-  const mnavBtn = document.getElementById("mnavBtn");
-  const mnavPanel = document.getElementById("mnavPanel");
-  if (mnavBtn && mnavPanel) mnavBtn.addEventListener("click", () => mnavPanel.classList.toggle("open"));
-  const userBtn = document.getElementById("userBtn");
-  const userMenu = document.getElementById("userMenu");
-  if (userBtn && userMenu) {
-    userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("open"); });
-    document.addEventListener("click", (e) => { if (!userMenu.contains(e.target)) userMenu.classList.remove("open"); });
-  }
-  for (const [dropId, btnId] of [["guildDrop", "guildDropBtn"], ["calcDrop", "calcDropBtn"]]) {
-    const dropBtn = document.getElementById(btnId);
-    const dropEl = document.getElementById(dropId);
-    if (dropBtn && dropEl) {
-      dropBtn.addEventListener("click", (e) => { e.stopPropagation(); dropEl.classList.toggle("open"); });
-      document.addEventListener("click", (e) => { if (!dropEl.contains(e.target)) dropEl.classList.remove("open"); });
-    }
-  }
-}
-
 // ── 페이지 부트 ─────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
   const user = getUser();
-  document.getElementById("app-shell").innerHTML = premiumHeader(user);
-  bindHeader();
-  pingVisitor();
-  setInterval(pingVisitor, 3 * 60 * 1000);
+  renderShell();
 
   document.querySelector("main").innerHTML = `
     <section class="hero"><div class="container">
@@ -192,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       getGuildsData(),
       fetch(`${API_BASE}/api/visitors/stats`, { cache: "no-store", signal: AbortSignal.timeout(15000) }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
       fetch(`${API_BASE}/api/notices?summary=true`, { cache: "no-store", signal: AbortSignal.timeout(15000) }).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders() }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${API_BASE}/api/tips?summary=true`, { cache: "no-store", headers: authHeaders(), signal: AbortSignal.timeout(15000) }).then(r => r.ok ? r.json() : []).catch(() => []),
       getServerRanking(15).catch(() => []),
       fetch(`${API_BASE}/api/server-guild-ranking?limit=30`, { cache: "no-store", signal: AbortSignal.timeout(15000) }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_BASE}/api/server-stats`, { cache: "no-store", signal: AbortSignal.timeout(15000) }).then(r => r.ok ? r.json() : {}).catch(() => ({})),
@@ -296,6 +206,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       </a>`;
 
     // ── 히어로 (친구패밀리 대시보드 내러티브) ──
+    const party=[]; const jobs=new Set();
+    const family=job=>/히어로|팔라딘|다크나이트/.test(job)?"전사":/비숍|아크메이지/.test(job)?"마법사":/나이트로드|섀도어/.test(job)?"도적":/신궁|보우마스터/.test(job)?"궁수":/캡틴|바이퍼/.test(job)?"해적":job;
+    const master=rows.find(r=>r.name==="친구닷");
+    if(master){party.push(master);jobs.add(family(master.job));}
+    for(const member of rows){if(party.length>=5)break;if(!jobs.has(family(member.job))){party.push(member);jobs.add(family(member.job));}}
+    const partyHtml=`<div class="guild-party"><div class="party-caption">친구패밀리 · 우리 길드의 모험가들</div><div class="party-members">${party.map(m=>`<a class="party-member" href="./profile?n=${encodeURIComponent(m.name)}">${characterAvatarHtml(m)}<strong>${escapeHtml(m.name)}</strong><span>${escapeHtml(m.job)} · Lv.${m.level}</span></a>`).join("")}</div><a class="party-directory" href="./members">길드원 모두 보기 →</a></div>`;
     const heroHtml = `
       <div class="hero-card lounge-hero">
         <div class="hero-copy">
@@ -308,6 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </form>
           <div class="lounge-hero-links">${u ? `<a href="./profile?n=${encodeURIComponent(u.character_name)}">내 전적 바로가기 →</a>` : `<a href="./join">친구패밀리 가입 문의 →</a>`}<span>mgf.gg 수집 데이터 기반</span></div>
         </div>
+        ${partyHtml}
       </div>`;
     const shortcuts = `<nav class="lounge-shortcuts" aria-label="자주 쓰는 기능">${[
       ["./ranking", "01", "통합 랭킹", "우리 길드와 서버 순위"],
@@ -379,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div class="panel gl-feedp">
             <div class="panel-head"><span class="panel-title">${ICON.trend} 최근 관측 성장</span>
-              ${gsData.grewCount ? `<span class="gl-head-meta">${feedDateStr} · <b>${gsData.grewCount}명</b> 상승</span>` : ""}</div>
+              ${gsData.grewCount ? `<span class="gl-head-meta">${gsData.prevDate ? escapeHtml(gsData.prevDate.slice(5).replace("-","/"))+" → " : ""}${feedDateStr} · <b>${gsData.grewCount}명</b> 상승</span>` : ""}</div>
             <div class="gl-feed-list">${gsFeed.length ? gsFeed.slice(0, 7).map(feedRowG).join("") : `<div class="gl-empty">비교할 수집 기록이 아직 부족해요. 기록이 쌓이면 표시됩니다.</div>`}</div>
           </div>
           <div class="gl-side">
@@ -536,6 +453,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector("main").innerHTML = `
       <section class="hero"><div class="container">${heroHtml}${shortcuts}</div></section>
 
+      <section class="container return-hub" id="returnHub" aria-label="나의 라운지"></section>
       <div class="live-bar"><div class="container live-bar-inner">
         <div class="live-bar-left"><span class="live-dot"></span>
           <span class="live-msg">${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : (Number(visitorStats.today || 0) > 0 ? `오늘 <b>${formatNumber(visitorStats.today)}명</b>이 다녀갔어요` : "메이플키우기 라운지에 오신 걸 환영해요")}</span>
@@ -616,6 +534,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="footer-copy">© ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
       </div></footer>`;
 
+    mountReturnHub(rows);
     document.getElementById("loungeSearch")?.addEventListener("submit", event => {
       event.preventDefault(); const value=event.currentTarget.q.value.trim();
       if(value) location.href="./profile?n="+encodeURIComponent(value);

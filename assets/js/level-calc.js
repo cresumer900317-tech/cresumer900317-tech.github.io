@@ -1,6 +1,6 @@
 // 레벨업 계산기 — 사냥/파티퀘 경험치 효율 계산 (데이터: level-calc-data.js)
 document.addEventListener("DOMContentLoaded", () => {
-  renderShell();
+  if (renderShell() === false) return;
   renderLevelCalc();
 });
 
@@ -196,8 +196,14 @@ function renderLevelCalc() {
     </div>
   </div>`;
 
+  const fields=['curLv','curExp','tgtLv','kmp','buffPct','stageSelect','pqSelect','clearSlider'];
+  try {const saved=JSON.parse(localStorage.getItem('friends.level.settings')||'{}');fields.forEach(id=>{const e=document.getElementById(id);if(e&&saved[id]!=null)e.value=String(saved[id]);});}catch{}
   bindLevelCalc();
   lcCalc();
+  fields.forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{
+    const data={};fields.forEach(key=>data[key]=document.getElementById(key)?.value);try{localStorage.setItem('friends.level.settings',JSON.stringify(data));}catch{}
+  }));
+  const note=document.createElement('p');note.className='local-note';note.textContent='입력값은 이 브라우저에 저장됩니다. 계산 결과는 입력한 조건에 따른 예상값입니다.';document.querySelector('.lc-inputs')?.append(note);
 }
 
 // ── 입력 클램프 ──────────────────────────────────────────────────

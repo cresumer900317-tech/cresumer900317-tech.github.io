@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  renderShell();
+  if (renderShell() === false) return;
 
   // 스켈레톤 로딩
   document.querySelector("main").innerHTML = `
