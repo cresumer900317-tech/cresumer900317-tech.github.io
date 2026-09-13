@@ -12,6 +12,7 @@ function mountReturnHub(members) {
   };
   function render(){
     const primary=user?.character_name||prefs.primary;
+    document.body.classList.toggle('returning-visitor',!!primary);
     const names=[...new Set([primary,...prefs.favorites].filter(Boolean))].slice(0,5);
     root.innerHTML=`<div class="hub-heading"><div><span class="eyebrow">MY LOUNGE</span><h2>다시 만나서 반가워요${primary?', '+escapeHtml(primary)+'님':''}</h2></div><a href="./points" class="hub-checkin">오늘 출석하기 →</a></div>
       <div class="hub-grid"><div class="hub-card"><div class="hub-card-head"><h3>내 캐릭터와 관심 캐릭터</h3><a href="./profile">찾아보기 →</a></div>

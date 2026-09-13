@@ -510,7 +510,7 @@ function logout() {
   location.href = "./";
 }
 document.addEventListener("DOMContentLoaded", () => {
-  const css = document.createElement("link"); css.rel="stylesheet"; css.href="./assets/css/lounge-upgrade.css?v=2"; if(!document.querySelector('link[href*="lounge-upgrade.css"]')) document.head.append(css);
+  const css = document.createElement("link"); css.rel="stylesheet"; css.href="./assets/css/lounge-upgrade.css?v=3"; if(!document.querySelector('link[href*="lounge-upgrade.css"]')) document.head.append(css);
   const main = document.querySelector("main"); if (main) { main.id="main-content"; main.tabIndex=-1; }
   const skip=document.createElement("a"); skip.href="#main-content"; skip.className="skip-link"; skip.textContent="본문으로 건너뛰기"; document.body.prepend(skip);
   document.addEventListener("click", event => {
