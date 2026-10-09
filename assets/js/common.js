@@ -49,8 +49,13 @@ function formatObservedAt(value) {
 }
 function observationHtml(value, label = "수집 기준", hours = 24) {
   const date = observationDate(value);
-  const stale = date && Date.now() - date.getTime() > hours * 3600000;
-  return `<span class="data-observation${stale ? " is-stale" : ""}">${escapeHtml(label)} · ${escapeHtml(formatObservedAt(value))}${stale ? " · 갱신 지연" : ""}</span>`;
+  const age = date ? Date.now() - date.getTime() : 0;
+  const stale = date && age > hours * 3600000;
+  // 3일 넘게 멈췄으면 단순 지연이 아니라 수집 중단(2026-09-25~ mgf.gg가 외부 수집을 차단)
+  const halted = date && age > 72 * 3600000;
+  const note = halted ? " · 갱신 중단" : stale ? " · 갱신 지연" : "";
+  const tip = halted ? ` title="데이터 출처(mgf.gg)가 외부 수집을 막아 이후 기록이 갱신되지 않고 있어요."` : "";
+  return `<span class="data-observation${stale ? " is-stale" : ""}"${tip}>${escapeHtml(label)} · ${escapeHtml(formatObservedAt(value))}${note}</span>`;
 }
 function latestObservation(rows, key = "capturedAt") {
   return (rows || []).map(r => r[key]).filter(v => observationDate(v)).sort((a,b) => observationDate(b)-observationDate(a))[0] || null;
@@ -372,12 +377,23 @@ function createEmptyBox(message = "데이터가 없습니다.") {
 // 친구패밀리(운영) 길드 — 아바타 LED 프레임 대상
 const FRIEND_GUILD_SET = new Set(["친구들", "친구둘", "친구삼", "친구닷", "친구넷"]);
 
+// mgf.gg가 2026-09-25부터 외부 사이트의 캐릭터 이미지 요청에 대체 이미지("image hosted by MGF.GG")를
+// 돌려준다(onerror도 안 남). 이미지를 부르지 않고 이름 첫 글자 아바타만 그린다. 허용되면 true로 되돌린다.
+const CHAR_IMAGE_ENABLED = false;
+
 function characterAvatarHtml(item) {
   const name = String(item?.name || "").trim();
-  const imageUrl = `https://mgf.gg/ranking/ranking_image.php?n=${encodeURIComponent(name)}`;
   const fallback = escapeHtml((name || "?").slice(0, 1));
   const guild = String(item?.guild || "").normalize("NFC").trim();
   const led = FRIEND_GUILD_SET.has(guild) ? " character-avatar-led" : "";
+  if (!CHAR_IMAGE_ENABLED) {
+    return `
+    <div class="character-avatar no-image${led}" role="img" aria-label="${escapeHtml(name)}">
+      <span class="avatar-fallback">${fallback}</span>
+    </div>
+  `;
+  }
+  const imageUrl = `https://mgf.gg/ranking/ranking_image.php?n=${encodeURIComponent(name)}`;
   return `
     <div class="character-avatar${led}">
       <img src="${imageUrl}" alt="${escapeHtml(name)}" loading="lazy" referrerpolicy="no-referrer"

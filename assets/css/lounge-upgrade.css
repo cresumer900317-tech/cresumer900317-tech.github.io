@@ -146,3 +146,6 @@ body[data-page=home] .character-avatar img{transform:scale(2.99);transform-origi
 .hub-grid,.hub-card,.watch-card,.watch-card>div{min-width:0}.hub-card-head{flex-wrap:wrap}.watch-card strong{overflow-wrap:anywhere}
 @media(max-width:800px){.hub-grid{grid-template-columns:minmax(0,1fr)}.primary-form input{width:100px;min-width:0}.hub-heading{flex-wrap:wrap}}
 @media(max-width:800px){.rk-hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr)!important}.rk-hero-card{min-width:0}.rk-hero-avatar-wrap{max-width:100%}.rk-hero-power{max-width:100%;white-space:normal!important;overflow-wrap:anywhere}.rk-hero-power .rk-power-lg-main{font-size:18px!important}.rk-hero-power .rk-power-lg-sub{display:block;font-size:12px!important}.rk-hero-name{max-width:100%;overflow-wrap:anywhere}.rk-hero-guild .guild-badge{font-size:11px;padding:3px 6px}}
+
+/* mgf.gg 이미지 차단(2026-09-25~) — 첫 글자 아바타가 빈 공간에 떠 보이지 않게 원형 배경 */
+.party-member .character-avatar.no-image .avatar-fallback{display:flex!important;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.72);border:1px solid #d6e3c6;color:#4f6a33;font-size:30px;font-weight:700}

@@ -57,6 +57,9 @@ function av(name, cls) {
   const nm = String(name || "").trim();
   const url = `https://mgf.gg/ranking/ranking_image.php?n=${encodeURIComponent(nm)}`;
   const init = escapeHtml((nm || "?").slice(0, 1));
+  if (typeof CHAR_IMAGE_ENABLED !== "undefined" && !CHAR_IMAGE_ENABLED) {
+    return `<span class="av ${cls || ""}"><span>${init}</span></span>`;   // mgf.gg 이미지 차단 — common.js 참고
+  }
   return `<span class="av ${cls || ""}"><span>${init}</span><img src="${url}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></span>`;
 }
 
