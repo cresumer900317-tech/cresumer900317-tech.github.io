@@ -1,5 +1,35 @@
 const API_BASE = "https://guild-backend-production-75a6.up.railway.app";
 
+// ── 운영 종료 보관 모드 (2026-10-18) ──────────────────────
+// 서버를 내리고 마지막 응답을 archive-data/ 에 박제했다(scripts/archive_snapshot.py).
+// API 요청은 그 파일로 돌리고, 쓰기 요청은 막는다.
+const ARCHIVE_DATE = "2026년 9월";
+function archiveFile(p) {
+  const [path, query] = p.split("?");
+  const name = path.slice("/api/".length).replace(/[^A-Za-z0-9_-]/g, "_");
+  if (!query) return `${name}.json`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < p.length; i++) { h ^= p.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return `${name}--${h.toString(16).padStart(8, "0")}.json`;
+}
+const nativeFetch = window.fetch.bind(window);
+window.fetch = async (input, init = {}) => {
+  const isRequest = input instanceof Request;
+  const url = isRequest ? input.url : String(input);
+  if (!url.startsWith(API_BASE)) return nativeFetch(input, init);
+  const method = String(init.method || (isRequest ? input.method : "GET")).toUpperCase();
+  const signal = init.signal || (isRequest ? input.signal : undefined);
+  const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  if (method !== "GET") return json({ detail: "운영이 종료되어 기록만 볼 수 있어요." }, 410);
+  let p = url.slice(API_BASE.length);
+  const rank = p.match(/^\/api\/server-ranking\?limit=(\d+)$/);
+  if (rank) p = "/api/server-ranking?limit=7000";
+  const res = await nativeFetch(`/archive-data/${archiveFile(p)}`, { signal });
+  if (!res.ok) return json({ detail: "보관된 기록이 없어요." }, 404);
+  if (!rank) return res;
+  return json((await res.json()).slice(0, Number(rank[1])), 200);
+};
+
 const GUILD_META = {
   "친구들": { className: "guild-f1", label: "친구들" },
   "친구둘": { className: "guild-f2", label: "친구둘" },
@@ -219,11 +249,10 @@ const SHELL_NAV = [
 ];
 const SHELL_CALC_NAV = [
   ["./level-calc", "level-calc", "레벨업 계산기"],
-  ["./item-compare", "item-compare", "아이템 비교 AI"],
 ];
 const SHELL_GUILD_NAV = [
   ["./members", "members", "길드원"], ["./profile", "profile", "캐릭터 검색"], ["./sources", "sources", "MGF 수집 현황"],
-  ["./rivals", "rivals", "라이벌"], ["./archive", "archive", "콘텐츠 기록"], ["./points", "points", "포인트"], ["./join", "join", "가입 문의"],
+  ["./archive", "archive", "콘텐츠 기록"],
 ];
 
 function renderShell() {
@@ -248,17 +277,7 @@ function renderShell() {
       <div class="nav-pop" id="guildMenu">${SHELL_GUILD_NAV.map(a).join("")}</div>
     </div>`;
 
-  const auth = user
-    ? `<div class="user-menu" id="userMenu">
-         <button class="user-btn" type="button" id="userBtn" aria-expanded="false" aria-controls="accountMenu">${escapeHtml(user.character_name)}${SHELL_ICON.chev}</button>
-         <div class="user-pop" id="accountMenu">
-           <div class="user-pop-head"><strong>${escapeHtml(user.character_name)}</strong><span>${escapeHtml(user.guild || "라운지 회원")}</span></div>
-           <a href="./mypage">회원정보</a>
-           <a href="./login?tab=changepw">비밀번호 변경</a>
-           <button class="logout" onclick="logout()">로그아웃</button>
-         </div>
-       </div>`
-    : `<a class="btn-login" href="./login">로그인</a>`;
+  const auth = "";
 
   const searchForm = (cls) => `
     <form class="${cls}" onsubmit="event.preventDefault(); var v=this.q.value.normalize("NFC").trim(); if(v) location.href='./profile?n='+encodeURIComponent(v);">
@@ -266,6 +285,7 @@ function renderShell() {
     </form>`;
 
   root.innerHTML = `
+    <div class="archive-ribbon" role="note">운영이 종료된 사이트예요. ${ARCHIVE_DATE}까지의 기록을 그대로 보관하고 있어요.</div>
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="./">
@@ -287,9 +307,6 @@ function renderShell() {
           ${SHELL_CALC_NAV.map(a).join("")}
           <div class="mnav-group-label">길드</div>
           ${SHELL_GUILD_NAV.map(a).join("")}
-          ${user
-            ? `<div class="mnav-group-label">내 계정</div><a href="./mypage">회원정보</a><a href="#" onclick="logout();return false;">로그아웃</a>`
-            : `<a href="./login">로그인 / 회원가입</a>`}
         </div>
       </div>
     </header>
@@ -297,7 +314,7 @@ function renderShell() {
       <a href="./" ${page==='home'?'aria-current="page"':''}><span aria-hidden="true">⌂</span>홈</a>
       <a href="./ranking" ${page==='ranking'?'aria-current="page"':''}><span aria-hidden="true">▥</span>랭킹</a>
       <a href="./profile${user?'?n='+encodeURIComponent(user.character_name):''}" ${page==='profile'?'aria-current="page"':''}><span aria-hidden="true">⌕</span>내 캐릭터</a>
-      <a href="./points" ${page==='points'?'aria-current="page"':''}><span aria-hidden="true">✓</span>출석</a>
+      <a href="./members" ${page==='members'?'aria-current="page"':''}><span aria-hidden="true">✓</span>길드원</a>
       <button type="button" id="dockMenu" aria-expanded="false" aria-controls="mnavPanel"><span aria-hidden="true">☰</span>전체</button>
     </nav>`;
 
@@ -325,9 +342,6 @@ function renderShell() {
     }
   }
 
-  // 방문자 ping (3분마다 재핑)
-  pingVisitor();
-  setInterval(pingVisitor, 3 * 60 * 1000);
   return true;
 }
 
@@ -511,7 +525,7 @@ async function unblockUser(name) {
 
 function requireLogin(page) {
   // 공지·공략 읽기는 공개(검색 유입·미리보기), 글쓰기·내부 페이지만 로그인 필요
-  const restricted = ["members", "weekly", "notice-write", "tips-write"];
+  const restricted = [];
   if (restricted.includes(page) && !getUser()) {
     const base = page.startsWith("notice") ? "notice" : page.startsWith("tips") ? "tips" : page;
     location.href = `./login?redirect=./${base}`;

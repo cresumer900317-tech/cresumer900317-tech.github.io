@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <input id="loungeQuery" name="q" placeholder="내 캐릭터의 성장을 찾아보세요" autocomplete="off" maxlength="40">
             <button type="submit">전적 검색 ${ICON.arrow}</button>
           </form>
-          <div class="lounge-hero-links">${u ? `<a href="./profile?n=${encodeURIComponent(u.character_name)}">내 전적 바로가기 →</a>` : `<a href="./join">친구패밀리 가입 문의 →</a>`}<span>mgf.gg 수집 데이터 기반</span></div>
+          <div class="lounge-hero-links">${u ? `<a href="./profile?n=${encodeURIComponent(u.character_name)}">내 전적 바로가기 →</a>` : ""}<span>mgf.gg 수집 데이터 기반</span></div>
         </div>
         ${partyHtml}
       </div>`;
@@ -456,7 +456,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector("main").innerHTML = `
       <section class="hero"><div class="container">${heroHtml}${shortcuts}</div></section>
 
-      <section class="container return-hub" id="returnHub" aria-label="나의 라운지"></section>
       <div class="live-bar"><div class="container live-bar-inner">
         <div class="live-bar-left"><span class="live-dot"></span>
           <span class="live-msg">${online > 0 ? `지금 <b>${online}명</b>이 함께 보고 있어요` : (Number(visitorStats.today || 0) > 0 ? `오늘 <b>${formatNumber(visitorStats.today)}명</b>이 다녀갔어요` : "메이플키우기 라운지에 오신 걸 환영해요")}</span>
@@ -519,25 +518,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       <section class="section" style="padding-top:8px"><div class="container">
         <div class="recruit">
           <div>
-            <div class="recruit-title">같이 할 길드, 찾고 계신가요?</div>
-            <div class="recruit-desc">스카니아11에서 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}이 함께 성장하고 있어요. 초보든 복귀든 부담 없이 문의 주세요.</div>
+            <div class="recruit-title">그동안 함께해 주셔서 고마워요</div>
+            <div class="recruit-desc">메이플키우기 라운지는 운영을 마쳤어요. 스카니아11 친구패밀리 5개 길드${rows.length ? `, 길드원 ${formatNumber(rows.length)}명` : ""}의 기록은 이곳에 그대로 남겨 둘게요.</div>
           </div>
-          <a class="btn-amber" href="./join">가입 문의하기 ${ICON.arrow}</a>
         </div>
       </div></section>
 
       <footer class="footer"><div class="container footer-inner">
         <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
         <div class="footer-links">
-          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">레벨업 계산기</a><a href="./item-compare">아이템 비교 AI</a>
-          <a href="https://apps.apple.com/kr/app/id6782071379" target="_blank" rel="noopener noreferrer">앱 (iOS)</a>
-          <a href="https://play.google.com/store/apps/details?id=com.jisoar.chingufamily" target="_blank" rel="noopener noreferrer">앱 (Android)</a>
-          <a href="./join">친구패밀리 가입 문의</a>
+          <a href="./profile">전적검색</a><a href="./ranking">서버 랭킹</a><a href="./level-calc">레벨업 계산기</a>
         </div>
         <div class="footer-copy">© ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
       </div></footer>`;
 
-    mountReturnHub(rows);
     document.getElementById("loungeSearch")?.addEventListener("submit", event => {
       event.preventDefault(); const value=event.currentTarget.q.value.trim();
       if(value) location.href="./profile?n="+encodeURIComponent(value);

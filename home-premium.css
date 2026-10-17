@@ -729,3 +729,6 @@ svg { display: block; }
   .gl-grid { gap: 12px; }
   .gl-king.lead .gl-king-val { font-size: 1.15rem; }
 }
+
+/* 운영 종료 보관 안내 (2026-10-18) */
+.archive-ribbon{background:#2b2118;color:#fff;font-size:13px;line-height:1.5;text-align:center;padding:8px 16px}

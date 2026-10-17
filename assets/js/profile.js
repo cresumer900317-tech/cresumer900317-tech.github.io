@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="container footer-inner">
           <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
           <div class="footer-links">
-            <a href="./join" class="footer-link">길드 가입 문의</a>
           </div>
           <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
         </div>
@@ -503,18 +502,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${isFriend ? `
         <div class="pf-cta pf-cta-member">
           <div class="pf-cta-title">🛡️ 친구패밀리 길드원이네요!</div>
-          <div class="pf-cta-desc">로그인하면 내 성장·포인트·출석을 한눈에 볼 수 있어요.</div>
           <div class="pf-cta-btns">
-            <a class="cta-btn" href="./login">로그인</a>
             <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
           </div>
         </div>
       ` : `
         <div class="pf-cta pf-cta-recruit">
-          <div class="pf-cta-title">스카니아11 ${formatNumber(rank)}위 — 친구들과 함께 더 키워보실래요?</div>
-          <div class="pf-cta-desc">${recruitTier}<br>전투력대별 5개 길드 운영 · 내 체급에 맞는 길드 자동 배정 · TOP30 길드 경쟁.</div>
+          <div class="pf-cta-title">스카니아11 ${formatNumber(rank)}위</div>
+          <div class="pf-cta-desc">${ARCHIVE_DATE} 마지막 수집 기준 순위예요.</div>
           <div class="pf-cta-btns">
-            <a class="cta-btn" href="./join">친구패밀리 길드 가입</a>
             <button type="button" id="pfShareBtn" class="cta-btn cta-btn-outline">📤 전적 공유</button>
           </div>
         </div>
