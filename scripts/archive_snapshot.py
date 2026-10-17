@@ -11,6 +11,7 @@ import urllib.request
 
 API = "https://guild-backend-production-75a6.up.railway.app"
 OUT = os.path.join(os.path.dirname(__file__), "..", "archive-data")
+FAILED = []
 GUILDS = ["친구들", "친구둘", "친구삼", "친구넷", "친구닷"]
 
 
@@ -44,6 +45,7 @@ def save(p, data=None):
             data = get(p)
         except Exception as e:
             print("skip", p, e)
+            FAILED.append(p)
             return None
     with open(os.path.join(OUT, archive_file(p)), "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
@@ -71,6 +73,8 @@ def main():
         save(f"/api/server-ranking/history?name={n}&days=365")
         save(f"/api/change-log?name={n}")
     print("files:", len(os.listdir(OUT)))
+    if FAILED:
+        raise SystemExit(f"실패 {len(FAILED)}건: 서버를 내리기 전에 다시 수집하세요")
 
 
 if __name__ == "__main__":

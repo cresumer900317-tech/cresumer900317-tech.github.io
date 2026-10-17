@@ -14,15 +14,17 @@ function archiveFile(p) {
 }
 const nativeFetch = window.fetch.bind(window);
 window.fetch = async (input, init = {}) => {
-  const url = typeof input === "string" ? input : input.url;
+  const isRequest = input instanceof Request;
+  const url = isRequest ? input.url : String(input);
   if (!url.startsWith(API_BASE)) return nativeFetch(input, init);
-  const method = String(init.method || "GET").toUpperCase();
+  const method = String(init.method || (isRequest ? input.method : "GET")).toUpperCase();
+  const signal = init.signal || (isRequest ? input.signal : undefined);
   const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   if (method !== "GET") return json({ detail: "운영이 종료되어 기록만 볼 수 있어요." }, 410);
   let p = url.slice(API_BASE.length);
   const rank = p.match(/^\/api\/server-ranking\?limit=(\d+)$/);
   if (rank) p = "/api/server-ranking?limit=7000";
-  const res = await nativeFetch(`/archive-data/${archiveFile(p)}`);
+  const res = await nativeFetch(`/archive-data/${archiveFile(p)}`, { signal });
   if (!res.ok) return json({ detail: "보관된 기록이 없어요." }, 404);
   if (!rank) return res;
   return json((await res.json()).slice(0, Number(rank[1])), 200);
