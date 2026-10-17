@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.querySelector("main").innerHTML = `
         <div class="page-card"><div class="container" style="padding:60px 20px;text-align:center;">
           <p style="font-size:1rem;color:var(--text-soft);">${isLocked ? "🔒 길드원 전용 글입니다.<br>로그인 후 이용해주세요." : "존재하지 않는 게시글입니다."}</p>
-          ${isLocked ? `<a href="./login?redirect=./tips-view?id=${postId}" class="board-submit-btn" style="display:inline-block;margin-top:16px;text-decoration:none;">로그인</a>` : ""}
+          ${false ? `<a href="./login?redirect=./tips-view?id=${postId}" class="board-submit-btn" style="display:inline-block;margin-top:16px;text-decoration:none;">로그인</a>` : ""}
           <a href="./tips" class="board-cancel-btn" style="display:inline-block;margin-top:16px;text-decoration:none;">목록으로</a>
         </div></div>`;
       return;

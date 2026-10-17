@@ -4536,3 +4536,6 @@ a.mini-summary-card:active { transform: translateY(1px); }
 /* 공용 페이지 헤드 (eyebrow는 .page-eyebrow 공용) */
 .page-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 4px; }
 .page-desc { font-size: 0.86rem; color: var(--ink-faint); margin: 0; }
+
+/* 운영 종료 보관 안내 (2026-10-18) */
+.archive-ribbon{background:#2b2118;color:#fff;font-size:13px;line-height:1.5;text-align:center;padding:8px 16px}

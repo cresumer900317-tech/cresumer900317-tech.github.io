@@ -162,7 +162,6 @@ document.addEventListener("DOMContentLoaded", async () => {
               <h1 class="page-title">공략 게시판</h1>
               <p class="page-desc">길드 컨텐츠 공략과 세팅을 공유해요</p>
             </div>
-            <a href="./tips-write" class="board-write-btn" style="text-decoration:none;">✏️ 공략 등록</a>
           </div>
 
           ${topNotice ? `

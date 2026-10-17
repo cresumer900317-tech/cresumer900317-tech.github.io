@@ -725,11 +725,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="container">
             <div class="rk-page-header">
               <div><span class="page-eyebrow">SCANIA 11</span><h1 class="rk-page-title">통합 랭킹</h1></div>
-              <div class="rk-dday-chip ${cutlineDDay !== null && cutlineDDay <= 3 ? 'rk-dday-urgent' : ''}">
-                <span class="rk-dday-label">배치 기준일</span>
-                <span class="rk-dday-date">${cutlineDateStr}</span>
-                <span class="rk-dday-badge">${cutlineDDayText}</span>
-              </div>
             </div>
             <div class="lounge-data-note">${observationHtml(latestObservation(rows), "친구패밀리 수집", 3)}<span>mgf.gg 관측값 · 서버 순위와 전투력의 수집 시점은 다를 수 있어요.</span></div>
             ${tabBarHtml(tab)}
@@ -740,7 +735,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="container footer-inner">
             <div class="footer-brand">메이플키우기 라운지 · 스카니아11 서버</div>
             <div class="footer-links">
-              <a href="./join" class="footer-link">길드 가입 문의</a>
             </div>
             <div class="footer-copy">&copy; ${new Date().getFullYear()} 메이플키우기 라운지 · 운영 친구패밀리. All rights reserved.</div>
           </div>
